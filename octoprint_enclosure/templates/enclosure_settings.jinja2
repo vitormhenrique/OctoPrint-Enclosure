@@ -1,0 +1,59 @@
+<h4>{{ _('Heater') }}</h4>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterEnable">  {{ _('Enable Heater') }}
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-heaterpin">{{ _('Heater Pin') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterPin">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-heaterFrequency">{{ _('Heater Frequency') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterFrequency">
+        </div>
+    </div>
+</form>
+
+<h4>{{ _('Fan') }}</h4>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: fanEnable">  {{ _('Enable Fan') }}
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-fanpin">{{ _('Fan Pin') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.fanPin">
+        </div>
+    </div>
+</form>
+
+<h4>{{ _('Light') }}</h4>
+
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.lightEnable">  {{ _('Enable Light') }}
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-lightpin">{{ _('Light Pin') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.lightPin">
+        </div>
+    </div>
+</form>
