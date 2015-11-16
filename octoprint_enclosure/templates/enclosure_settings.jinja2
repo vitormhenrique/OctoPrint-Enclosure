@@ -1,5 +1,4 @@
 <h4>{{ _('Heater') }}</h4>
-
 <form class="form-horizontal">
     <div class="control-group">
         <div class="controls">
@@ -14,26 +13,45 @@
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterPin">
         </div>
     </div>
+</form>
+
+<h4>{{ _('Temperature Sensor') }}</h4>
+<form class="form-horizontal" style="display: none;" data-bind="visible: settings.plugins.enclosure.heaterPin">
+Available options are:
+11 for DHT11
+22 for DHT22
+2302 for AM2302
     <div class="control-group">
-        <label class="control-label" for="settings-enclosure-heaterFrequency">{{ _('Heater Frequency') }}</label>
+        <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterFrequency">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtModel">
+        </div>
+    </div>
+	    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-getTempScript">{{ _('Get Temperature Script') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getTempScript">
+        </div>
+    </div>
+	    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-getHumiScript">{{ _('Get Humidity Script') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getHumiScript">
         </div>
     </div>
 </form>
 
 <h4>{{ _('Fan') }}</h4>
-
 <form class="form-horizontal">
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: fanEnable">  {{ _('Enable Fan') }}
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.fanEnable">  {{ _('Enable Fan') }}
             </label>
         </div>
     </div>
     <div class="control-group">
-        <label class="control-label" for="settings-enclosure-fanpin">{{ _('Fan Pin') }}</label>
+        <label class="control-label" for="settings-enclosure-fanPin">{{ _('Fan Pin') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.fanPin">
         </div>
@@ -41,7 +59,6 @@
 </form>
 
 <h4>{{ _('Light') }}</h4>
-
 <form class="form-horizontal">
     <div class="control-group">
         <div class="controls">
@@ -51,7 +68,7 @@
         </div>
     </div>
     <div class="control-group">
-        <label class="control-label" for="settings-enclosure-lightpin">{{ _('Light Pin') }}</label>
+        <label class="control-label" for="settings-enclosure-lightPin">{{ _('Light Pin') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.lightPin">
         </div>
