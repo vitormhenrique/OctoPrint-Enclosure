@@ -1,65 +1,168 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-### (Don't forget to remove me)
-# This is a basic skeleton for your plugin's __init__.py. You probably want to adjust the class name of your plugin
-# as well as the plugin mixins it's subclassing from. This is really just a basic skeleton to get you started,
-# defining your plugin as a template plugin.
-#
-# Take a look at the documentation on what other plugin mixins are available.
-
 import octoprint.plugin
+import flask
 from octoprint.util import RepeatedTimer
+import os
+from subprocess import Popen, PIPE
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 						octoprint.plugin.TemplatePlugin,
-                      	octoprint.plugin.SettingsPlugin):
-
-    def on_after_startup(self):
-        self._logger.info("Starting Timer")
-        self.startTimer(5)
-
-    def startTimer(self, interval):
-        self._checkTempTimer = RepeatedTimer(interval, self.checkEnclosureTemp, None, None, True)
-        self._checkTempTimer.start()
-
-    def checkEnclosureTemp(self):
-    	self._logger.info("Checking eclosure temp...")
-       	import random
-       	def randrange_float(start, stop, step):
-        	return random.randint(0, int((stop - start) / step)) * step + start
-        p = randrange_float(5, 60, 0.1)
-        self._logger.info("temp:: %s" % p)
-        self._plugin_manager.send_plugin_message(self._identifier, dict(enclosureTemp=p))
-
-	##~~ SettingsPlugin
-    def get_settings_defaults(self):
-    	return dict(heaterPin=17,
-    				heaterFrequency=5,
-    				heaterEnable=False,
-    				fanEnable=False,
-    				fanPin=18,
-    				lightEnable=True,
-    				lightPin=20
-    		)
-
-    def get_template_configs(self):
-		return [
-	        dict(type="settings", custom_bindings=False)	        
-	        ]
+                      	octoprint.plugin.SettingsPlugin,
+                      	octoprint.plugin.AssetPlugin,
+                        octoprint.plugin.BlueprintPlugin):
 
 
-# If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
-# ("OctoPrint-PluginSkeleton"), you may define that here. Same goes for the other metadata derived from setup.py that
-# can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
+	enclosureSetTemperature=0.0
+	enclosureCurrentTemperature=0.0
+	enclosureCurrentHumidity=0.0
+	def on_after_startup(self):
+		self.startTimer()
+		self.startGPIO()
+		
+	def startGPIO(self):
+		self.configureGPIO(self._settings.get_int(["heaterPin"]))
+		self.configureGPIO(self._settings.get_int(["fanPin"]))
+		self.configureGPIO(self._settings.get_int(["lightPin"]))
+	
+	def configureGPIO(self, pin):
+		os.system("sudo echo "+str(pin)+" > /sys/class/gpio/export ")
+		os.system("sudo echo out > /sys/class/gpio/gpio"+str(pin)+"/direction")
+		os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(pin)+"/value")
+		
+	def startTimer(self):
+		self._checkTempTimer = RepeatedTimer(10, self.checkEnclosureTemp, None, None, True)
+		self._checkTempTimer.start()
+
+	def checkEnclosureTemp(self):
+		stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+		sTemp = stdout.read()
+		if sTemp.find("Failed") != -1:
+			self._logger.info("Failed to read Temperature")
+		else:
+			self.enclosureCurrentTemperature = float(sTemp)
+
+		stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+		sTemp = stdout.read()
+		if sTemp.find("Failed") != -1:
+			self._logger.info("Failed to read Humidity")
+		else:
+			self.enclosureCurrentHumidity = float(sTemp)
+
+		self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
+		self.heaterHandler()
+
+	def heaterHandler(self):
+		if self.enclosureCurrentTemperature<float(self.enclosureSetTemperature) and self._settings.get_boolean(["heaterEnable"]):
+			os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value")
+		else:
+			os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value")
+
+	@octoprint.plugin.BlueprintPlugin.route("/setEnclosureTemperature", methods=["GET"])
+	def setEnclosureTemperature(self):
+		self.enclosureSetTemperature = flask.request.values["enclosureSetTemp"]
+		self.heaterHandler()
+		return flask.jsonify(success=True)
+
+	@octoprint.plugin.BlueprintPlugin.route("/getEnclosureSetTemperature", methods=["GET"])
+	def getEnclosureSetTemperature(self):
+		self._logger.info("Enclosure set temperature requested")
+		return str(self.enclosureSetTemperature)
+
+	@octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
+	def getEnclosureTemperature(self):
+		self._logger.info("Enclosure temperature requested")
+		return str(self.enclosureCurrentTemperature)
+		
+	@octoprint.plugin.BlueprintPlugin.route("/handleFan", methods=["GET"])
+	def handleFan(self):
+		if self._settings.get_boolean(["fanEnable"]):
+			if flask.request.values["status"] == "on":
+				os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+			else:
+				os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+		return flask.jsonify(success=True)
+		
+	@octoprint.plugin.BlueprintPlugin.route("/handleLight", methods=["GET"])
+	def handleLight(self):
+		if self._settings.get_boolean(["lightEnable"]):
+			if flask.request.values["status"] == "on":
+				os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["lightPin"]))+"/value")
+			else:
+				os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["lightPin"]))+"/value")
+		return flask.jsonify(success=True)
+
+	def on_settings_save(self, data):
+		old_heaterPin = self._settings.get_int(["heaterPin"])
+		old_dhtPin = self._settings.get_int(["dhtPin"])
+		old_fanPin = self._settings.get_int(["fanPin"])
+		octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
+		new_heaterPin = self._settings.get_int(["heaterPin"])
+		new_dhtPin = self._settings.get_int(["dhtPin"])
+		new_fanPin = self._settings.get_int(["fanPin"])
+		if new_heaterPin != old_heaterPin:
+			self.configureGPIO(new_heaterPin)
+		if old_dhtPin != new_dhtPin:
+			self.configureGPIO(new_dhtPin)
+		if old_fanPin != new_fanPin:
+			self.configureGPIO(new_fanPin)
+
+	def get_settings_defaults(self):
+		return dict(
+			heaterEnable=False,
+			heaterPin=18,
+			fanPin=14,
+			lightPin=15,
+			dhtPin=4,
+			dhtModel=22,
+			fanEnable=False,
+			lightEnable=False,
+			getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py",
+			getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py"
+		)
+		
+		
+	def get_template_configs(self):
+		return [dict(type="settings", custom_bindings=False)]
+
+	##~~ AssetPlugin mixin
+
+	def get_assets(self):
+		# Define your plugin's asset files to automatically include in the
+		# core UI here.
+		return dict(
+			js=["js/enclosure.js"],
+			css=["css/enclosure.css"],
+			less=["less/enclosure.less"]
+		)
+
+	##~~ Softwareupdate hook
+	def get_update_information(self):
+		return dict(
+			enclosure=dict(
+				displayName="Enclosure Plugin",
+				displayVersion=self._plugin_version,
+
+				# version check: github repository
+				type="github_release",
+				user="vitormhenrique",
+				repo="OctoPrint-Enclosure",
+				current=self._plugin_version,
+
+				# update method: pip
+				pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"
+			)
+		)
+
 __plugin_name__ = "Enclosure Plugin"
 
 def __plugin_load__():
 	global __plugin_implementation__
 	__plugin_implementation__ = EnclosurePlugin()
 
-	# global __plugin_hooks__
-	# __plugin_hooks__ = {
-	#    "some.octoprint.hook": __plugin_implementation__.some_hook_handler
-	# }
+	global __plugin_hooks__
+	__plugin_hooks__ = {
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+	}
 
