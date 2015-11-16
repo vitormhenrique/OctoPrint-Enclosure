@@ -11,16 +11,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 						octoprint.plugin.TemplatePlugin,
                       	octoprint.plugin.SettingsPlugin,
                       	octoprint.plugin.AssetPlugin,
-                        octoprint.plugin.BlueprintPlugin):
+                        octoprint.plugin.BlueprintPlugin,
+						octoprint.plugin.EventHandlerPlugin):
 
 
 	enclosureSetTemperature=0.0
 	enclosureCurrentTemperature=0.0
 	enclosureCurrentHumidity=0.0
-	def on_after_startup(self):
-		self.startTimer()
-		self.startGPIO()
-		
+	
 	def startGPIO(self):
 		self.configureGPIO(self._settings.get_int(["heaterPin"]))
 		self.configureGPIO(self._settings.get_int(["fanPin"]))
@@ -59,6 +57,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		else:
 			os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value")
 
+	#~~ StartupPlugin mixin
+	def on_after_startup(self):
+		self.startTimer()
+		self.startGPIO()
+			
+	#~~ Blueprintplugin mixin
 	@octoprint.plugin.BlueprintPlugin.route("/setEnclosureTemperature", methods=["GET"])
 	def setEnclosureTemperature(self):
 		self.enclosureSetTemperature = flask.request.values["enclosureSetTemp"]
@@ -92,7 +96,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 			else:
 				os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["lightPin"]))+"/value")
 		return flask.jsonify(success=True)
-
+		
+	#~~ EventPlugin mixin
+	def on_event(self, event, payload):
+		
+		if event != "PrintDone":
+			return
+		
+		if  self._settings.get(['heaterEnable']):
+			self.enclosureSetTemperature = 0
+			
+		if  self._settings.get(['fanEnable']):
+			os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+			
+	#~~ SettingsPlugin mixin
 	def on_settings_save(self, data):
 		old_heaterPin = self._settings.get_int(["heaterPin"])
 		old_dhtPin = self._settings.get_int(["dhtPin"])
@@ -122,19 +139,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 			getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py"
 		)
 		
-		
+	#~~ TemplatePlugin
 	def get_template_configs(self):
 		return [dict(type="settings", custom_bindings=False)]
 
 	##~~ AssetPlugin mixin
-
 	def get_assets(self):
-		# Define your plugin's asset files to automatically include in the
-		# core UI here.
 		return dict(
-			js=["js/enclosure.js"],
-			css=["css/enclosure.css"],
-			less=["less/enclosure.less"]
+			js=["js/enclosure.js"]
 		)
 
 	##~~ Softwareupdate hook
