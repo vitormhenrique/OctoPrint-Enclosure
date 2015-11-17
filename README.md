@@ -55,13 +55,13 @@ Sometimes raspbery pi don't want to obey the command to set the pin on GPIO corr
 
 ```
 sudo su
-echo **XX** > /sys/class/gpio/export 
-echo out > /sys/class/gpio/gpio**XX**/direction
-echo **XX** > /sys/class/gpio/gpio11/value
+echo {pin} > /sys/class/gpio/export 
+echo out > /sys/class/gpio/gpio{pin}/direction
+echo 0 > /sys/class/gpio/gpio{pin}/value
 
 ```
 
-Where XX is the pin on raspberry pi.
+Where {pin} is the pin number on raspberry pi, ex:15
 
 ## Configuration
 
