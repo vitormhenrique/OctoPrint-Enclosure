@@ -33,11 +33,11 @@
     </tr>
 </table>
 <h4>{{ _('Fan') }}</h4>
-<button type="submit" data-bind="click: turnFanOn(true)" class="btn">Turn on</button> 
-<button type="submit" data-bind="click: turnFanOn(false)"  class="btn">Turn off</button>
+<button type="submit" data-bind="click: turnFanOn, enable: settings.settings.plugins.enclosure.fanEnable && isConnected()" class="btn">Turn on</button> 
+<button type="submit" data-bind="click: turnFanOff, enable: settings.settings.plugins.enclosure.fanEnable && isConnected()"   class="btn">Turn off</button>
 <h4>{{ _('Light') }}</h4>
-<button type="submit" data-bind="click: turnLightOn(true)"  class="btn">Turn on</button>
-<button type="submit" data-bind="click: turnLightOn(false)"  class="btn">Turn off</button>
+<button type="submit" data-bind="click: turnLightOn, enable: settings.settings.plugins.enclosure.lightEnable && isConnected()"  class="btn">Turn on</button>
+<button type="submit" data-bind="click: turnLightOff, enable: settings.settings.plugins.enclosure.lightEnable && isConnected()"   class="btn">Turn off</button>
 
 
 

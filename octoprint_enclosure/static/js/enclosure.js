@@ -22,8 +22,7 @@ $(function() {
         };
 
         self.isConnected = ko.computed(function() {
-            //return self.connection.isOperational();
-            return true;
+            return self.connection.loginState.isUser();
         });
 
         self.setTemperature = function(){
@@ -81,22 +80,41 @@ $(function() {
             return "off";
         }
 		
-		self.turnFanOn = function(isON){
+		self.turnFanOn = function(){
             $.ajax({
                     type: "GET",
 					dataType: "json",
-					data: {"status": isON ? "on" : "off"},
-                    url: "/plugin/enclosure/getEnclosureTemperature",
+					data: {"status": "on"},
+                    url: "/plugin/enclosure/handleFan",
+                    async: false
+            });
+        }
+
+        self.turnFanOff = function(){
+            $.ajax({
+                    type: "GET",
+                    dataType: "json",
+                    data: {"status": "off"},
+                    url: "/plugin/enclosure/handleFan",
                     async: false
             });
         }
 		
-		self.turnLightOn = function(isON){
+		self.turnLightOn = function(){
             $.ajax({
                     type: "GET",
 					dataType: "json",
-					data: {"status": isON ? "on" : "off"},
-                    url: "/plugin/enclosure/getEnclosureTemperature",
+					data: {"status":"on"},
+                    url: "/plugin/enclosure/handleLight",
+                    async: false
+            });
+        }
+        self.turnLightOff = function(){
+            $.ajax({
+                    type: "GET",
+                    dataType: "json",
+                    data: {"status":"off"},
+                    url: "/plugin/enclosure/handleLight",
                     async: false
             });
         }
@@ -112,3 +130,4 @@ $(function() {
 function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
+

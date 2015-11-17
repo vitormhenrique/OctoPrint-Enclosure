@@ -52,10 +52,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		self.heaterHandler()
 
 	def heaterHandler(self):
+		command=""
 		if self.enclosureCurrentTemperature<float(self.enclosureSetTemperature) and self._settings.get_boolean(["heaterEnable"]):
-			os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value")
+			command = "sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value"
 		else:
-			os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value")
+			command = "sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value"
+		os.system(command)
 
 	#~~ StartupPlugin mixin
 	def on_after_startup(self):
@@ -81,7 +83,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		
 	@octoprint.plugin.BlueprintPlugin.route("/handleFan", methods=["GET"])
 	def handleFan(self):
+		self._logger.info("Caiu no Fan")
 		if self._settings.get_boolean(["fanEnable"]):
+			self._logger.info("Fan: " + flask.request.values["status"])
 			if flask.request.values["status"] == "on":
 				os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
 			else:
@@ -129,7 +133,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		return dict(
 			heaterEnable=False,
 			heaterPin=18,
-			fanPin=14,
+			fanPin=23,
 			lightPin=15,
 			dhtPin=4,
 			dhtModel=22,

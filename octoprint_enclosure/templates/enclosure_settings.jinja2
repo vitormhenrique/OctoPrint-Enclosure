@@ -15,12 +15,16 @@
     </div>
 </form>
 
+
+<form class="form-horizontal" id="enclosure_settings_temperature">
 <h4>{{ _('Temperature Sensor') }}</h4>
-<form class="form-horizontal" style="display: none;" data-bind="visible: settings.plugins.enclosure.heaterPin">
-Available options are:
-11 for DHT11
-22 for DHT22
-2302 for AM2302
+Available options are: 11 for DHT11; 22 for DHT22 and 2302 for AM2302
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtPin">
+        </div>
+    </div>
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
