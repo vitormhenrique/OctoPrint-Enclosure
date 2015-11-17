@@ -50,6 +50,19 @@ chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py
 ```
 
+**PLEASE NOTE**
+Sometimes raspbery pi don't want to obey the command to set the pin on GPIO correctly. If your relays are not working as expected try manually turning them on on terminal using: 
+
+```
+sudo su
+echo **XX** > /sys/class/gpio/export 
+echo out > /sys/class/gpio/gpio**XX**/direction
+echo **XX** > /sys/class/gpio/gpio11/value
+
+```
+
+Where XX is the pin on raspberry pi.
+
 ## Configuration
 
 Default plugin configuration uses:
