@@ -24,6 +24,7 @@ or manually using this URL:
     https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip
 
 **Temperature Sensor**
+
 You need to install Adafruit library to use the temperature sensor on raspberry pi. 
 
 Open raspberry pi terminal and type:
