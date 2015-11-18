@@ -48,8 +48,8 @@ You also need to make the provided scripts to read temperature executable.
 
 If you have octoprint installed on the default location type:
 ```
-chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py
-chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py
+chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py
+chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py
 ```
 
 **wiringPi**
