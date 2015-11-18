@@ -34,7 +34,7 @@ $(function() {
                     data: {"enclosureSetTemp": Number($("#enclosureSetTemp").val())},
                      success: function(data) {
                         $("#enclosureSetTemp").val('');
-                        $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater());
+                        $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature,data.enclosureCurrentTemperature));
                     }
                 });
             }else{
@@ -50,7 +50,7 @@ $(function() {
                 data: {"enclosureSetTemp":0},
                  success: function(data) {
                     $("#enclosureSetTemp").val('');
-                    $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater());
+                    $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature,data.enclosureCurrentTemperature));
                 }
             });
         }
@@ -71,9 +71,7 @@ $(function() {
                 }).responseText;
         }
 
-        self.getStatusHeater = function(){
-            setTemp = self.requestEnclosureSetTemperature();
-            currentTemp = self.requestEnclosureTemperature();
+        self.getStatusHeater = function(setTemp,currentTemp){
             if (parseFloat(setTemp)>parseFloat(currentTemp)){
                 return cleanTemperature(setTemp);
             }

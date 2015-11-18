@@ -50,18 +50,22 @@ chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py
 ```
 
-**PLEASE NOTE**
-Sometimes raspbery pi don't want to obey the command to set the pin on GPIO correctly. If your relays are not working as expected try manually turning them on on terminal using: 
+To use raspberry pi GPIO without needing to run octoprint as root this plugin uses (wiringPi)[http://wiringpi.com]
+
+You must install wiringPi using:
+
 
 ```
-sudo su
-echo **XX** > /sys/class/gpio/export 
-echo out > /sys/class/gpio/gpio**XX**/direction
-echo **XX** > /sys/class/gpio/gpio11/value
+git clone git://git.drogon.net/wiringPi
+cd wiringPi
+git pull origin
+cd wiringPi
+./build
 
 ```
 
-Where XX is the pin on raspberry pi.
+If by any change the git page is offline you can follow *Plan B* on wiringPi website.
+
 
 ## Configuration
 

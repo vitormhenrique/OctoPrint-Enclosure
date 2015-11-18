@@ -25,9 +25,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		self.configureGPIO(self._settings.get_int(["lightPin"]))
 	
 	def configureGPIO(self, pin):
-		os.system("sudo echo "+str(pin)+" > /sys/class/gpio/export ")
-		os.system("sudo echo out > /sys/class/gpio/gpio"+str(pin)+"/direction")
-		os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(pin)+"/value")
+		os.system("gpio -g mode "+str(pin)+" out")
+		os.system("gpio -g write "+str(pin)+" 1")
 		
 	def startTimer(self):
 		self._checkTempTimer = RepeatedTimer(10, self.checkEnclosureTemp, None, None, True)
@@ -54,9 +53,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 	def heaterHandler(self):
 		command=""
 		if self.enclosureCurrentTemperature<float(self.enclosureSetTemperature) and self._settings.get_boolean(["heaterEnable"]):
-			command = "sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value"
+			os.system("gpio -g write "+str(self._settings.get_int(["heaterPin"]))+" 0")
 		else:
-			command = "sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["heaterPin"]))+"/value"
+			os.system("gpio -g write "+str(self._settings.get_int(["heaterPin"]))+" 1")
 		os.system(command)
 
 	#~~ StartupPlugin mixin
@@ -69,36 +68,32 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 	def setEnclosureTemperature(self):
 		self.enclosureSetTemperature = flask.request.values["enclosureSetTemp"]
 		self.heaterHandler()
-		return flask.jsonify(success=True)
+		return flask.jsonify(enclosureSetTemperature=self.enclosureSetTemperature,enclosureCurrentTemperature=self.enclosureCurrentTemperature)
 
 	@octoprint.plugin.BlueprintPlugin.route("/getEnclosureSetTemperature", methods=["GET"])
 	def getEnclosureSetTemperature(self):
-		self._logger.info("Enclosure set temperature requested")
 		return str(self.enclosureSetTemperature)
 
 	@octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
 	def getEnclosureTemperature(self):
-		self._logger.info("Enclosure temperature requested")
 		return str(self.enclosureCurrentTemperature)
 		
 	@octoprint.plugin.BlueprintPlugin.route("/handleFan", methods=["GET"])
 	def handleFan(self):
-		self._logger.info("Caiu no Fan")
 		if self._settings.get_boolean(["fanEnable"]):
-			self._logger.info("Fan: " + flask.request.values["status"])
 			if flask.request.values["status"] == "on":
-				os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+				os.system("gpio -g write "+str(self._settings.get_int(["fanPin"]))+" 0")
 			else:
-				os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+				os.system("gpio -g write "+str(self._settings.get_int(["fanPin"]))+" 1")
 		return flask.jsonify(success=True)
 		
 	@octoprint.plugin.BlueprintPlugin.route("/handleLight", methods=["GET"])
 	def handleLight(self):
 		if self._settings.get_boolean(["lightEnable"]):
 			if flask.request.values["status"] == "on":
-				os.system("sudo echo 0 > /sys/class/gpio/gpio"+str(self._settings.get_int(["lightPin"]))+"/value")
+				os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 0")
 			else:
-				os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["lightPin"]))+"/value")
+				os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 1")
 		return flask.jsonify(success=True)
 		
 	#~~ EventPlugin mixin
@@ -111,7 +106,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 			self.enclosureSetTemperature = 0
 			
 		if  self._settings.get(['fanEnable']):
-			os.system("sudo echo 1 > /sys/class/gpio/gpio"+str(self._settings.get_int(["fanPin"]))+"/value")
+			os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 1")
 			
 	#~~ SettingsPlugin mixin
 	def on_settings_save(self, data):
