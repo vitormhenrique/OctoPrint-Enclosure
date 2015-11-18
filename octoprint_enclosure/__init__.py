@@ -8,11 +8,11 @@ import os
 from subprocess import Popen, PIPE
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
-						octoprint.plugin.TemplatePlugin,
+			octoprint.plugin.TemplatePlugin,
                       	octoprint.plugin.SettingsPlugin,
                       	octoprint.plugin.AssetPlugin,
                         octoprint.plugin.BlueprintPlugin,
-						octoprint.plugin.EventHandlerPlugin):
+			octoprint.plugin.EventHandlerPlugin):
 
 
 	enclosureSetTemperature=0.0
@@ -134,8 +134,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 			dhtModel=22,
 			fanEnable=False,
 			lightEnable=False,
-			getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py",
-			getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py"
+			getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py",
+			getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py"
 		)
 		
 	#~~ TemplatePlugin
