@@ -23,6 +23,7 @@ or manually using this URL:
 
     https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip
 
+**Temperature Sensor**
 You need to install Adafruit library to use the temperature sensor on raspberry pi. 
 
 Open raspberry pi terminal and type:
@@ -50,7 +51,9 @@ chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetTemperature.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/SensorScript/GetHumidity.py
 ```
 
-To use raspberry pi GPIO without needing to run octoprint as root this plugin uses (wiringPi)[http://wiringpi.com]
+**wiringPi**
+
+To use raspberry pi GPIO without needing to run octoprint as root this plugin uses [wiringPi](http://wiringpi.com)
 
 You must install wiringPi using:
 
@@ -61,7 +64,6 @@ cd wiringPi
 git pull origin
 cd wiringPi
 ./build
-
 ```
 
 If by any change the git page is offline you can follow *Plan B* on wiringPi website.
