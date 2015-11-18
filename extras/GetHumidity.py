@@ -37,7 +37,7 @@ else:
 humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
 
 if humidity is not None:
-	print '{1:0.1f}'.format(humidity)
+	print '{0:0.1f}'.format(humidity)
 else:
 	print 'Failed'
 	sys.exit(1)
