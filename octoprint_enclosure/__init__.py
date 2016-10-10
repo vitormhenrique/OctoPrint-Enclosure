@@ -43,12 +43,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		else:
 			self.enclosureCurrentTemperature = float(sTemp)
 
-		stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
-		sTemp = stdout.read()
-		if sTemp.find("Failed") != -1:
-			self._logger.info("Failed to read Humidity")
-		else:
-			self.enclosureCurrentHumidity = float(sTemp)
+		if self._settings.get(["dhtModel"]) != 1820 or self._settings.get(["dhtModel"]) != '1820':
+			stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+			sHum = stdout.read()
+			if sHum.find("Failed") != -1:
+				self._logger.info("Failed to read Humidity")
+			else:
+				self.enclosureCurrentHumidity = float(sHum)
 
 		self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
 		self.heaterHandler()
