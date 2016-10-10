@@ -31,6 +31,9 @@ sensor_args = { '11': Adafruit_DHT.DHT11,
 if len(sys.argv) == 3 and sys.argv[1] in sensor_args:
 	sensor = sensor_args[sys.argv[1]]
 	pin = sys.argv[2]
+elif len(sys.argv) == 2 and sys.argv[1] == '1820'
+	print 'Failed'
+	sys.exit(1)
 else:
 	sys.exit(1)
 
