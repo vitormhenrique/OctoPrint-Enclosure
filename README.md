@@ -25,6 +25,10 @@ or manually using this URL:
 
 **Temperature Sensor**
 
+You can choose to use a DHT11, DHT22, AM2302 sensor or a DS18B20.
+
+For the DHT11, DHT22 and AM2302 follow this steps:
+
 You need to install Adafruit library to use the temperature sensor on raspberry pi. 
 
 Open raspberry pi terminal and type:
@@ -51,6 +55,18 @@ If you have octoprint installed on the default location type:
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py
 ```
+
+For the DS18B20 sensor you need to enable your raspberry pie to use one-wire. You also NEED to use pin #4 to connect this type of sensor. 
+
+Follow instructions on [website](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing?view=all) to connect and get the sensor working. 
+After that you will need to change on the plugin settings to use the GetTemperature1820.py script to read the temperature and configure the the sensor type that you are using on this case is 1820.  You also need to make the scripts executable:
+
+If you have octoprint installed on the default location type:
+```
+chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature1820.py
+```
+
+Note that DS18B20 sensors will not provide  information regarding humidity of the enclosure.
 
 **wiringPi**
 
