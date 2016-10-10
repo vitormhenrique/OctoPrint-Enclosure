@@ -33,7 +33,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 		self._checkTempTimer.start()
 
 	def checkEnclosureTemp(self):
-		stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+		if self._settings.get(["dhtModel"]) == 1820 or self._settings.get(["dhtModel"]) == '1820':
+			stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"])), shell=True, stdout=PIPE).stdout	
+		else
+			stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
 		sTemp = stdout.read()
 		if sTemp.find("Failed") != -1:
 			self._logger.info("Failed to read Temperature")
