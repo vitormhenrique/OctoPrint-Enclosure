@@ -42,6 +42,17 @@ sudo apt-get install build-essential python-dev python-openssl
 sudo python setup.py install
 ```
 
+Than you can manually copy the scripts on your octopi rpi: 
+```
+mkdir -p ~/.octoprint/plugins/OctoPrint-Enclosure/extras/
+cd ~/.octoprint/plugins/OctoPrint-Enclosure/extras/
+wget https://raw.githubusercontent.com/vitormhenrique/OctoPrint-Enclosure/master/extras/GetHumidity.py
+wget https://raw.githubusercontent.com/vitormhenrique/OctoPrint-Enclosure/master/extras/GetTemperature.py
+chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py
+chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py
+```
+
+
 More info on Adafruit [website](https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/software-install-updated)
 
 Note that sometimes you might see an error that the sensor can't be read even if you have your connections setup correctly. 
