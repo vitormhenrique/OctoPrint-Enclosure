@@ -75,7 +75,11 @@ Follow instructions on [website](https://learn.adafruit.com/adafruits-raspberry-
 After that you will need to change on the plugin settings to use the GetTemperature1820.py script to read the temperature and configure the the sensor type that you are using on this case is 1820.  You also need to make the scripts executable:
 
 If you have octoprint installed on the default location type:
+
 ```
+mkdir -p ~/.octoprint/plugins/OctoPrint-Enclosure/extras/
+cd ~/.octoprint/plugins/OctoPrint-Enclosure/extras/
+wget https://raw.githubusercontent.com/vitormhenrique/OctoPrint-Enclosure/master/extras/GetTemperature1820.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature1820.py
 ```
 
