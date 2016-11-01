@@ -52,20 +52,11 @@ chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py
 chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py
 ```
 
-
 More info on Adafruit [website](https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/software-install-updated)
 
 Note that sometimes you might see an error that the sensor can't be read even if you have your connections setup correctly. 
 This is a limitation of reading DHT sensors from Linux--there's no guarantee the program will be given enough priority and time by the Linux kernel to reliably read the sensor.
 This plugin will try to read enclosure temperature and humidity every 10 seconds, it will probably fail few times, but again, for the purpose this is ok.
-
-You also need to make the provided scripts to read temperature executable.
-
-If you have octoprint installed on the default location type:
-```
-chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py
-chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py
-```
 
 **For the DS18B20 sensor:**
 
