@@ -77,42 +77,13 @@ $(function() {
             }
             return "off";
         }
-		
-		self.turnFanOn = function(){
-            $.ajax({
-                    type: "GET",
-					dataType: "json",
-					data: {"status": "on"},
-                    url: "/plugin/enclosure/handleFan",
-                    async: false
-            });
-        }
 
-        self.turnFanOff = function(){
+        self.handleIO = function(pin, value){
             $.ajax({
                     type: "GET",
                     dataType: "json",
-                    data: {"status": "off"},
-                    url: "/plugin/enclosure/handleFan",
-                    async: false
-            });
-        }
-		
-		self.turnLightOn = function(){
-            $.ajax({
-                    type: "GET",
-					dataType: "json",
-					data: {"status":"on"},
-                    url: "/plugin/enclosure/handleLight",
-                    async: false
-            });
-        }
-        self.turnLightOff = function(){
-            $.ajax({
-                    type: "GET",
-                    dataType: "json",
-                    data: {"status":"off"},
-                    url: "/plugin/enclosure/handleLight",
+                    data: {"io": pin, "status": value},
+                    url: "/plugin/enclosure/handleIO",
                     async: false
             });
         }
