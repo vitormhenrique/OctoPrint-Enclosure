@@ -33,7 +33,7 @@
     </tr>
 </table>
 
-<p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p>
+<h4><p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p></h4>
 <button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'on')" class="btn">Turn on</button> 
 <button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'off'), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()"   class="btn">Turn off</button>
 
