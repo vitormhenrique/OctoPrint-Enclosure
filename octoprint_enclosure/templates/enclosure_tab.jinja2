@@ -32,9 +32,9 @@
         <th></th>
     </tr>
 </table>
-<h4  data-bind="html: io1Label "> </h4>
 
-<button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'on') , enable: settings.settings.plugins.enclosure.io1Enable && isConnected()" class="btn">Turn on</button> 
+<p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p>
+<button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'on')" class="btn">Turn on</button> 
 <button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'off'), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()"   class="btn">Turn off</button>
 
 

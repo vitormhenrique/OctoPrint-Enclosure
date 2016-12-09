@@ -79,6 +79,7 @@ $(function() {
         }
 
         self.handleIO = function(data, event){
+            alert(data.pin + " " + data.value);
             $.ajax({
                     type: "GET",
                     dataType: "json",
