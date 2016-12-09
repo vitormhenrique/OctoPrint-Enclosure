@@ -82,7 +82,7 @@ $(function() {
             $.ajax({
                     type: "GET",
                     dataType: "json",
-                    data: {"io": data[0], "status": data[1]},
+                    data: {"pin": data[0], "status": data[1]},
                     url: "/plugin/enclosure/handleIO",
                     async: false
             });

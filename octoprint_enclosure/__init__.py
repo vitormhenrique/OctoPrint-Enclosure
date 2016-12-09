@@ -96,10 +96,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def getEnclosureTemperature(self):
         return str(self.enclosureCurrentTemperature)
 
-    @octoprint.plugin.BlueprintPlugin.route("/handleIO", methods=["GET"])
-    def handleIO(self):
+    @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
+    def setIO(self):
         io = flask.request.values["pin"]
-        if flask.request.values["value"] == "on":
+        value = flask.request.values["status"]
+        if value == "on":
             os.system("gpio -g write "+str(self._settings.get_int([io]))+" 0")
         else:
             os.system("gpio -g write "+str(self._settings.get_int([io]))+" 1")
