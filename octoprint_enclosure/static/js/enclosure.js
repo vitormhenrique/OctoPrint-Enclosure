@@ -79,7 +79,7 @@ $(function() {
         }
 
         self.handleIO = function(data, event){
-            alert(data);
+            alert(data[1]);
             // $.ajax({
             //         type: "GET",
             //         dataType: "json",
