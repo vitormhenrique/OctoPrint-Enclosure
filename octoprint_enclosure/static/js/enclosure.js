@@ -78,11 +78,11 @@ $(function() {
             return "off";
         }
 
-        self.handleIO = function(pin, value){
+        self.handleIO = function(data, event){
             $.ajax({
                     type: "GET",
                     dataType: "json",
-                    data: {"io": pin, "status": value},
+                    data: {"io": data.pin, "status": data.value},
                     url: "/plugin/enclosure/handleIO",
                     async: false
             });
