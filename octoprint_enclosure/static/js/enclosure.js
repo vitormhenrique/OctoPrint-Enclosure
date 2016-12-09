@@ -79,14 +79,13 @@ $(function() {
         }
 
         self.handleIO = function(data, event){
-            alert(data[1]);
-            // $.ajax({
-            //         type: "GET",
-            //         dataType: "json",
-            //         data: {"io": data.pin, "status": data.value},
-            //         url: "/plugin/enclosure/handleIO",
-            //         async: false
-            // });
+            $.ajax({
+                    type: "GET",
+                    dataType: "json",
+                    data: {"io": data[0], "status": data[1]},
+                    url: "/plugin/enclosure/handleIO",
+                    async: false
+            });
         }
     }
 

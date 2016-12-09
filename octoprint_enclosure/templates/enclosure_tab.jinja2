@@ -34,8 +34,13 @@
 </table>
 
 <h4><p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'on'])" class="btn">Turn on</button> 
-<button type="submit" data-bind="click: handleIO.bind($data, 'io1', 'off'), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()"   class="btn">Turn off</button>
+<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'on']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()" class="btn">Turn on</button> 
+
+<h4><p data-bind="html: settings.settings.plugins.enclosure.io2Label"></p></h4>
+
+<h4><p data-bind="html: settings.settings.plugins.enclosure.io3Label"></p></h4>
+
+<h4><p data-bind="html: settings.settings.plugins.enclosure.io4Label"></p></h4>
 
 
 
