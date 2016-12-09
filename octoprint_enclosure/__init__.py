@@ -21,8 +21,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     
     def startGPIO(self):
         self.configureGPIO(self._settings.get_int(["heaterPin"]))
-        self.configureGPIO(self._settings.get_int(["fanPin"]))
-        self.configureGPIO(self._settings.get_int(["lightPin"]))
+        self.configureGPIO(self._settings.get_int(["io1"]))
+        self.configureGPIO(self._settings.get_int(["io2"]))
+        self.configureGPIO(self._settings.get_int(["io3"]))
+        self.configureGPIO(self._settings.get_int(["io4"]))
     
     def configureGPIO(self, pin):
         os.system("gpio -g mode "+str(pin)+" out")
@@ -93,23 +95,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
     def getEnclosureTemperature(self):
         return str(self.enclosureCurrentTemperature)
-        
-    @octoprint.plugin.BlueprintPlugin.route("/handleFan", methods=["GET"])
-    def handleFan(self):
-        if self._settings.get_boolean(["fanEnable"]):
-            if flask.request.values["status"] == "on":
-                os.system("gpio -g write "+str(self._settings.get_int(["fanPin"]))+" 0")
-            else:
-                os.system("gpio -g write "+str(self._settings.get_int(["fanPin"]))+" 1")
-        return flask.jsonify(success=True)
-        
-    @octoprint.plugin.BlueprintPlugin.route("/handleLight", methods=["GET"])
-    def handleLight(self):
-        if self._settings.get_boolean(["lightEnable"]):
-            if flask.request.values["status"] == "on":
-                os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 0")
-            else:
-                os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 1")
+
+    @octoprint.plugin.BlueprintPlugin.route("/handleIO", methods=["GET"])
+    def handleIO(self):
+        io = flask.request.values["pin"]
+        if flask.request.values["value"] == "on":
+            os.system("gpio -g write "+str(self._settings.get_int([io]))+" 0")
+        else:
+            os.system("gpio -g write "+str(self._settings.get_int([io]))+" 1")
         return flask.jsonify(success=True)
         
     #~~ EventPlugin mixin
@@ -120,36 +113,53 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         
         if  self._settings.get(['heaterEnable']):
             self.enclosureSetTemperature = 0
-            
-        if  self._settings.get(['fanEnable']):
-            os.system("gpio -g write "+str(self._settings.get_int(["lightPin"]))+" 1")
-            
+                     
     #~~ SettingsPlugin mixin
     def on_settings_save(self, data):
         old_heaterPin = self._settings.get_int(["heaterPin"])
         old_dhtPin = self._settings.get_int(["dhtPin"])
-        old_fanPin = self._settings.get_int(["fanPin"])
+        old_io1 = self._settings.get_int(["io1"])
+        old_io2 = self._settings.get_int(["io2"])
+        old_io3 = self._settings.get_int(["io3"])
+        old_io4 = self._settings.get_int(["io4"])
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
         new_heaterPin = self._settings.get_int(["heaterPin"])
         new_dhtPin = self._settings.get_int(["dhtPin"])
-        new_fanPin = self._settings.get_int(["fanPin"])
+        new_io1 = self._settings.get_int(["io1"])
+        new_io2 = self._settings.get_int(["io2"])
+        new_io3 = self._settings.get_int(["io3"])
+        new_io4 = self._settings.get_int(["io4"])
         if new_heaterPin != old_heaterPin:
             self.configureGPIO(new_heaterPin)
         if old_dhtPin != new_dhtPin:
             self.configureGPIO(new_dhtPin)
-        if old_fanPin != new_fanPin:
-            self.configureGPIO(new_fanPin)
+        if old_io1 != new_io1:
+            self.configureGPIO(new_io1)
+        if old_io2 != new_io2:
+            self.configureGPIO(new_io2)
+        if old_io3 != new_io3:
+            self.configureGPIO(new_io3)
+        if old_io4 != new_io4:
+            self.configureGPIO(new_io4)
 
     def get_settings_defaults(self):
         return dict(
             heaterEnable=False,
             heaterPin=18,
-            fanPin=23,
-            lightPin=15,
+            io1=17,
+            io2=18,
+            io3=21,
+            io4=22,
             dhtPin=4,
             dhtModel=22,
-            fanEnable=False,
-            lightEnable=False,
+            io1Enable=False,
+            io2Enable=False,
+            io3Enable=False,
+            io4Enable=False,
+            io1Label="IO1",
+            io2Label="IO2",
+            io3Label="IO3",
+            io4Label="IO4",
             getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py",
             getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py"
         )
