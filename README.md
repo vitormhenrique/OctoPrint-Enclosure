@@ -76,31 +76,24 @@ chmod +x ~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature1820.py
 
 Note that DS18B20 sensors will not provide  information regarding humidity of the enclosure.
 
-**wiringPi**
+**Filament sensor:**
 
-To use raspberry pi GPIO without needing to run octoprint as root this plugin uses [wiringPi](http://wiringpi.com)
+You have the hability to add a filament sensor to the enclosure, it will automatically pause the print if you run out of filament, I can be any type of filament that gives a signal normally open, and it should connect to ground (active low) when detected the end of filament. I'm using the following sensor:
 
-You must install wiringPi using:
+http://www.thingiverse.com/thing:1698397
 
+**GPIO**
 
-```
-git clone git://git.drogon.net/wiringPi
-cd wiringPi
-git pull origin
-cd wiringPi
-./build
-```
-
-If by any change the git page is offline you can follow *Plan B* on wiringPi website.
-
+This release uses RPi.GPIO to control IO of raspberry pi, it should install and work automatically. If it doesn't please update your octoprint with the latest release of octopi.
 
 ## Configuration
 
 Default plugin configuration uses:
 Pin 4 connected to Temperature Sensor
-Pin 14 connected to the relay that controls the fan
-Pin 15 connected to the relay that controls the light
-Pin 18 connected to the relay that controls the heater
+Pin 23 connected to the relay that controls the fan
+Pin 18 connected to the relay that controls the light
+Pin 17 connected to the relay that controls the heater
+Pin 24 connected to the fillament sensor
 
 Those settings are configurable, as well the location of the python scripts to read temperature and humidity.
 

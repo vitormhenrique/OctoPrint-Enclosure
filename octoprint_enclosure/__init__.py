@@ -122,18 +122,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.heater.write(False)
 
     def startFilamentDetection(self):
-        if not GPIO.input(self.PIN_FILAMENT):
+        if not GPIO.input(self.filamentSensor.pinNumber):
             self._logger.info("Started printing with no filament.")
             self._printer.toggle_pause_print()
-        else:
-            try:
-                GPIO.remove_event_detect(self.filamentSensor.pinNumber)
-            except:
-                pass
-            if self.self.filamentSensor.pinNumber != -1:
-                GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
+        try:
+            GPIO.remove_event_detect(self.filamentSensor.pinNumber)
+        except:
+            pass
+        if self.filamentSensor.pinNumber != -1:
+            self._logger.info("Started filament detection.")
+            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
 
-    def handleFilamentDetection(self):
+    def handleFilamentDetection(self,channel):
         if self._printer.is_printing():
             self._logger.info("Detected end of filament.")
             self._printer.toggle_pause_print()
@@ -203,12 +203,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     #~~ SettingsPlugin mixin
     def on_settings_save(self, data):
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self.io1.configureGPIO()
-        self.io2.configureGPIO()
-        self.io3.configureGPIO()
-        self.io4.configureGPIO()
-        self.heater.configureGPIO()
-        self.filamentSensor.configureGPIO()
+        self.startGPIO()
 
     def get_settings_defaults(self):
         return dict(
@@ -217,8 +212,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             heaterActiveLow=True,
             dhtPin=4,
             filamentSensorPin=24,
-            filamentSensorEnable=False,
-            dhtModel=22,
+            filamentSensorEnable=True,
+            dhtModel=2302,
             io1Pin=18,
             io2Pin=23,
             io3Pin=22,
