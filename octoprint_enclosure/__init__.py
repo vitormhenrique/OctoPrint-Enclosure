@@ -115,20 +115,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def heaterHandler(self):
         if self.enclosureCurrentTemperature<float(self.enclosureSetTemperature) and self.heater.enable:
+            self._logger.info("Turning heater on.")
             self.heater.write(True)
         else:
+            self._logger.info("Turning heater off.")
             self.heater.write(False)
 
     def startFilamentDetection(self):
-        try:
-            GPIO.remove_event_detect(self.filamentSensor.pinNumber)
-        except:
-            pass
-        if self.self.filamentSensor.pinNumber != -1:
-            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
+        if not GPIO.input(self.PIN_FILAMENT):
+            self._logger.info("Started printing with no filament.")
+            self._printer.toggle_pause_print()
+        else:
+            try:
+                GPIO.remove_event_detect(self.filamentSensor.pinNumber)
+            except:
+                pass
+            if self.self.filamentSensor.pinNumber != -1:
+                GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
 
     def handleFilamentDetection(self):
         if self._printer.is_printing():
+            self._logger.info("Detected end of filament.")
             self._printer.toggle_pause_print()
 
     def stopFilamentDetection(self):
