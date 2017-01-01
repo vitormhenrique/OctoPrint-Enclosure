@@ -82,7 +82,7 @@ $(function() {
             $.ajax({
                     type: "GET",
                     dataType: "json",
-                    data: {"pin": data[0], "status": data[1]},
+                    data: {"io": data[0], "status": data[1]},
                     url: "/plugin/enclosure/setIO",
                     async: false
             });

@@ -13,6 +13,11 @@
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterPin">
         </div>
     </div>
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterActiveLow">  {{ _('Heater Active Low') }}
+        </label>
+    </div>
 </form>
 
 
@@ -31,13 +36,13 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtModel">
         </div>
     </div>
-	    <div class="control-group">
+        <div class="control-group">
         <label class="control-label" for="settings-enclosure-getTempScript">{{ _('Get Temperature Script') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getTempScript">
         </div>
     </div>
-	    <div class="control-group">
+        <div class="control-group">
         <label class="control-label" for="settings-enclosure-getHumiScript">{{ _('Get Humidity Script') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getHumiScript">
@@ -61,7 +66,21 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <label class="control-label" for="settings-enclosure-io1">{{ _('IO 1 Number') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1Pin">
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1ActiveLow">  {{ _('Active Low') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1AutoShutDown">  {{ _('Auto Shutdown') }}
+            </label>
+        </div>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1TimeDelay">
         </div>
     </div>
 </form>
@@ -82,7 +101,21 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <label class="control-label" for="settings-enclosure-io2">{{ _('IO 2 Number') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2Pin">
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2ActiveLow">  {{ _('Active Low') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2AutoShutDown">  {{ _('Auto Shutdown') }}
+            </label>
+        </div>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2TimeDelay">
         </div>
     </div>
 </form>
@@ -103,7 +136,21 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <label class="control-label" for="settings-enclosure-io3">{{ _('IO 3 Number') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3Pin">
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3ActiveLow">  {{ _('Active Low') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3AutoShutDown">  {{ _('Auto Shutdown') }}
+            </label>
+        </div>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3TimeDelay">
         </div>
     </div>
 </form>
@@ -124,7 +171,39 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <label class="control-label" for="settings-enclosure-io4">{{ _('IO 4 Number') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4Pin">
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4ActiveLow">  {{ _('Active Low') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4AutoShutDown">  {{ _('Auto Shutdown') }}
+            </label>
+        </div>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4TimeDelay">
+        </div>
+    </div>
+</form>
+
+
+<h4>{{ _('Filament Sensor') }}</h4>
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorEnable">  {{ _('Enable Filament Sensor') }}
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Sensor Pin') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.filamentSensorPin">
         </div>
     </div>
 </form>
