@@ -76,7 +76,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.filamentSensor.configureGPIO()
 
     def startTimer(self):
-        self._checkTempTimer = RepeatedTimer(15, self.checkEnclosureTemp, None, None, True)
+        self._checkTempTimer = RepeatedTimer(8, self.checkEnclosureTemp, None, None, True)
         self._checkTempTimer.start()
 
     def toFloat(self, value):
