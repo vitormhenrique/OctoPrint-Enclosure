@@ -11,6 +11,8 @@ import sched
 import time
 import os
 
+scheduler = sched.scheduler(time.time, time.sleep)
+
 class EnclosureGPIO():
     def __init__(self, pinNumber, label, activeLow, enable, autoShutDown,isOutput,timeDelay):
         self.pinNumber = pinNumber
@@ -36,7 +38,6 @@ class EnclosureGPIO():
 
         GPIO.output(self.pinNumber, active)
 
-
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             octoprint.plugin.TemplatePlugin,
             octoprint.plugin.SettingsPlugin,
@@ -47,7 +48,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     enclosureSetTemperature=0.0
     enclosureCurrentTemperature=0.0
     enclosureCurrentHumidity=0.0
-    scheduler = sched.scheduler(time.time, time.sleep)
     def startGPIO(self):
         GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
@@ -76,7 +76,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.filamentSensor.configureGPIO()
 
     def startTimer(self):
-        self._checkTempTimer = RepeatedTimer(8, self.checkEnclosureTemp, None, None, True)
+        self._checkTempTimer = RepeatedTimer(10, self.checkEnclosureTemp, None, None, True)
         self._checkTempTimer.start()
 
     def toFloat(self, value):
@@ -131,10 +131,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pass
         if self.filamentSensor.pinNumber != -1:
             self._logger.info("Started filament detection.")
-            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
+            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=300) 
 
     def handleFilamentDetection(self,channel):
-        if self._printer.is_printing():
+        if not GPIO.input(self.filamentSensor.pinNumber) and self._printer.is_printing():
             self._logger.info("Detected end of filament.")
             self._printer.toggle_pause_print()
 
@@ -192,13 +192,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self.enclosureSetTemperature = 0
 
             if self.io1.autoShutDown:
-                self.scheduler.enter(self.io1.timeDelay, 1, self.write, (False,))
+                scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (False,))
             if self.io2.autoShutDown:
-                self.scheduler.enter(self.io2.timeDelay, 1, self.write, (False,))
+                scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (False,))
             if self.io3.autoShutDown:
-                self.scheduler.enter(self.io3.timeDelay, 1, self.write, (False,))
+                scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (False,))
             if self.io4.autoShutDown:
-                self.scheduler.enter(self.io4.timeDelay, 1, self.write, (False,))
+                scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (False,))
+            scheduler.run()
+
 
     #~~ SettingsPlugin mixin
     def on_settings_save(self, data):
