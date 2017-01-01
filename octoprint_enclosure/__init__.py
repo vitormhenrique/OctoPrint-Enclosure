@@ -125,7 +125,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         except:
             pass
         if self.self.filamentSensor.pinNumber != -1:
-            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=self.BOUNCE) 
+            GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=200) 
 
     def handleFilamentDetection(self):
         if self._printer.is_printing():
@@ -210,9 +210,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             heaterActiveLow=True,
             dhtPin=4,
             filamentSensorPin=24,
-            filamentSensorEnable=True,
+            filamentSensorEnable=False,
             dhtModel=22,
-            io1Pin=17,
+            io1Pin=18,
             io2Pin=23,
             io3Pin=22,
             io4Pin=27,
