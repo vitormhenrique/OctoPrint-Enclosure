@@ -78,7 +78,7 @@ Note that DS18B20 sensors will not provide  information regarding humidity of th
 
 **Filament sensor:**
 
-You have the hability to add a filament sensor to the enclosure, it will automatically pause the print if you run out of filament, I can be any type of filament that gives a signal normally open, and it should connect to ground (active low) when detected the end of filament. I'm using the following sensor:
+You have the hability to add a filament sensor to the enclosure, it will automatically pause the print if you run out of filament, I can be any type of filament sensor, the sensor should connect to ground if is set as an "active low" when the fillament run out or 3.3v if the sensor is set as "active high" when detected the end of filament, it does not matter if it is normally open or closed, that will only interfere on your wiring. I'm using the following sensor:
 
 http://www.thingiverse.com/thing:1698397
 
