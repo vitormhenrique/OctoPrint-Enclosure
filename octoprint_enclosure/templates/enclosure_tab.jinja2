@@ -11,7 +11,8 @@
         <td style="vertical-align: middle; overflow: visible">
             <div class="input-append">
             <input type="text" class="input-mini text-right tempInput" id="enclosureSetTemp" data-bind="attr: {placeholder: cleanTemperature(requestEnclosureSetTemperature())}">
-            <span class="add-on">&deg;C</span>
+            <span class="add-on" data-bind="visible: settings.settings.plugins.enclosure.useCelsius">&deg;C</span>
+            <span class="add-on" data-bind="visible: settings.settings.plugins.enclosure.useFahrenheit">&deg;F</span>
                 <div class="btn-group">
                     <button type="submit" data-bind="click: setTemperature, enable: settings.settings.plugins.enclosure.heaterEnable && isConnected()" class="btn">{{ _('Set') }}</button>
                     <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: settings.settings.plugins.enclosure.heaterEnable && isConnected()">
@@ -35,33 +36,24 @@
 
 <div data-bind="visible: settings.settings.plugins.enclosure.io1Enable">
 <h4><p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'on']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()" class="btn">Turn on</button> 
+<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'on']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()" class="btn">Turn on</button>
 <button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'off']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()"   class="btn">Turn off</button>
 </div>
 
 <div data-bind="visible: settings.settings.plugins.enclosure.io2Enable">
 <h4><p data-bind="html: settings.settings.plugins.enclosure.io2Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io2', 'on']), enable: settings.settings.plugins.enclosure.io2Enable && isConnected()" class="btn">Turn on</button> 
+<button type="submit" data-bind="click: handleIO.bind($data, ['io2', 'on']), enable: settings.settings.plugins.enclosure.io2Enable && isConnected()" class="btn">Turn on</button>
 <button type="submit" data-bind="click: handleIO.bind($data, ['io2', 'off']), enable: settings.settings.plugins.enclosure.io2Enable && isConnected()"   class="btn">Turn off</button>
 </div>
 
 <div data-bind="visible: settings.settings.plugins.enclosure.io3Enable">
 <h4><p data-bind="html: settings.settings.plugins.enclosure.io3Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io3', 'on']), enable: settings.settings.plugins.enclosure.io3Enable && isConnected()" class="btn">Turn on</button> 
+<button type="submit" data-bind="click: handleIO.bind($data, ['io3', 'on']), enable: settings.settings.plugins.enclosure.io3Enable && isConnected()" class="btn">Turn on</button>
 <button type="submit" data-bind="click: handleIO.bind($data, ['io3', 'off']), enable: settings.settings.plugins.enclosure.io3Enable && isConnected()"   class="btn">Turn off</button>
 </div>
 
 <div data-bind="visible: settings.settings.plugins.enclosure.io4Enable">
 <h4><p data-bind="html: settings.settings.plugins.enclosure.io4Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io4', 'on']), enable: settings.settings.plugins.enclosure.io4Enable && isConnected()" class="btn">Turn on</button> 
+<button type="submit" data-bind="click: handleIO.bind($data, ['io4', 'on']), enable: settings.settings.plugins.enclosure.io4Enable && isConnected()" class="btn">Turn on</button>
 <button type="submit" data-bind="click: handleIO.bind($data, ['io4', 'off']), enable: settings.settings.plugins.enclosure.io4Enable && isConnected()"   class="btn">Turn off</button>
 </div>
-
-
-
-
-
-   
-
-
-

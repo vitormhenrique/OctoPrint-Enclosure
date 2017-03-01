@@ -48,6 +48,11 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getHumiScript">
         </div>
     </div>
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useFahrenheit">  {{ _('Use Fahrenheit Unit') }}
+        </label>
+    </div>
 </form>
 
 <h4>{{ _('IO 1') }}</h4>
@@ -75,10 +80,15 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <div class="controls">
             <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1AutoStartup">  {{ _('Auto Startup') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1TimeDelay">
         </div>
@@ -110,10 +120,15 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <div class="controls">
             <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2AutoStartup">  {{ _('Auto Startup') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2TimeDelay">
         </div>
@@ -145,10 +160,15 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <div class="controls">
             <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3AutoStartup">  {{ _('Auto Startup') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3TimeDelay">
         </div>
@@ -180,10 +200,15 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         </div>
         <div class="controls">
             <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4AutoStartup">  {{ _('Auto Startup') }}
+            </label>
+        </div>
+        <div class="controls">
+            <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4TimeDelay">
         </div>
@@ -204,6 +229,29 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
         <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Sensor Pin') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.filamentSensorPin">
+        </div>
+    </div>
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorActiveLow">  {{ _('Active Low') }}
+        </label>
+    </div>
+</form>
+
+<h4>{{ _('Debug / Other') }}</h4>
+<form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.debug">  {{ _('Enable debug info') }}
+            </label>
+        </div>
+    </div>
+    <div class="control-group">
+        <div class="controls">
+            <label class="checkbox">
+                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useBoardPinNumber">  {{ _('Use Board Pin #') }}
+            </label>
         </div>
     </div>
 </form>
