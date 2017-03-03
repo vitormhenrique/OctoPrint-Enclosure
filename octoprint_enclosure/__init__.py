@@ -165,7 +165,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handleFilamentDetection(self,channel):
         if self._printer.is_printing():
-            if  ~(self._settings.get(["filamentSensorActiveLow"]) ^ (not GPIO.input(self.filamentSensor.pinNumber))):
+            if  self._settings.get(["filamentSensorActiveLow"]) and (not GPIO.input(self.filamentSensor.pinNumber)):
+                self._logger.info("Detected end of filament.")
+                self._printer.toggle_pause_print()
+            elif (not self._settings.get(["filamentSensorActiveLow"])) and GPIO.input(self.filamentSensor.pinNumber):
                 self._logger.info("Detected end of filament.")
                 self._printer.toggle_pause_print()
 
