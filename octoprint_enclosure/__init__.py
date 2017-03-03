@@ -221,13 +221,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if self.filamentSensor.enable:
                 self.startFilamentDetection()
 
-            if self.io1.autoStartup:
+            if self.io1.autoStartup and self.io1.enable:
                 scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (True,))
-            if self.io2.autoStartup:
+            if self.io2.autoStartup and self.io2.enable:
                 scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (True,))
-            if self.io3.autoStartup:
+            if self.io3.autoStartup and self.io3.enable:
                 scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (True,))
-            if self.io4.autoStartup:
+            if self.io4.autoStartup and self.io4.enable:
                 scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (True,))
 
         elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
@@ -237,13 +237,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if  self.heater.enable:
                     self.enclosureSetTemperature = 0
 
-            if self.io1.autoShutDown:
+            if self.io1.autoShutDown and self.io1.enable:
                 scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (False,))
-            if self.io2.autoShutDown:
+            if self.io2.autoShutDown and self.io2.enable::
                 scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (False,))
-            if self.io3.autoShutDown:
+            if self.io3.autoShutDown and self.io3.enable::
                 scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (False,))
-            if self.io4.autoShutDown:
+            if self.io4.autoShutDown and self.io4.enable::
                 scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (False,))
             scheduler.run()
 
