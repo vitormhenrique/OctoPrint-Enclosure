@@ -242,11 +242,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
             if self.io1.autoShutDown and self.io1.enable:
                 scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (False,))
-            if self.io2.autoShutDown and self.io2.enable::
+            if self.io2.autoShutDown and self.io2.enable:
                 scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (False,))
-            if self.io3.autoShutDown and self.io3.enable::
+            if self.io3.autoShutDown and self.io3.enable:
                 scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (False,))
-            if self.io4.autoShutDown and self.io4.enable::
+            if self.io4.autoShutDown and self.io4.enable:
                 scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (False,))
             scheduler.run()
 
