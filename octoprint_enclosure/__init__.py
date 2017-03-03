@@ -24,16 +24,17 @@ class EnclosureGPIO():
         self.timeDelay = timeDelay
 
     def configureGPIO(self):
-        if self.isOutput:
-            if self.activeLow: #if is active low, we start disabelling it by making it high!
-                GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.HIGH)
+        if self.enable:
+            if self.isOutput:
+                if self.activeLow: #if is active low, we start disabelling it by making it high!
+                    GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.HIGH)
+                else:
+                    GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.LOW)
             else:
-                GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.LOW)
-        else:
-            if self.activeLow:
-                GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-            else:
-                GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+                if self.activeLow:
+                    GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                else:
+                    GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     def write(self,active):
         if self.activeLow:
