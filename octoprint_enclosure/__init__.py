@@ -85,14 +85,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.filamentSensor = EnclosureGPIO(self._settings.get_int(["filamentSensorPin"]),"filamentSensor",self._settings.get(["filamentSensorActiveLow"]),
                                 self._settings.get(["filamentSensorEnable"]),False,False,0,False)
 
-
         self.io1.configureGPIO()
         self.io2.configureGPIO()
         self.io3.configureGPIO()
         self.io4.configureGPIO()
         self.heater.configureGPIO()
         self.filamentSensor.configureGPIO()
-        
+
         self._settings.set(["useCelsius"],not self._settings.get(["useFahrenheit"]))
 
     def startTimer(self):
@@ -107,46 +106,46 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             return 0
 
     def checkEnclosureTemp(self):
-        if self._settings.get(["dhtModel"]) == 1820 or self._settings.get(["dhtModel"]) == '1820':
-            stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"])), shell=True, stdout=PIPE).stdout
-        else:
-            stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
-        sTemp = stdout.read()
-        if self._settings.get(["debug"]) == True and self._settings.get(["heaterEnable"]) == True:
-            self._logger.info("DEBUG -> Reading temperature stdout: %s",stdout)
-        sTemp.replace(" ", "")
-        fTemp = self.toFloat(sTemp)
-        if sTemp.find("Failed") != -1 or fTemp == 0:
-            if self._settings.get(["heaterEnable"]) == True:
+        if self._settings.get(["temperatureReadingEnable"]):
+            if self._settings.get(["dhtModel"]) == 1820 or self._settings.get(["dhtModel"]) == '1820':
+                stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"])), shell=True, stdout=PIPE).stdout
+            else:
+                stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+            sTemp = stdout.read()
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Reading temperature stdout: %s",stdout)
+            sTemp.replace(" ", "")
+            fTemp = self.toFloat(sTemp)
+            if sTemp.find("Failed") != -1 or fTemp == 0:
                 self._logger.info("Failed to read Temperature")
-        else:
-            self.enclosureCurrentTemperature = fTemp*1.8 + 32 if self._settings.get(["useFahrenheit"]) else fTemp
+            else:
+                self.enclosureCurrentTemperature = fTemp*1.8 + 32 if self._settings.get(["useFahrenheit"]) else fTemp
 
-        if self._settings.get(["dhtModel"]) != '1820':
-            stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
-            sHum = stdout.read()
-        if self._settings.get(["debug"]) == True and self._settings.get(["heaterEnable"]) == True:
-            self._logger.info("DEBUG -> Reading humidity stdout: %s",stdout)
+            if self._settings.get(["dhtModel"]) != '1820':
+                stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+                sHum = stdout.read()
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Reading humidity stdout: %s",stdout)
             sHum.replace(" ", "")
             fHum = self.toFloat(sHum)
             if sHum.find("Failed") != -1 or fHum == 0:
-                if self._settings.get(["heaterEnable"]) == True:
-                    self._logger.info("Failed to read Humidity")
+                self._logger.info("Failed to read Humidity")
             else:
                 self.enclosureCurrentHumidity = fHum
-        self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
-        self.heaterHandler()
+            self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
+            self.heaterHandler()
 
     def heaterHandler(self):
-        self.currrentHeaterStatus = self.enclosureCurrentTemperature<float(self.enclosureSetTemperature)
-        if self.currentHeaterStatus != self.previousHeaterStatus:
-            if self.currentHeaterStatus and self.heater.enable:
-                self._logger.info("Turning heater on.")
-                self.heater.write(True)
-            else:
-                self._logger.info("Turning heater off.")
-                self.heater.write(False)
-        self.previousHeaterStatus = self.currentHeaterStatus
+        if self._settings.get(["heaterEnable"]):
+            self.currrentHeaterStatus = self.enclosureCurrentTemperature<float(self.enclosureSetTemperature)
+            if self.currentHeaterStatus != self.previousHeaterStatus:
+                if self.currentHeaterStatus and self.heater.enable:
+                    self._logger.info("Turning heater on.")
+                    self.heater.write(True)
+                else:
+                    self._logger.info("Turning heater off.")
+                    self.heater.write(False)
+            self.previousHeaterStatus = self.currentHeaterStatus
 
     def startFilamentDetection(self):
         if not GPIO.input(self.filamentSensor.pinNumber):
@@ -165,12 +164,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handleFilamentDetection(self,channel):
         if self._printer.is_printing():
-            if  self._settings.get(["filamentSensorActiveLow"]) and (not GPIO.input(self.filamentSensor.pinNumber)):
+            #if  self._settings.get(["filamentSensorActiveLow"]) and (not GPIO.input(self.filamentSensor.pinNumber)):
+            if  self._settings.get(["filamentSensorActiveLow"]) ^ GPIO.input(self.filamentSensor.pinNumber):
                 self._logger.info("Detected end of filament.")
-                self._printer.toggle_pause_print()
-            elif (not self._settings.get(["filamentSensorActiveLow"])) and GPIO.input(self.filamentSensor.pinNumber):
-                self._logger.info("Detected end of filament.")
-                self._printer.toggle_pause_print()
+                for line in filamentSensorGcode.split(';'):
+                    if line:
+                        self._printer.commands(line.strip().capitalize())
+                        self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
+
 
     def stopFilamentDetection(self):
         try:
@@ -232,13 +233,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (True,))
             if self.io4.autoStartup and self.io4.enable:
                 scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (True,))
+            scheduler.run()
 
         elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
             if self.filamentSensor.enable:
                 self.stopFilamentDetection()
 
             if  self.heater.enable:
-                    self.enclosureSetTemperature = 0
+                self.enclosureSetTemperature = 0
 
             if self.io1.autoShutDown and self.io1.enable:
                 scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (False,))
@@ -258,6 +260,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def get_settings_defaults(self):
         return dict(
             debug=False,
+            temperatureReadingEnable=False,
             heaterEnable=False,
             heaterPin=17,
             heaterActiveLow=True,
@@ -268,6 +271,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             filamentSensorPin=24,
             filamentSensorEnable=True,
             filamentSensorActiveLow=True,
+            filamentSensorGcode="M600;",
             dhtModel=2302,
             io1Pin=18,
             io2Pin=23,

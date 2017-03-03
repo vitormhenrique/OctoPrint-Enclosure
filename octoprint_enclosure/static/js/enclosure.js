@@ -9,8 +9,8 @@ $(function() {
         self.enclosureSetTemperature = ko.observable();
         self.enclosureHumidity = ko.observable();
 
-        self.onBeforeBinding = function () {
-            
+        self.onStartupComplete = function () {
+          correctCheckBoxStatus();
         };
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
@@ -90,7 +90,7 @@ $(function() {
     }
 
     ADDITIONAL_VIEWMODELS.push([
-        EnclosureViewModel, 
+        EnclosureViewModel,
         ["settingsViewModel","connectionViewModel"],
         [document.getElementById("tab_plugin_enclosure")]
     ]);
@@ -100,3 +100,11 @@ function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+function correctCheckBoxStatus() {
+  if($('#enableTemperatureReading').is(':checked')){
+    $('#enableHeater').prop('disabled', false);
+  }else{
+    $('#enableHeater').prop('disabled', true);
+    $('#enableHeater').prop('checked', false);
+  }
+}
