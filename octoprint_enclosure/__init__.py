@@ -212,6 +212,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     #~~ EventPlugin mixin
     def on_event(self, event, payload):
+
+        if event == Events.PRINT_RESUMED:
+            if self.filamentSensor.enable:
+                self.startFilamentDetection()
+
         if event == Events.PRINT_STARTED:
             if self.filamentSensor.enable:
                 self.startFilamentDetection()
