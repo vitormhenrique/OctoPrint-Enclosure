@@ -55,8 +55,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     enclosureCurrentHumidity=0.0
     def startGPIO(self):
         if self._settings.get(["useBoardPinNumber"]):
+            GPIO.cleanup()
             GPIO.setmode(GPIO.BOARD)
         else:
+            GPIO.cleanup()
             GPIO.setmode(GPIO.BCM)
         GPIO.setwarnings(False)
 
@@ -109,24 +111,26 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         else:
             stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
         sTemp = stdout.read()
-        if self._settings.get(["debug"]) == True:
+        if self._settings.get(["debug"]) == True and self._settings.get(["heaterEnable"]) == True:
             self._logger.info("DEBUG -> Reading temperature stdout: %s",stdout)
         sTemp.replace(" ", "")
         fTemp = self.toFloat(sTemp)
         if sTemp.find("Failed") != -1 or fTemp == 0:
-            self._logger.info("Failed to read Temperature")
+            if self._settings.get(["heaterEnable"]) == True:
+                self._logger.info("Failed to read Temperature")
         else:
             self.enclosureCurrentTemperature = fTemp*1.8 + 32 if self._settings.get(["useFahrenheit"]) else fTemp
 
         if self._settings.get(["dhtModel"]) != '1820':
             stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
             sHum = stdout.read()
-        if self._settings.get(["debug"]) == True:
+        if self._settings.get(["debug"]) == True and self._settings.get(["heaterEnable"]) == True:
             self._logger.info("DEBUG -> Reading humidity stdout: %s",stdout)
             sHum.replace(" ", "")
             fHum = self.toFloat(sHum)
             if sHum.find("Failed") != -1 or fHum == 0:
-                self._logger.info("Failed to read Humidity")
+                if self._settings.get(["heaterEnable"]) == True:
+                    self._logger.info("Failed to read Humidity")
             else:
                 self.enclosureCurrentHumidity = fHum
         self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
