@@ -167,7 +167,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             #if  self._settings.get(["filamentSensorActiveLow"]) and (not GPIO.input(self.filamentSensor.pinNumber)):
             if  self._settings.get(["filamentSensorActiveLow"]) ^ GPIO.input(self.filamentSensor.pinNumber):
                 self._logger.info("Detected end of filament.")
-                for line in filamentSensorGcode.split(';'):
+                for line in self._settings.get(["filamentSensorGcode"]).split(';'):
                     if line:
                         self._printer.commands(line.strip().capitalize())
                         self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
