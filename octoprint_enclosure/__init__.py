@@ -24,17 +24,21 @@ class EnclosureGPIO():
         self.timeDelay = timeDelay
 
     def configureGPIO(self):
-        if self.enable:
-            if self.isOutput:
-                if self.activeLow: #if is active low, we start disabelling it by making it high!
-                    GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.HIGH)
+        try:
+            if self.enable:
+                if self.isOutput:
+                    if self.activeLow: #if is active low, we start disabelling it by making it high!
+                        GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.HIGH)
+                    else:
+                        GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.LOW)
                 else:
-                    GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.LOW)
-            else:
-                if self.activeLow:
-                    GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-                else:
-                    GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+                    if self.activeLow:
+                        GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                    else:
+                        GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        except:
+            self._logger.info("Error while configuring GPIO: %s",self.pinNumber)
+            pass
 
     def write(self,active):
         if self.activeLow:
@@ -164,14 +168,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handleFilamentDetection(self,channel):
         if self._printer.is_printing():
-            #if  self._settings.get(["filamentSensorActiveLow"]) and (not GPIO.input(self.filamentSensor.pinNumber)):
-            if  self._settings.get(["filamentSensorActiveLow"]) ^ GPIO.input(self.filamentSensor.pinNumber):
+            activeLow = self._settings.get(["filamentSensorActiveLow"])
+            gpioStatus = GPIO.input(self.filamentSensor.pinNumber)
+
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Filament detection active low: %s gpio status: %s",activeLow,gpioStatus)
+            if  activeLow ^ gpioStatus:
                 self._logger.info("Detected end of filament.")
                 for line in self._settings.get(["filamentSensorGcode"]).split(';'):
                     if line:
                         self._printer.commands(line.strip().capitalize())
                         self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
-
 
     def stopFilamentDetection(self):
         try:
