@@ -13,7 +13,7 @@ import os
 scheduler = sched.scheduler(time.time, time.sleep)
 
 class EnclosureGPIO():
-    def __init__(self, pinNumber, label, activeLow, enable, autoShutDown,isOutput,timeDelay,autoStartup):
+    def __init__(self, pinNumber, label, activeLow, enable,autoStartup, autoShutDown,isOutput,timeDelay,timeOffDelay):
         self.pinNumber = pinNumber
         self.label = label
         self.activeLow = activeLow
@@ -22,6 +22,7 @@ class EnclosureGPIO():
         self.autoStartup = autoStartup
         self.isOutput = isOutput
         self.timeDelay = timeDelay
+        self.timeOffDelay = timeOffDelay
 
     def configureGPIO(self):
         try:
@@ -58,6 +59,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     enclosureSetTemperature=0.0
     enclosureCurrentTemperature=0.0
     enclosureCurrentHumidity=0.0
+    lastFilamentEndDetected=0
     def startGPIO(self):
         if self._settings.get(["useBoardPinNumber"]):
             GPIO.cleanup()
@@ -68,26 +70,31 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         GPIO.setwarnings(False)
 
         self.io1 = EnclosureGPIO(self._settings.get_int(["io1Pin"]),self._settings.get(["io1Label"]),self._settings.get(["io1ActiveLow"]),
-                                 self._settings.get(["io1Enable"]),self._settings.get(["io1AutoShutDown"]),True,self._settings.get(["io1TimeDelay"]),
-                                 self._settings.get(["io1AutoStartup"]))
+                                self._settings.get(["io1Enable"]),self._settings.get(["io1AutoStartup"]),
+                                self._settings.get(["io1AutoShutDown"]),True,self._settings.get(["io1TimeDelay"]),
+                                self._settings.get(["io1OffTimeDelay"]))
 
         self.io2 = EnclosureGPIO(self._settings.get_int(["io2Pin"]),self._settings.get(["io2Label"]),self._settings.get(["io2ActiveLow"]),
-                                 self._settings.get(["io2Enable"]),self._settings.get(["io2AutoShutDown"]),True,self._settings.get(["io2TimeDelay"]),
-                                 self._settings.get(["io2AutoStartup"]))
+                                self._settings.get(["io2Enable"]),self._settings.get(["io2AutoStartup"]),
+                                self._settings.get(["io2AutoShutDown"]),True,self._settings.get(["io2TimeDelay"]),
+                                self._settings.get(["io2OffTimeDelay"]))
 
         self.io3 = EnclosureGPIO(self._settings.get_int(["io3Pin"]),self._settings.get(["io3Label"]),self._settings.get(["io3ActiveLow"]),
-                                 self._settings.get(["io3Enable"]),self._settings.get(["io3AutoShutDown"]),True,self._settings.get(["io3TimeDelay"]),
-                                 self._settings.get(["io3AutoStartup"]))
+                                self._settings.get(["io3Enable"]),self._settings.get(["io3AutoStartup"]),
+                                self._settings.get(["io3AutoShutDown"]),True,self._settings.get(["io3TimeDelay"]),
+                                self._settings.get(["io3OffTimeDelay"]))
 
         self.io4 = EnclosureGPIO(self._settings.get_int(["io4Pin"]),self._settings.get(["io4Label"]),self._settings.get(["io4ActiveLow"]),
-                                 self._settings.get(["io4Enable"]),self._settings.get(["io4AutoShutDown"]),True,self._settings.get(["io4TimeDelay"]),
-                                 self._settings.get(["io4AutoStartup"]))
+                                self._settings.get(["io4Enable"]),self._settings.get(["io4AutoStartup"]),
+                                self._settings.get(["io4AutoShutDown"]),True,self._settings.get(["io4TimeDelay"]),
+                                self._settings.get(["io4OffTimeDelay"]))
 
         self.heater = EnclosureGPIO(self._settings.get_int(["heaterPin"]),"heater",self._settings.get(["heaterActiveLow"]),
-                                self._settings.get(["heaterEnable"]),True,True,0,False)
+                                self._settings.get(["heaterEnable"]),False,True,True,0,0)
 
-        self.filamentSensor = EnclosureGPIO(self._settings.get_int(["filamentSensorPin"]),"filamentSensor",self._settings.get(["filamentSensorActiveLow"]),
-                                self._settings.get(["filamentSensorEnable"]),False,False,0,False)
+        self.filamentSensor = EnclosureGPIO(self._settings.get_int(["filamentSensorPin"]),"filamentSensor",
+                                self._settings.get(["filamentSensorActiveLow"]),self._settings.get(["filamentSensorEnable"]),
+                                False,False,False,0,0)
 
         self.io1.configureGPIO()
         self.io2.configureGPIO()
@@ -174,11 +181,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if self._settings.get(["debug"]) == True:
                 self._logger.info("DEBUG -> Filament detection active low: %s gpio status: %s",activeLow,gpioStatus)
             if  activeLow ^ gpioStatus:
-                self._logger.info("Detected end of filament.")
-                for line in self._settings.get(["filamentSensorGcode"]).split(';'):
-                    if line:
-                        self._printer.commands(line.strip().capitalize())
-                        self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
+                if time.time() - lastFilamentEndDetected >  self._settings.get(["filamentSensorTimeout"]):
+                    self._logger.info("Detected end of filament.")
+                    lastFilamentEndDetected = time.time()
+                    for line in self._settings.get(["filamentSensorGcode"]).split(';'):
+                        if line:
+                            self._printer.commands(line.strip().capitalize())
+                            self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
+                else:
+                    self._logger.info("Prevented end of filament detection, filament sensor timeout not elapsed.")
 
     def stopFilamentDetection(self):
         try:
@@ -250,13 +261,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self.enclosureSetTemperature = 0
 
             if self.io1.autoShutDown and self.io1.enable:
-                scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (False,))
+                scheduler.enter(self.toFloat(self.io1.timeOffDelay), 1, self.io1.write, (False,))
             if self.io2.autoShutDown and self.io2.enable:
-                scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (False,))
+                scheduler.enter(self.toFloat(self.io2.timeOffDelay), 1, self.io2.write, (False,))
             if self.io3.autoShutDown and self.io3.enable:
-                scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (False,))
+                scheduler.enter(self.toFloat(self.io3.timeOffDelay), 1, self.io3.write, (False,))
             if self.io4.autoShutDown and self.io4.enable:
-                scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (False,))
+                scheduler.enter(self.toFloat(self.io4.timeOffDelay), 1, self.io4.write, (False,))
             scheduler.run()
 
     #~~ SettingsPlugin mixin
@@ -279,6 +290,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             filamentSensorEnable=True,
             filamentSensorActiveLow=True,
             filamentSensorGcode="M600;",
+            filamentSensorTimeout=120,
             dhtModel=2302,
             io1Pin=18,
             io2Pin=23,
@@ -308,6 +320,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             io2TimeDelay=0,
             io3TimeDelay=0,
             io4TimeDelay=0,
+            io1OffTimeDelay=0,
+            io2OffTimeDelay=0,
+            io3OffTimeDelay=0,
+            io4OffTimeDelay=0,
             getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py",
             getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py"
         )

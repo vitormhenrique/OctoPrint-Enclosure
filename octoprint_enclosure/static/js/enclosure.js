@@ -10,7 +10,7 @@ $(function() {
         self.enclosureHumidity = ko.observable();
 
         self.onStartupComplete = function () {
-          correctCheckBoxStatus();
+          fixUI();
         };
 
         self.onDataUpdaterPluginMessage = function(plugin, data) {
@@ -100,11 +100,49 @@ function isNumeric(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function correctCheckBoxStatus() {
+function fixUI() {
   if($('#enableTemperatureReading').is(':checked')){
     $('#enableHeater').prop('disabled', false);
+    $('#temperature_reading_content').show("blind");
   }else{
     $('#enableHeater').prop('disabled', true);
     $('#enableHeater').prop('checked', false);
+    $('#temperature_reading_content').hide("blind");
+  }
+
+  if($('#enableHeater').is(':checked')){
+    $('#heater_content').show("blind");
+  }else{
+    $('#heater_content').hide("blind");
+  }
+
+  if($('#io1_enabled').is(':checked')){
+    $('#io1_content').show("blind");
+  }else{
+    $('#io1_content').hide("blind");
+  }
+
+  if($('#io2_enabled').is(':checked')){
+    $('#io2_content').show("blind");
+  }else{
+    $('#io2_content').hide("blind");
+  }
+
+  if($('#io3_enabled').is(':checked')){
+    $('#io3_content').show("blind");
+  }else{
+    $('#io3_content').hide("blind");
+  }
+
+  if($('#io4_enabled').is(':checked')){
+    $('#io4_content').show("blind");
+  }else{
+    $('#io4_content').hide("blind");
+  }
+
+  if($('#filament_sensor_enable').is(':checked')){
+    $('#filament_sensor_content').show("blind");
+  }else{
+    $('#filament_sensor_content').hide("blind");
   }
 }
