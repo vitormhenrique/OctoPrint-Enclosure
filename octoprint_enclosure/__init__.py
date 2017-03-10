@@ -44,7 +44,6 @@ class EnclosureGPIO():
     def write(self,active):
         if self.activeLow:
             active = not active
-
         GPIO.output(self.pinNumber, active)
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
@@ -148,7 +147,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def heaterHandler(self):
         if self._settings.get(["heaterEnable"]):
-            self.currrentHeaterStatus = self.enclosureCurrentTemperature<float(self.enclosureSetTemperature)
+            self.currentHeaterStatus = self.enclosureCurrentTemperature<float(self.enclosureSetTemperature)
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Current heater status: %s previous heater status %s",self.currentHeaterStatus,self.previousHeaterStatus)
             if self.currentHeaterStatus != self.previousHeaterStatus:
                 if self.currentHeaterStatus and self.heater.enable:
                     self._logger.info("Turning heater on.")
@@ -156,7 +157,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 else:
                     self._logger.info("Turning heater off.")
                     self.heater.write(False)
-            self.previousHeaterStatus = self.currentHeaterStatus
+                self.previousHeaterStatus = self.currentHeaterStatus
 
     def startFilamentDetection(self):
         if not GPIO.input(self.filamentSensor.pinNumber):
@@ -205,6 +206,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTemperature", methods=["GET"])
     def setEnclosureTemperature(self):
         self.enclosureSetTemperature = flask.request.values["enclosureSetTemp"]
+        if self._settings.get(["debug"]) == True:
+            self._logger.info("DEBUG -> Seting enclosure temperature: %s",self.enclosureSetTemperature)
         self.heaterHandler()
         return flask.jsonify(enclosureSetTemperature=self.enclosureSetTemperature,enclosureCurrentTemperature=self.enclosureCurrentTemperature)
 
