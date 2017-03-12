@@ -1,39 +1,45 @@
 <form class="form-horizontal" id="enclosure_settings_temperature">
 <h4>{{ _('Temperature Sensor') }}</h4>
-Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS18B20 1-wire temperature sensor
     <div class="controls">
       <label class="checkbox">
-          <input id="enableTemperatureReading" type="checkbox" onclick="correctCheckBoxStatus()" data-bind="checked: settings.plugins.enclosure.temperatureReadingEnable">  {{ _('Temperature Reading') }}
+          <input id="enableTemperatureReading" type="checkbox" onclick="fixUI()" data-bind="checked: settings.plugins.enclosure.temperatureReadingEnable">  {{ _('Temperature Reading') }}
       </label>
     </div>
-    <div class="control-group">
-        <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtPin">
-        </div>
-    </div>
-    <div class="control-group">
-        <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtModel">
-        </div>
-    </div>
-        <div class="control-group">
-        <label class="control-label" for="settings-enclosure-getTempScript">{{ _('Get Temperature Script') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getTempScript">
-        </div>
-    </div>
-        <div class="control-group">
-        <label class="control-label" for="settings-enclosure-getHumiScript">{{ _('Get Humidity Script') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getHumiScript">
-        </div>
-    </div>
-    <div class="controls">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useFahrenheit">  {{ _('Use Fahrenheit Unit') }}
-        </label>
+    <div  id="temperature_reading_content">
+      <div class="control-group">
+          <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtPin">
+              <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 only works on pin 4</span>
+          </div>
+      </div>
+      <div class="control-group">
+          <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.dhtModel">
+              <span class="help-inline">Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS18B20 1-wire temperature sensor</span>
+          </div>
+      </div>
+          <div class="control-group">
+          <label class="control-label" for="settings-enclosure-getTempScript">{{ _('Get Temperature Script') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getTempScript">
+              <span class="help-inline">Location of script that reads temperature</span>
+          </div>
+      </div>
+          <div class="control-group">
+          <label class="control-label" for="settings-enclosure-getHumiScript">{{ _('Get Humidity Script') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.getHumiScript">
+              <span class="help-inline">Location of script that reads humidity</span>
+          </div>
+      </div>
+      <div class="controls">
+          <label class="checkbox">
+              <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useFahrenheit">  {{ _('Use Fahrenheit Unit') }}
+          </label>
+          <span class="help-inline">Choose if you want to work with Celsius or Fahrenheit</span>
+      </div>
     </div>
 </form>
 
@@ -42,20 +48,24 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input id="enableHeater" type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterEnable">  {{ _('Enable Heater') }}
+                <input id="enableHeater" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterEnable">  {{ _('Enable Heater') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
-        <label class="control-label" for="settings-enclosure-heaterpin">{{ _('Heater Pin') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterPin">
-        </div>
-    </div>
-    <div class="controls">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterActiveLow">  {{ _('Heater Active Low') }}
-        </label>
+    <div  id="heater_content">
+      <div class="control-group">
+          <label class="control-label" for="settings-enclosure-heaterpin">{{ _('Heater Pin') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.heaterPin">
+              <span class="help-inline">GPIO pin used to control Heater. You can not use GPIO 4 here</span>
+          </div>
+      </div>
+      <div class="controls">
+          <label class="checkbox">
+              <input type="checkbox" data-bind="checked: settings.plugins.enclosure.heaterActiveLow">  {{ _('Heater Active Low') }}
+          </label>
+          <span class="help-inline">Active low means that the heater will turn on when receive a low signal (groud) from Raspbery PI</span>
+      </div>
     </div>
 </form>
 
@@ -64,38 +74,63 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1Enable">  {{ _('Enable IO 1') }}
+                <input id="io1_enabled" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.io1Enable">  {{ _('Enable IO 1') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" id="io1_content">
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io1">{{ _('IO 1 Label') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1Label">
+            <span class="help-inline">Name displayed on Enclosure Tab</span>
         </div>
+      </div>
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io1">{{ _('IO 1 Number') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1Pin">
+            <span class="help-inline">GPIO number that will be controlled. You can not use GPIO 4 here</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1ActiveLow">  {{ _('Active Low') }}
             </label>
+            <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (groud) from Raspbery PI</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1AutoStartup">  {{ _('Auto Startup') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
         </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Startup Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1TimeDelay">
+            <span class="help-inline">Time delay to turn on GPIO when print starts</span>
+        </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io1AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Shutdown Delay (Seconds)') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1TimeDelay">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io1OffTimeDelay">
+            <span class="help-inline">Time delay to turn off GPIO when print finishes</span>
         </div>
+      </div>
     </div>
 </form>
 
@@ -104,78 +139,129 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2Enable">  {{ _('Enable IO 2') }}
+                <input id="io2_enabled" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.io2Enable">  {{ _('Enable IO 2') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" id="io2_content">
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io2">{{ _('IO 2 Label') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2Label">
+            <span class="help-inline">Name displayed on Enclosure Tab</span>
         </div>
+      </div>
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io2">{{ _('IO 2 Number') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2Pin">
+            <span class="help-inline">GPIO number that will be controlled. You can not use GPIO 4 here</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2ActiveLow">  {{ _('Active Low') }}
             </label>
+            <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (groud) from Raspbery PI</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2AutoStartup">  {{ _('Auto Startup') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
         </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io2">{{ _('Startup Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2TimeDelay">
+            <span class="help-inline">Time delay to turn on GPIO when print starts</span>
+        </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io2AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io2">{{ _('Shutdown Delay (Seconds)') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2TimeDelay">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io2OffTimeDelay">
+            <span class="help-inline">Time delay to turn off GPIO when print finishes</span>
         </div>
+      </div>
     </div>
 </form>
+
 
 <h4>{{ _('IO 3') }}</h4>
 <form class="form-horizontal">
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3Enable">  {{ _('Enable IO 3') }}
+                <input id="io3_enabled" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.io3Enable">  {{ _('Enable IO 3') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" id="io3_content">
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io3">{{ _('IO 3 Label') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3Label">
+            <span class="help-inline">Name displayed on Enclosure Tab</span>
         </div>
+      </div>
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io3">{{ _('IO 3 Number') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3Pin">
+            <span class="help-inline">GPIO number that will be controlled. You can not use GPIO 4 here</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3ActiveLow">  {{ _('Active Low') }}
             </label>
+            <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (groud) from Raspbery PI</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3AutoStartup">  {{ _('Auto Startup') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
         </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io3">{{ _('Startup Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3TimeDelay">
+            <span class="help-inline">Time delay to turn on GPIO when print starts</span>
+        </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io3AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io3">{{ _('Shutdown Delay (Seconds)') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3TimeDelay">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io3OffTimeDelay">
+            <span class="help-inline">Time delay to turn off GPIO when print finishes</span>
         </div>
+      </div>
     </div>
 </form>
 
@@ -184,84 +270,128 @@ Available options are: 11 for DHT11; 22 for DHT22; 2302 for AM2302; 1820 for DS1
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4Enable">  {{ _('Enable IO 4') }}
+                <input id="io4_enabled" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.io4Enable">  {{ _('Enable IO 4') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
+    <div class="control-group" id="io4_content">
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io4">{{ _('IO 4 Label') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4Label">
+            <span class="help-inline">Name displayed on Enclosure Tab</span>
         </div>
+      </div>
+      <div class="control-group">
         <label class="control-label" for="settings-enclosure-io4">{{ _('IO 4 Number') }}</label>
         <div class="controls">
             <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4Pin">
+            <span class="help-inline">GPIO number that will be controlled. You can not use GPIO 4 here</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4ActiveLow">  {{ _('Active Low') }}
             </label>
+            <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (groud) from Raspbery PI</span>
         </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4AutoStartup">  {{ _('Auto Startup') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
         </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io4">{{ _('Startup Delay (Seconds)') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4TimeDelay">
+            <span class="help-inline">Time delay to turn on GPIO when print starts</span>
+        </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
             <label class="checkbox">
                 <input type="checkbox" data-bind="checked: settings.plugins.enclosure.io4AutoShutDown">  {{ _('Auto Shutdown') }}
             </label>
+            <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
         </div>
-        <label class="control-label" for="settings-enclosure-io1">{{ _('Delay (Seconds)') }}</label>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io4">{{ _('Shutdown Delay (Seconds)') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4TimeDelay">
+            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.io4OffTimeDelay">
+            <span class="help-inline">Time delay to turn off GPIO when print finishes</span>
         </div>
+      </div>
     </div>
 </form>
-
 
 <h4>{{ _('Filament Sensor') }}</h4>
 <form class="form-horizontal">
     <div class="control-group">
         <div class="controls">
             <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorEnable">  {{ _('Enable Filament Sensor') }}
+                <input id="filament_sensor_enable" onclick="fixUI()" type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorEnable">  {{ _('Enable Filament Sensor') }}
             </label>
         </div>
     </div>
-    <div class="control-group">
-        <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Sensor Pin') }}</label>
-        <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.filamentSensorPin">
-        </div>
-    </div>
-    <div class="controls">
-        <label class="checkbox">
-            <input type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorActiveLow">  {{ _('Active Low') }}
-        </label>
-    </div>
-    <div class="control-group">
-      <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Filament Change Gcode') }}</label>
+    <div id="filament_sensor_content">
+      <div class="control-group">
+          <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Sensor Pin') }}</label>
+          <div class="controls">
+              <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.filamentSensorPin">
+              <span class="help-inline">GPIO number that will be used to sense end of filament. You can not use GPIO 4 here</span>
+          </div>
+      </div>
       <div class="controls">
-         <textarea rows="4" class="block" data-bind="value: settings.plugins.enclosure.filamentSensorGcode"></textarea>
+          <label class="checkbox">
+              <input type="checkbox" data-bind="checked: settings.plugins.enclosure.filamentSensorActiveLow">  {{ _('Active Low') }}
+          </label>
+          <span class="help-inline">Active low means that end of the filament was detected when receive a low signal (groud) from filament sensor</span>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Filament Change Gcode') }}</label>
+        <div class="controls">
+           <textarea rows="4" class="block" data-bind="value: settings.plugins.enclosure.filamentSensorGcode"></textarea>
+           <span class="help-inline">GCODE that will be sent to the printer to pause and allow filament to be changed.
+             You should add <code>;</code> on the end of every line sent to the printer</span>
+        </div>
       </div>
     </div>
 </form>
 
-<h4>{{ _('Debug / Other') }}</h4>
-<form class="form-horizontal">
-    <div class="control-group">
-        <div class="controls">
-            <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.debug">  {{ _('Enable debug info') }}
-            </label>
-        </div>
-    </div>
-    <div class="control-group">
-        <div class="controls">
-            <label class="checkbox">
-                <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useBoardPinNumber">  {{ _('Use Board Pin #') }}
-            </label>
-        </div>
-    </div>
-</form>
+
+<a class="accordion-toggle collapsed" data-toggle="collapse" data-target="#advanced_enclosure">
+    <h4>{{ _('Advanced') }}</h4>
+</a>
+
+<div id="advanced_enclosure" class="accordion-body collapse">
+  <form class="form-horizontal">
+      <div class="control-group">
+          <div class="controls">
+              <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: settings.plugins.enclosure.debug">  {{ _('Enable debug info') }}
+              </label>
+              <span class="help-inline">Log adcitional information on octoprint log to help trouble shoot the plugin</span>
+          </div>
+      </div>
+      <div class="control-group">
+          <div class="controls">
+              <label class="checkbox">
+                  <input type="checkbox" data-bind="checked: settings.plugins.enclosure.useBoardPinNumber">  {{ _('Use Board Pin #') }}
+              </label>
+              <span class="help-inline">Use BOARD pin numbers instead of BCM pin numbers</span>
+          </div>
+      </div>
+      <label class="control-label" for="settings-enclosure-io1">{{ _('Filament Detection Timeout') }}</label>
+      <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: settings.plugins.enclosure.filamentSensorTimeout">
+          <span class="help-inline">Time that filament sensor will be inactive after sensing end of filament. This is to avoid sending multiple M600
+            commands to the printer.</span>
+      </div>
+  </form>
+</div>
