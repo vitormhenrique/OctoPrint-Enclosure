@@ -2,19 +2,17 @@
 
 This plugin is intended to control your printer enclosure using raspberry pi GPIO (At the moment this plugin only support raspberry pi).
 
-You can control lights, fans and heaters of your enclosure. To use the heater you need to have a temperature sensor added to your enclosure connected to your raspberry pi.
+You can control lights, fans and heaters of your enclosure. You can schedulle GPIOs to turn on and off after the print start or finish, so you can even switch your printer off after the print is complete. To use the heater you need to have a temperature sensor added to your enclosure connected to your raspberry pi. This plugin can support DHT11, DHT22, AM2302 and DS18B20 temperature sensors.
 
-This plugin can support DHT11, DHT22 and AM2302. They are not *very* accurate but work for the purpose.
+You can relays or mosfets connected to the raspberry pi to control heaters, fans, lights or anything else. 
 
-I used relays connected to the raspberry pi to control my heaters, fan and lights.
-
-For heating my enclosure I got a $15 [lasko](http://www.amazon.com/gp/product/B003XDTWN2?psc=1&redirect=true&ref_=oh_aui_search_detailpage) inside my encosure. I opened it and added a relay to the mains wire.
+For heating my enclosure I got a $15 [lasko](http://www.amazon.com/gp/product/B003XDTWN2?psc=1&redirect=true&ref_=oh_aui_search_detailpage) inside my encosure. I opened it and added a relay to the mains wire.  If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx). The PowerSwitch Tail II is fully enclosed, making it a lot safer.
 
 **CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK**
 
 **CAUTION 2: THIS HEATER IS NOT INTENDED TO FUNCTION THIS WAY AND IT MIGHT BE A FIRE HAZARD. DO IT AT YOUR OWN RISK**
 
-The relays module that I used can be found [here](http://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In orther to not fry your r-pi connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
+The relays module that I used can be found [here](http://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In orther to not fry your r-pi pay attention on your wiring connection: connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
 
 ## Setup
 
