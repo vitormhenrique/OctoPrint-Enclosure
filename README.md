@@ -4,7 +4,7 @@ This plugin is intended to control your printer enclosure using raspberry pi GPI
 
 You can control lights, fans and heaters of your enclosure. You can schedulle GPIOs to turn on and off after the print start or finish, so you can even switch your printer off after the print is complete. To use the heater you need to have a temperature sensor added to your enclosure connected to your raspberry pi. This plugin can support DHT11, DHT22, AM2302 and DS18B20 temperature sensors.
 
-You can relays or mosfets connected to the raspberry pi to control heaters, fans, lights or anything else. 
+You can use relays or mosfets connected to the raspberry pi to control heaters, fans, lights or anything else. 
 
 For heating my enclosure I got a $15 [lasko](http://www.amazon.com/gp/product/B003XDTWN2?psc=1&redirect=true&ref_=oh_aui_search_detailpage) inside my encosure. I opened it and added a relay to the mains wire.  If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx). The PowerSwitch Tail II is fully enclosed, making it a lot safer.
 
@@ -58,7 +58,7 @@ This plugin will try to read enclosure temperature and humidity every 10 seconds
 
 **For the DS18B20 sensor:**
 
-You need to enable your raspberry pie to use one-wire. You also NEED to use pin #4 to connect this type of sensor. 
+You need to enable your raspberry pi to use one-wire. You also NEED to use pin #4 to connect this type of sensor. 
 
 Follow instructions on [website](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing?view=all) to connect and get the sensor working. 
 After that you will need to change on the plugin settings to use the GetTemperature1820.py script to read the temperature and configure the the sensor type that you are using on this case is 1820.  You also need to make the scripts executable:
