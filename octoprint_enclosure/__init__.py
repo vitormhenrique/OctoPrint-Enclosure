@@ -8,11 +8,43 @@ import RPi.GPIO as GPIO
 import flask
 import sched
 import time
-import sys
-import glob
 import os
 
 scheduler = sched.scheduler(time.time, time.sleep)
+
+class EnclosureGPIO():
+    def __init__(self, pinNumber, label, activeLow, enable,autoStartup, autoShutDown,isOutput,timeDelay,timeOffDelay):
+        self.pinNumber = pinNumber
+        self.label = label
+        self.activeLow = activeLow
+        self.enable = enable
+        self.autoShutDown = autoShutDown
+        self.autoStartup = autoStartup
+        self.isOutput = isOutput
+        self.timeDelay = timeDelay
+        self.timeOffDelay = timeOffDelay
+
+    def configureGPIO(self):
+        try:
+            if self.enable:
+                if self.isOutput:
+                    if self.activeLow: #if is active low, we start disabelling it by making it high!
+                        GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.HIGH)
+                    else:
+                        GPIO.setup(self.pinNumber, GPIO.OUT, initial=GPIO.LOW)
+                else:
+                    if self.activeLow:
+                        GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+                    else:
+                        GPIO.setup(self.pinNumber, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+        except:
+            self._logger.info("Error while configuring GPIO: %s",self.pinNumber)
+            pass
+
+    def write(self,active):
+        if self.activeLow:
+            active = not active
+        GPIO.output(self.pinNumber, active)
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             octoprint.plugin.TemplatePlugin,
@@ -21,16 +53,56 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             octoprint.plugin.BlueprintPlugin,
             octoprint.plugin.EventHandlerPlugin):
 
-    previousTempControlStatus = False
-    currentTempControlStatus = False
+    previousHeaterStatus = False
+    currentHeaterStatus = False
     enclosureSetTemperature=0.0
     enclosureCurrentTemperature=0.0
     enclosureCurrentHumidity=0.0
     lastFilamentEndDetected=0
-    temperature_reading = []
-    temperature_control = []
-    rpi_outputs = []
-    rpi_inputs = []
+    def startGPIO(self):
+        if self._settings.get(["useBoardPinNumber"]):
+            GPIO.cleanup()
+            GPIO.setmode(GPIO.BOARD)
+        else:
+            GPIO.cleanup()
+            GPIO.setmode(GPIO.BCM)
+        GPIO.setwarnings(False)
+
+        self.io1 = EnclosureGPIO(self._settings.get_int(["io1Pin"]),self._settings.get(["io1Label"]),self._settings.get(["io1ActiveLow"]),
+                                self._settings.get(["io1Enable"]),self._settings.get(["io1AutoStartup"]),
+                                self._settings.get(["io1AutoShutDown"]),True,self._settings.get(["io1TimeDelay"]),
+                                self._settings.get(["io1OffTimeDelay"]))
+
+        self.io2 = EnclosureGPIO(self._settings.get_int(["io2Pin"]),self._settings.get(["io2Label"]),self._settings.get(["io2ActiveLow"]),
+                                self._settings.get(["io2Enable"]),self._settings.get(["io2AutoStartup"]),
+                                self._settings.get(["io2AutoShutDown"]),True,self._settings.get(["io2TimeDelay"]),
+                                self._settings.get(["io2OffTimeDelay"]))
+
+        self.io3 = EnclosureGPIO(self._settings.get_int(["io3Pin"]),self._settings.get(["io3Label"]),self._settings.get(["io3ActiveLow"]),
+                                self._settings.get(["io3Enable"]),self._settings.get(["io3AutoStartup"]),
+                                self._settings.get(["io3AutoShutDown"]),True,self._settings.get(["io3TimeDelay"]),
+                                self._settings.get(["io3OffTimeDelay"]))
+
+        self.io4 = EnclosureGPIO(self._settings.get_int(["io4Pin"]),self._settings.get(["io4Label"]),self._settings.get(["io4ActiveLow"]),
+                                self._settings.get(["io4Enable"]),self._settings.get(["io4AutoStartup"]),
+                                self._settings.get(["io4AutoShutDown"]),True,self._settings.get(["io4TimeDelay"]),
+                                self._settings.get(["io4OffTimeDelay"]))
+
+        self.heater = EnclosureGPIO(self._settings.get_int(["heaterPin"]),"heater",self._settings.get(["heaterActiveLow"]),
+                                self._settings.get(["heaterEnable"]),False,True,True,0,0)
+
+        self.filamentSensor = EnclosureGPIO(self._settings.get_int(["filamentSensorPin"]),"filamentSensor",
+                                self._settings.get(["filamentSensorActiveLow"]),self._settings.get(["filamentSensorEnable"]),
+                                False,False,False,0,0)
+
+        self.io1.configureGPIO()
+        self.io2.configureGPIO()
+        self.io3.configureGPIO()
+        self.io4.configureGPIO()
+        self.heater.configureGPIO()
+        self.filamentSensor.configureGPIO()
+
+        self._settings.set(["useCelsius"],not self._settings.get(["useFahrenheit"]))
 
     def startTimer(self):
         self._checkTempTimer = RepeatedTimer(10, self.checkEnclosureTemp, None, None, True)
@@ -43,46 +115,105 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         except:
             return 0
 
-    def toInt(self, value):
+    def checkEnclosureTemp(self):
+        if self._settings.get(["temperatureReadingEnable"]):
+            if self._settings.get(["dhtModel"]) == 1820 or self._settings.get(["dhtModel"]) == '1820':
+                stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"])), shell=True, stdout=PIPE).stdout
+            else:
+                stdout = Popen("sudo "+self._settings.get(["getTempScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+            sTemp = stdout.read()
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Reading temperature stdout: %s",stdout)
+            sTemp.replace(" ", "")
+            fTemp = self.toFloat(sTemp)
+            if sTemp.find("Failed") != -1 or fTemp == 0:
+                self._logger.info("Failed to read Temperature")
+            else:
+                self.enclosureCurrentTemperature = fTemp*1.8 + 32 if self._settings.get(["useFahrenheit"]) else fTemp
+
+            if self._settings.get(["dhtModel"]) != '1820':
+                stdout = Popen("sudo "+self._settings.get(["getHumiScript"])+" "+str(self._settings.get(["dhtModel"]))+" "+str(self._settings.get(["dhtPin"])), shell=True, stdout=PIPE).stdout
+                sHum = stdout.read()
+                if self._settings.get(["debug"]) == True:
+                    self._logger.info("DEBUG -> Reading humidity stdout: %s",stdout)
+                sHum.replace(" ", "")
+                fHum = self.toFloat(sHum)
+                if sHum.find("Failed") != -1 or fHum == 0:
+                    self._logger.info("Failed to read Humidity")
+                else:
+                    self.enclosureCurrentHumidity = fHum
+            self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
+            self.heaterHandler()
+
+    def heaterHandler(self):
+        if self._settings.get(["heaterEnable"]):
+            self.currentHeaterStatus = self.enclosureCurrentTemperature<float(self.enclosureSetTemperature)
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Current heater status: %s previous heater status %s",self.currentHeaterStatus,self.previousHeaterStatus)
+            if self.currentHeaterStatus != self.previousHeaterStatus:
+                if self.currentHeaterStatus and self.heater.enable:
+                    self._logger.info("Turning heater on.")
+                    self.heater.write(True)
+                else:
+                    self._logger.info("Turning heater off.")
+                    self.heater.write(False)
+                self.previousHeaterStatus = self.currentHeaterStatus
+
+    def startFilamentDetection(self):
+        if not GPIO.input(self.filamentSensor.pinNumber):
+            self._logger.info("Started printing with no filament.")
+            self._printer.toggle_pause_print()
         try:
-            val = int(value)
-            return val
+            GPIO.remove_event_detect(self.filamentSensor.pinNumber)
         except:
-            return 0
+            pass
+        if self.filamentSensor.pinNumber != -1:
+            self._logger.info("Started filament detection.")
+            if self._settings.get(["filamentSensorActiveLow"]):
+                GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.FALLING, callback=self.handleFilamentDetection, bouncetime=300)
+            else:
+                GPIO.add_event_detect(self.filamentSensor.pinNumber, GPIO.RISING, callback=self.handleFilamentDetection, bouncetime=300)
+
+    def handleFilamentDetection(self,channel):
+        if self._printer.is_printing():
+            activeLow = self._settings.get(["filamentSensorActiveLow"])
+            gpioStatus = GPIO.input(self.filamentSensor.pinNumber)
+
+            if self._settings.get(["debug"]) == True:
+                self._logger.info("DEBUG -> Filament detection active low: %s gpio status: %s",activeLow,gpioStatus)
+            if  activeLow ^ gpioStatus:
+                if time.time() - lastFilamentEndDetected >  self._settings.get(["filamentSensorTimeout"]):
+                    self._logger.info("Detected end of filament.")
+                    lastFilamentEndDetected = time.time()
+                    for line in self._settings.get(["filamentSensorGcode"]).split(';'):
+                        if line:
+                            self._printer.commands(line.strip().capitalize())
+                            self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
+                else:
+                    self._logger.info("Prevented end of filament detection, filament sensor timeout not elapsed.")
+
+    def stopFilamentDetection(self):
+        try:
+            GPIO.remove_event_detect(self.filamentSensor.pinNumber)
+        except:
+            pass
 
     #~~ StartupPlugin mixin
     def on_after_startup(self):
-        self.temperature_reading = self._settings.get(["temperature_reading"])
-        self.temperature_control = self._settings.get(["temperature_control"])
-        self.rpi_outputs = self._settings.get(["rpi_outputs"])
-        self.rpi_inputs = self._settings.get(["rpi_inputs"])
         self.startTimer()
         self.startGPIO()
-        self.clearGPIO()
-        self.configureGPIO()
-
     #~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTemperature", methods=["GET"])
     def setEnclosureTemperature(self):
         self.enclosureSetTemperature = flask.request.values["enclosureSetTemp"]
         if self._settings.get(["debug"]) == True:
             self._logger.info("DEBUG -> Seting enclosure temperature: %s",self.enclosureSetTemperature)
-        self.handleTemperatureControl()
+        self.heaterHandler()
         return flask.jsonify(enclosureSetTemperature=self.enclosureSetTemperature,enclosureCurrentTemperature=self.enclosureCurrentTemperature)
 
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureSetTemperature", methods=["GET"])
     def getEnclosureSetTemperature(self):
         return str(self.enclosureSetTemperature)
-
-    @octoprint.plugin.BlueprintPlugin.route("/clearGPIOMode", methods=["GET"])
-    def clearGPIOMode(self):
-        GPIO.cleanup()
-        return flask.jsonify(success=True)
-
-    @octoprint.plugin.BlueprintPlugin.route("/getUpdateBtnStatus", methods=["GET"])
-    def getUpdateBtnStatus(self):
-        self.updateOutputUI()
-        return flask.make_response("Ok.", 200)
 
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
     def getEnclosureTemperature(self):
@@ -92,281 +223,116 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def setIO(self):
         io = flask.request.values["io"]
         value = True if flask.request.values["status"] == "on" else False
-        for rpi_output in self.rpi_outputs:
-            if self.toInt(io) == self.toInt(rpi_output['gpioPin']):
-                val = (not value) if rpi_output['activeLow'] else value
-                self.writeGPIO(self.toInt(io), val)
+
+        if io == "io1":
+            self.io1.write(value)
+        elif io == "io2":
+            self.io2.write(value)
+        elif io == "io3":
+            self.io3.write(value)
+        elif io == "io4":
+            self.io4.write(value)
 
         return flask.jsonify(success=True)
-
-    #~~ Plugin Internal methods
-    def checkEnclosureTemp(self):
-        # self.temperature_reading = self._settings.get(["temperature_reading"])
-        # if self._settings.get(["debug"]) == True:
-        #     self._logger.info("Checking enclosure temperature")
-        for temp_reader in self.temperature_reading:
-            if temp_reader['isEnabled']:
-                if temp_reader['sensorType'] in ["11", "22", "2303"]:
-                    self._logger.info("sensorType dht")
-                    self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity = self.readDhtTemp(temp_reader['sensorType'],temp_reader['gpioPin'])
-                elif temp_reader['sensorType'] == "18b20":
-                    self.enclosureCurrentTemperature = self.read18b20Temp()
-                else:
-                    self._logger.info("sensorType no match")
-                    self.enclosureCurrentTemperature = 0
-
-                if temp_reader['useFahrenheit']:
-                    self.enclosureCurrentTemperature  = self.enclosureCurrentTemperature*1.8 + 32
-
-                if self._settings.get(["debug"]) == True:
-                    self._logger.info("Temperature read was: %s", self.enclosureCurrentTemperature)
-
-                self._plugin_manager.send_plugin_message(self._identifier, dict(enclosuretemp=self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity))
-                self.handleTemperatureControl()
-                self.handleTemperatureEvents()
-
-
-    def handleTemperatureEvents(self):
-        for rpi_input in self.rpi_inputs:
-            if rpi_input['eventType']=='temperature' and self.toFloat(rpi_input['setTemp']) < self.toFloat(self.enclosureCurrentTemperature):
-                for rpi_output in self.rpi_outputs:
-                    if 'controlledIO' in rpi_input:
-                        if self.toInt(rpi_input['controlledIO']) == self.toInt(rpi_output['gpioPin']):
-                            val = GPIO.LOW if rpi_output['activeLow'] else GPIO.HIGH
-                            self.writeGPIO(self.toInt(rpi_output['gpioPin']), val)
-
-    def readDhtTemp(self,sensor,pin):
-        try:
-            import Adafruit_DHT
-            return Adafruit_DHT.read_retry(sensor, pin,2,0.5)
-        except:
-            self._checkTempTimer.stop();
-            self._plugin_manager.send_plugin_message(self._identifier, dict(isMsg=True,msg="Failed to import Adafruit_DHT. Please install the library and restart octoprint!."))
-            pass
-        return (0, 0)
-
-    def read18b20Temp(self):
-        os.system('modprobe w1-gpio')
-        os.system('modprobe w1-therm')
-
-        lines = self.readraw18b20Temp()
-        while lines[0].strip()[-3:] != 'YES':
-            time.sleep(0.2)
-            lines = self.readraw18b20Temp()
-        equals_pos = lines[1].find('t=')
-        if equals_pos != -1:
-            temp_string = lines[1][equals_pos+2:]
-            temp_c = float(temp_string) / 1000.0
-            return '{0:0.1f}'.format(temp_c)
-        return 0
-
-    def readraw18b20Temp(self):
-        base_dir = '/sys/bus/w1/devices/'
-        device_folder = glob.glob(base_dir + '28*')[0]
-        device_file = device_folder + '/w1_slave'
-        f = open(device_file, 'r')
-        lines = f.readlines()
-        f.close()
-        return lines
-
-    def handleTemperatureControl(self):
-        for control in self.temperature_control:
-            if control['isEnabled'] == True:
-                if control['controlType'] == 'heater':
-                    self.currentTempControlStatus = self.toFloat(self.enclosureCurrentTemperature)<self.toFloat(self.enclosureSetTemperature)
-                else:
-                    self.currentTempControlStatus = self.toFloat(self.enclosureCurrentTemperature)>self.toFloat(self.enclosureSetTemperature)
-                if self.currentTempControlStatus != self.previousTempControlStatus:
-                    if self.currentTempControlStatus:
-                        self._logger.info("Turning gpio to control temperature on.")
-                        val =  False if control['activeLow'] else True
-                        self.writeGPIO(self.toInt(control['gpioPin']),val)
-                    else:
-                        self._logger.info("Turning gpio to control temperature off.")
-                        val = True if control['activeLow'] else False
-                        self.writeGPIO(self.toInt(control['gpioPin']), val)
-                    self.previousTempControlStatus = self.currentTempControlStatus
-
-    def startGPIO(self):
-        currentMode = GPIO.getmode()
-        setMode = GPIO.BOARD if self._settings.get(["useBoardPinNumber"]) else GPIO.BCM
-        if currentMode== None:
-            currentMode = setMode
-        if currentMode != setMode:
-            GPIO.setmode(currentMode)
-            tempstr = "BOARD" if currentMode == GPIO.BOARD else "BCM"
-            self._settings.set(["useBoardPinNumber"],True if currentMode == GPIO.BOARD else False)
-            self._plugin_manager.send_plugin_message(self._identifier,dict(isMsg=True,msg="GPIO mode was configured before, GPIO mode will be forced to use: " + tempstr + " as pin numbers. Please update GPIO accordingly!"))
-        else:
-            GPIO.setmode(setMode)
-        GPIO.setwarnings(False)
-
-    def clearGPIO(self):
-        for control in self.temperature_control:
-            GPIO.cleanup(self.toInt(control['gpioPin']))
-        for rpi_output in self.rpi_outputs:
-            GPIO.cleanup(self.toInt(rpi_output['gpioPin']))
-        for rpi_input in self.rpi_inputs:
-            try:
-                GPIO.remove_event_detect(self.toInt(rpi_input['gpioPin']))
-            except:
-                pass
-            GPIO.cleanup(self.toInt(rpi_input['gpioPin']))
-
-
-    def configureGPIO(self):
-        for control in self.temperature_control:
-             GPIO.setup(self.toInt(control['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if control['activeLow'] else GPIO.LOW)
-        for rpi_output in self.rpi_outputs:
-            GPIO.setup(self.toInt(rpi_output['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if rpi_output['activeLow'] else GPIO.LOW)
-        for rpi_input in self.rpi_inputs:
-            GPIO.setup(self.toInt(rpi_input['gpioPin']), GPIO.IN, pull_up_down=GPIO.PUD_UP if rpi_input['inputPull'] == 'inputPullUp' else GPIO.PUD_DOWN)
-            if rpi_input['eventType'] == 'gpio' and self.toInt(rpi_input['gpioPin']) != 0:
-                edge =  GPIO.RISING if rpi_input['edge'] == 'hise' else  GPIO.FALLING
-                GPIO.add_event_detect(self.toInt(rpi_input['gpioPin']), edge, callback= self.handleGPIOControl, bouncetime=200)
-
-    def handleFilammentDetection(self,channel):
-        for rpi_input in self.rpi_inputs:
-            if channel == self.toInt(rpi_input['gpioPin']) and rpi_input['eventType']=='filament' and ((rpi_input['edge']=='fall') ^ GPIO.input(self.toInt(rpi_input['gpioPin']))):
-                if time.time() - self.lastFilamentEndDetected >  self._settings.get(["filamentSensorTimeout"]):
-                    self._logger.info("Detected end of filament.")
-                    self.lastFilamentEndDetected = time.time()
-                    for line in self._settings.get(["filamentSensorGcode"]).split(';'):
-                        if line:
-                            self._printer.commands(line.strip().capitalize())
-                            self._logger.info("Sending GCODE command: %s",line.strip().capitalize())
-                else:
-                    self._logger.info("Prevented end of filament detection, filament sensor timeout not elapsed.")
-
-    def startFilamentDetection(self):
-        for rpi_input in self.rpi_inputs:
-            if rpi_input['eventType'] == 'filament' and self.toInt(rpi_input['gpioPin']) != 0:
-                edge =  GPIO.RISING if rpi_input['edge'] == 'hise' else GPIO.FALLING
-                if GPIO.input(self.toInt(rpi_input['gpioPin'])) == (edge == GPIO.RISING):
-                    self._printer.toggle_pause_print()
-                    self._logger.info("Started printing with no filament.")
-                else:
-                    GPIO.add_event_detect(self.toInt(rpi_input['gpioPin']), edge, callback= self.handleFilammentDetection, bouncetime=200)
-
-    def stopFilamentDetection(self):
-        for rpi_input in self.rpi_inputs:
-            if rpi_input['eventType'] == 'filament':
-                GPIO.remove_event_detect(self.toInt(rpi_input['gpioPin']))
-
-    def handleGPIOControl(self,channel):
-        for rpi_input in self.rpi_inputs:
-            if channel == self.toInt(rpi_input['gpioPin']) and rpi_input['eventType']=='gpio' and \
-            ((rpi_input['edge']=='fall') ^ GPIO.input(self.toInt(rpi_input['gpioPin']))):
-                for rpi_output in self.rpi_outputs:
-                    if self.toInt(rpi_input['controlledIO']) == self.toInt(rpi_output['gpioPin']):
-                        val = GPIO.LOW if rpi_input['setControlledIO']=='low' else GPIO.HIGH
-                        self.writeGPIO(self.toInt(rpi_output['gpioPin']),val)
-
-    def writeGPIO(self,gpio,value):
-        try:
-            GPIO.output(gpio, value)
-            self.updateOutputUI()
-        except:
-            self._logger.info("Error while writing on GPIO %s", gpio)
-            pass
-
-    def updateOutputUI(self):
-        result = []
-        i=0
-        for rpi_output in self.rpi_outputs:
-            pin = self.toInt(rpi_output['gpioPin'])
-            val = GPIO.input(pin) if not rpi_output['activeLow'] else (not GPIO.input(pin))
-            result.append({pin:val})
-        self._plugin_manager.send_plugin_message(self._identifier, dict(rpi_output=result))
 
     #~~ EventPlugin mixin
     def on_event(self, event, payload):
 
-        if event == Events.CONNECTED:
-            self.updateOutputUI()
-
         if event == Events.PRINT_RESUMED:
-            self.startFilamentDetection()
+            if self.filamentSensor.enable:
+                self.startFilamentDetection()
 
         if event == Events.PRINT_STARTED:
+            if self.filamentSensor.enable:
+                self.startFilamentDetection()
 
-            map(scheduler.cancel, scheduler.queue)
-
-            self.startFilamentDetection()
-
-            for rpi_output in self.rpi_outputs:
-                if rpi_output['autoStartup']:
-                    value = False if rpi_output['activeLow'] else True
-                    scheduler.enter(rpi_output['startupTimeDelay'], 1, self.writeGPIO, (self.toInt(rpi_output['gpioPin']),value,))
+            if self.io1.autoStartup and self.io1.enable:
+                scheduler.enter(self.toFloat(self.io1.timeDelay), 1, self.io1.write, (True,))
+            if self.io2.autoStartup and self.io2.enable:
+                scheduler.enter(self.toFloat(self.io2.timeDelay), 1, self.io2.write, (True,))
+            if self.io3.autoStartup and self.io3.enable:
+                scheduler.enter(self.toFloat(self.io3.timeDelay), 1, self.io3.write, (True,))
+            if self.io4.autoStartup and self.io4.enable:
+                scheduler.enter(self.toFloat(self.io4.timeDelay), 1, self.io4.write, (True,))
             scheduler.run()
 
-            for control in self.temperature_control:
-                if control['autoStartup'] == True:
-                    self.enclosureSetTemperature = self.toInt(control['defaultTemp'])
-                    self._plugin_manager.send_plugin_message(self._identifier, dict(enclosureSetTemp=self.enclosureSetTemperature))
-
-
         elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
-            self.stopFilamentDetection()
+            if self.filamentSensor.enable:
+                self.stopFilamentDetection()
 
-            self.enclosureSetTemperature = 0
-            self._plugin_manager.send_plugin_message(self._identifier, dict(enclosureSetTemp=self.enclosureSetTemperature))
+            if  self.heater.enable:
+                self.enclosureSetTemperature = 0
 
-            for rpi_output in self.rpi_outputs:
-                if rpi_output['autoShutdown']:
-                    value = True if rpi_output['activeLow'] else False
-                    scheduler.enter(rpi_output['shutdownTimeDelay'], 1, self.writeGPIO, (self.toInt(rpi_output['gpioPin']),value,))
+            if self.io1.autoShutDown and self.io1.enable:
+                scheduler.enter(self.toFloat(self.io1.timeOffDelay), 1, self.io1.write, (False,))
+            if self.io2.autoShutDown and self.io2.enable:
+                scheduler.enter(self.toFloat(self.io2.timeOffDelay), 1, self.io2.write, (False,))
+            if self.io3.autoShutDown and self.io3.enable:
+                scheduler.enter(self.toFloat(self.io3.timeOffDelay), 1, self.io3.write, (False,))
+            if self.io4.autoShutDown and self.io4.enable:
+                scheduler.enter(self.toFloat(self.io4.timeOffDelay), 1, self.io4.write, (False,))
             scheduler.run()
 
     #~~ SettingsPlugin mixin
     def on_settings_save(self, data):
-        self.clearGPIO()
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
-        self.temperature_reading = self._settings.get(["temperature_reading"])
-        self.temperature_control = self._settings.get(["temperature_control"])
-        self.rpi_outputs = self._settings.get(["rpi_outputs"])
-        self.rpi_inputs = self._settings.get(["rpi_inputs"])
-        if self._settings.get(["debug"]) == True:
-            self._logger.info("temperature_reading: %s", self.temperature_reading)
-            self._logger.info("temperature_control: %s", self.temperature_control)
-            self._logger.info("rpi_outputs: %s", self.rpi_outputs)
-            self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self.startGPIO()
-        self.configureGPIO()
-
 
     def get_settings_defaults(self):
         return dict(
-            temperature_reading = [{ 'isEnabled': True, 'gpioPin': 4, 'useFahrenheit':False, 'sensorType':''}],
-            temperature_control = [{ 'isEnabled': False, 'controlType':'heater', 'gpioPin': 17, 'activeLow': True, 'autoStartup': False,'defaultTemp':0}],
-            rpi_outputs = [{'label':'My Label', 'gpioPin': 0,'activeLow': True,'autoStartup':False,'startupTimeDelay':0,
-                'autoShutdown':False,'shutdownTimeDelay':0,'active':False}],
-            rpi_inputs = [{'label':'My Label', 'gpioPin': 0,'inputPull': 'inputPullUp', 'eventType':'temperature', 'setTemp':100,
-                'controlledIO':0, 'setControlledIO':'low', 'edge':'fall'}],
-            filamentSensorGcode =  "G91  ;Set Relative Mode \n" +
-                                    "G1 E-5.000000 F500 ;Retract 5mm\n" +
-                                    "G1 Z15 F300         ;move Z up 15mm\n" +
-                                    "G90            ;Set Absolute Mode\n " +
-                                    "G1 X20 Y20 F9000      ;Move to hold position\n" +
-                                    "G91            ;Set Relative Mode\n" +
-                                    "G1 E-40 F500      ;Retract 40mm\n" +
-                                    "M0            ;Idle Hold\n" +
-                                    "G90            ;Set Absolute Mode\n" +
-                                    "G1 F5000         ;Set speed limits\n" +
-                                    "G28 X0 Y0         ;Home X Y\n" +
-                                    "M82            ;Set extruder to Absolute Mode\n" +
-                                    "G92 E0         ;Set Extruder to 0",
-            debug=True,
+            debug=False,
+            temperatureReadingEnable=False,
+            heaterEnable=False,
+            heaterPin=17,
+            heaterActiveLow=True,
+            dhtPin=4,
+            useFahrenheit=False,
+            useCelsius=True,
             useBoardPinNumber=False,
-            filamentSensorTimeout=120
+            filamentSensorPin=24,
+            filamentSensorEnable=True,
+            filamentSensorActiveLow=True,
+            filamentSensorGcode="M600;",
+            filamentSensorTimeout=120,
+            dhtModel=2302,
+            io1Pin=18,
+            io2Pin=23,
+            io3Pin=22,
+            io4Pin=27,
+            io1Label="Light",
+            io2Label="Fan",
+            io3Label="IO3",
+            io4Label="IO4",
+            io1ActiveLow=True,
+            io2ActiveLow=True,
+            io3ActiveLow=True,
+            io4ActiveLow=True,
+            io1Enable=False,
+            io2Enable=False,
+            io3Enable=False,
+            io4Enable=False,
+            io1AutoShutDown=True,
+            io2AutoShutDown=True,
+            io3AutoShutDown=True,
+            io4AutoShutDown=True,
+            io1AutoStartup=False,
+            io2AutoStartup=False,
+            io3AutoStartup=False,
+            io4AutoStartup=False,
+            io1TimeDelay=0,
+            io2TimeDelay=0,
+            io3TimeDelay=0,
+            io4TimeDelay=0,
+            io1OffTimeDelay=0,
+            io2OffTimeDelay=0,
+            io3OffTimeDelay=0,
+            io4OffTimeDelay=0,
+            getTempScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetTemperature.py",
+            getHumiScript="~/.octoprint/plugins/OctoPrint-Enclosure/extras/GetHumidity.py"
         )
-
     #~~ TemplatePlugin
     def get_template_configs(self):
-        return [
-                dict(type="settings", custom_bindings=True),
-                dict(type="tab", custom_bindings=True)
-        ]
+        return [dict(type="settings", custom_bindings=False)]
 
     ##~~ AssetPlugin mixin
     def get_assets(self):
