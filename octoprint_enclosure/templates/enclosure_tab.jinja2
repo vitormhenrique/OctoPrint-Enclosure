@@ -1,61 +1,50 @@
-<div data-bind="visible: settings.settings.plugins.enclosure.temperatureReadingEnable">
-  <h4>{{ _('Heater') }}</h4>
-  <table class="table table-bordered table-hover" style="table-layout: fixed; width: 100%; margin-top: 20px">
+<div data-bind="foreach: global_settings.settings.plugins.enclosure.temperature_reading">
+  <div data-bind="visible: isEnabled">
+    <h4>{{ _('Enclosure Temperature') }}</h4>
+    <table class="table table-bordered table-hover" style="table-layout: fixed; width: 100%; margin-top: 20px">
       <tr>
-          <th style="width: 18%"></th>
-          <th style="width: 12%; text-align: right">{{ _('Actual') }}</th>
-          <th style="width: 35%">{{ _('Target') }}</th>
+        <th style="width: 18%"></th>
+        <th style="width: 12%; text-align: right">{{ _('Actual') }}</th>
+        <th style="width: 35%">{{ _('Target') }}</th>
       </tr>
       <tr>
-          <th style="vertical-align: middle">{{ _('Enclosure') }}</th>
-          <td style="text-align: right; vertical-align: middle" data-bind="html: enclosureTemp"></td>
-          <td style="vertical-align: middle; overflow: visible">
-              <div class="input-append" data-bind="visible: settings.settings.plugins.enclosure.heaterEnable">
-              <input type="text" class="input-mini text-right tempInput" id="enclosureSetTemp" data-bind="attr: {placeholder: cleanTemperature(requestEnclosureSetTemperature())}">
-              <span class="add-on" data-bind="visible: settings.settings.plugins.enclosure.useCelsius">&deg;C</span>
-              <span class="add-on" data-bind="visible: settings.settings.plugins.enclosure.useFahrenheit">&deg;F</span>
-                  <div class="btn-group" >
-                      <button type="submit" data-bind="click: setTemperature, enable: settings.settings.plugins.enclosure.heaterEnable && isConnected()" class="btn">{{ _('Set') }}</button>
-                      <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: settings.settings.plugins.enclosure.heaterEnable && isConnected()">
-                      <span class="caret"></span>
-                          </button>
-                          <ul class="dropdown-menu">
-                              <li>
-                                  <a href="#" data-bind="click: turnOffHeater">{{ _('Off') }}</a>
-                              </li>
-                          </ul>
-                  </div>
+        <th style="vertical-align: middle">{{ _('Enclosure') }}</th>
+        <td style="text-align: right; vertical-align: middle" data-bind="html: $root.enclosureTemp"></td>
+        <td style="vertical-align: middle; overflow: visible">
+          <div data-bind="foreach: $root.global_settings.settings.plugins.enclosure.temperature_control">
+            <div class="input-append" data-bind="visible: isEnabled">
+              <input type="text" class="input-mini text-right tempInput" id="enclosureSetTemp"
+              data-bind="attr: {placeholder:cleanTemperature($root.requestEnclosureSetTemperature())}">
+              <span class="add-on" data-bind="visible: $parent.useFahrenheit">&deg;F</span>
+              <span class="add-on" data-bind="visible: !$parent.useFahrenheit()">&deg;C</span>
+              <div class="btn-group" >
+                <button type="submit" data-bind="click: $root.setTemperature, enable: $root.enableBtn()" class="btn">{{ _('Set') }}</button>
+                <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.enableBtn()">
+                  <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="#" data-bind="click: $root.turnOffHeater">{{ _('Off') }}</a>
+                  </li>
+                </ul>
               </div>
-          </td>
+            </div>
+
+          </div>
+        </td>
       </tr>
       <tr>
-          <th style="vertical-align: middle">{{ _('Humidity') }}</th>
-          <td style="text-align: right; vertical-align: middle" data-bind="html: enclosureHumidity"></td>
-          <th></th>
+        <th style="vertical-align: middle">{{ _('Humidity') }}</th>
+        <td style="text-align: right; vertical-align: middle" data-bind="html: $root.enclosureHumidity"></td>
+        <th></th>
       </tr>
-  </table>
+    </table>
+  </div>
 </div>
-
-<div data-bind="visible: settings.settings.plugins.enclosure.io1Enable">
-<h4><p data-bind="html: settings.settings.plugins.enclosure.io1Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'on']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()" class="btn">Turn on</button>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io1', 'off']), enable: settings.settings.plugins.enclosure.io1Enable && isConnected()"   class="btn">Turn off</button>
-</div>
-
-<div data-bind="visible: settings.settings.plugins.enclosure.io2Enable">
-<h4><p data-bind="html: settings.settings.plugins.enclosure.io2Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io2', 'on']), enable: settings.settings.plugins.enclosure.io2Enable && isConnected()" class="btn">Turn on</button>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io2', 'off']), enable: settings.settings.plugins.enclosure.io2Enable && isConnected()"   class="btn">Turn off</button>
-</div>
-
-<div data-bind="visible: settings.settings.plugins.enclosure.io3Enable">
-<h4><p data-bind="html: settings.settings.plugins.enclosure.io3Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io3', 'on']), enable: settings.settings.plugins.enclosure.io3Enable && isConnected()" class="btn">Turn on</button>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io3', 'off']), enable: settings.settings.plugins.enclosure.io3Enable && isConnected()"   class="btn">Turn off</button>
-</div>
-
-<div data-bind="visible: settings.settings.plugins.enclosure.io4Enable">
-<h4><p data-bind="html: settings.settings.plugins.enclosure.io4Label"></p></h4>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io4', 'on']), enable: settings.settings.plugins.enclosure.io4Enable && isConnected()" class="btn">Turn on</button>
-<button type="submit" data-bind="click: handleIO.bind($data, ['io4', 'off']), enable: settings.settings.plugins.enclosure.io4Enable && isConnected()"   class="btn">Turn off</button>
+<div data-bind="foreach: global_settings.settings.plugins.enclosure.rpi_outputs">
+  <h4><p data-bind="html: label"></p></h4>
+  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin, 'on']),
+  enable: $root.enableBtn(), attr: {id: 'btn_on_' + ($data.gpioPin ? $data.gpioPin() : '')}" class="btn">Turn on</button>
+  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin, 'off']),
+  enable: $root.enableBtn(), attr: {id: 'btn_off_' + ($data.gpioPin ? $data.gpioPin() : '')}"   class="btn">Turn off</button>
 </div>
