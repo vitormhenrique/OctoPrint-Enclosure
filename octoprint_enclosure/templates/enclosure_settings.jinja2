@@ -92,6 +92,7 @@
           <span class="help-inline">Choose if you want to automatically startup temperature control when the print starts</span>
         </div>
       </div>
+      <!-- ko if: $data.autoStartup  -->
       <div class="control-group">
         <label class="control-label">{{ _('Default Temperature') }}</label>
         <div class="controls">
@@ -99,6 +100,7 @@
           <span class="help-inline">Default temperature that temperature control will be set</span>
         </div>
       </div>
+      <!-- /ko -->
     </div>
   </div>
 </form>
@@ -133,13 +135,13 @@
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
-        <input type="checkbox" data-bind="checked: autoStartup, click: $parent.fixAutoStartupUI($index()),
-        attr: {id: 'autoStartup_' + $index() }">  {{ _('Auto Startup') }}
+        <input type="checkbox" data-bind="checked: autoStartup">  {{ _('Auto Startup') }}
       </label>
       <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
     </div>
   </div>
-  <div style="display: none" data-bind="attr: {id: 'autoStartupField_' + $index() }">
+  <!-- ko if: $data.autoStartup  -->
+  <div data-bind="attr: {id: 'autoStartupField_' + $index() }">
     <div class="control-group">
       <label class="control-label">{{ _('Startup Delay (Seconds)') }}</label>
       <div class="controls">
@@ -148,15 +150,17 @@
       </div>
     </div>
   </div>
+  <!-- /ko -->
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
-        <input type="checkbox" data-bind="checked: autoShutdown, click: $parent.fixAutoShutdownUI($index()), attr: {id: 'autoShutdown_' + $index() }">  {{ _('Auto Shutdown') }}
+        <input type="checkbox" data-bind="checked: autoShutdown">  {{ _('Auto Shutdown') }}
       </label>
       <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
     </div>
   </div>
-  <div style="display: none" data-bind="attr: {id: 'autoShutdownField_' + $index() }">
+  <!-- ko if: $data.autoShutdown  -->
+  <div data-bind="attr: {id: 'autoShutdownField_' + $index() }">
     <div class="control-group">
       <label class="control-label">{{ _('Shutdown Delay (Seconds)') }}</label>
       <div class="controls">
@@ -165,6 +169,7 @@
       </div>
     </div>
   </div>
+  <!-- /ko -->
   <div class="control-group">
     <a title="Delete IO" class="btn btn-danger pull-right"  data-bind="click: function() { $parent.removeRpiOutput($data) }"><i class="icon-trash"></i></a>
   </div>
