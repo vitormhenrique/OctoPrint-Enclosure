@@ -123,15 +123,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self.handleTemperatureControl()
                     self.handleTemperatureEvents()
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on checkEnclosureTemp. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
 
     def handleTemperatureEvents(self):
-        if self.toFloat(rpi_input['setTemp']) == 0:
-            return
         for rpi_input in self.rpi_inputs:
+            if self.toFloat(rpi_input['setTemp']) == 0:
+                continue
             if rpi_input['eventType']=='temperature' and (self.toFloat(rpi_input['setTemp']) < self.toFloat(self.enclosureCurrentTemperature)):
                 for rpi_output in self.rpi_outputs:
                     if self.toInt(rpi_input['controlledIO']) == self.toInt(rpi_output['gpioPin']):
@@ -207,7 +207,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 GPIO.setmode(setMode)
             GPIO.setwarnings(False)
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on startGPIO. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -225,7 +225,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     pass
                 GPIO.cleanup(self.toInt(rpi_input['gpioPin']))
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on clearGPIO. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -245,7 +245,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     edge =  GPIO.RISING if rpi_input['edge'] == 'hise' else  GPIO.FALLING
                     GPIO.add_event_detect(self.toInt(rpi_input['gpioPin']), edge, callback= self.handlePrinterAction, bouncetime=200)
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on configureGPIO. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -265,7 +265,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     else:
                         self._logger.info("Prevented end of filament detection, filament sensor timeout not elapsed.")
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on handleFilammentDetection. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -282,7 +282,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     else:
                         GPIO.add_event_detect(self.toInt(rpi_input['gpioPin']), edge, callback= self.handleFilammentDetection, bouncetime=200)
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on startFilamentDetection. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -293,7 +293,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if rpi_input['eventType'] == 'printer' and rpi_input['printerAction'] == 'filament':
                     GPIO.remove_event_detect(self.toInt(rpi_input['gpioPin']))
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on stopFilamentDetection. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -308,7 +308,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                             val = GPIO.LOW if rpi_input['setControlledIO']=='low' else GPIO.HIGH
                             self.writeGPIO(self.toInt(rpi_output['gpioPin']),val)
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on handleGPIOControl. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -325,7 +325,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self._logger.info("Printer action pause.")
                         self._printer.pause_print()
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on handlePrinterAction. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
@@ -337,7 +337,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Writing on gpio: %s value %s", gpio,value)
             self.updateOutputUI()
         except Exception as ex:
-            template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on writeGPIO. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             pass
