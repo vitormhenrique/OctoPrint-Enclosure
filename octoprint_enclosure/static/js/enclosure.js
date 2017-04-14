@@ -82,15 +82,11 @@ $(function() {
 
         self.onSettingsShown = function(){
           self.fixUI();
-        }
+        };
 
-        self.save = function(){
-          $.ajax({
-              url: "/plugin/enclosure/save",
-              type: "GET"
-          });
-        }
-
+        self.onSettingsHidden = function(){
+          self.getUpdateBtnStatus();
+        };
 
         self.setTemperature = function(){
             if(self.isNumeric($("#enclosureSetTemp").val())){
@@ -113,7 +109,7 @@ $(function() {
           self.global_settings.settings.plugins.enclosure.rpi_outputs.push({label: ko.observable("Ouput "+
             (self.global_settings.settings.plugins.enclosure.rpi_outputs().length+1)) ,
             gpioPin: 0,activeLow: true,
-            autoStartup:false, startupTimeDelay:0, autoShutdown:false,shutdownTimeDelay:0,active:false});
+            autoStartup:ko.observable(false), startupTimeDelay:0, autoShutdown:ko.observable(false),shutdownTimeDelay:0});
         };
 
         self.removeRpiOutput = function(definition) {
