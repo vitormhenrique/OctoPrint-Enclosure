@@ -242,22 +242,22 @@ $(function() {
         //   }
         // };
 
-
-        self.fixAutoStartupUI = function(idNumber){
-          if($('#autoStartup_'+idNumber).is(':checked')){
-            $('#autoStartupField_'+idNumber).show("blind");
-          }else{
-            $('#autoStartupField_'+idNumber).hide("blind");
-          }
-        };
-
-        self.fixAutoShutdownUI = function(idNumber){
-          if($('#autoShutdown_'+idNumber).is(':checked')){
-            $('#autoShutdownField_'+idNumber).show("blind");
-          }else{
-            $('#autoShutdownField_'+idNumber).hide("blind");
-          }
-        };
+        //
+        // self.fixAutoStartupUI = function(idNumber){
+        //   if($('#autoStartup_'+idNumber).is(':checked')){
+        //     $('#autoStartupField_'+idNumber).show("blind");
+        //   }else{
+        //     $('#autoStartupField_'+idNumber).hide("blind");
+        //   }
+        // };
+        //
+        // self.fixAutoShutdownUI = function(idNumber){
+        //   if($('#autoShutdown_'+idNumber).is(':checked')){
+        //     $('#autoShutdownField_'+idNumber).show("blind");
+        //   }else{
+        //     $('#autoShutdownField_'+idNumber).hide("blind");
+        //   }
+        // };
 
         self.isNumeric = function(n){
           return !isNaN(parseFloat(n)) && isFinite(n);
