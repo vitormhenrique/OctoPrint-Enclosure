@@ -14,7 +14,7 @@ plugin_package = "octoprint_enclosure"
 plugin_name = "OctoPrint-Enclosure"
 
 # The plugin's version. Can be overwritten within OctoPrint's internal data via __plugin_version__ in the plugin module
-plugin_version = "3.1"
+plugin_version = "3.2"
 
 # The plugin's description. Can be overwritten within OctoPrint's internal data via __plugin_description__ in the plugin
 # module
@@ -36,7 +36,7 @@ plugin_license = "AGPLv3"
 plugin_requires = ["RPi.GPIO>=0.6",
 		  "adafruit_python_dht"]
 
-additional_setup_parameters = []
+additional_setup_parameters = {}
 
 #additional_setup_parameters = {"dependency_links": ["git://github.com/adafruit/Adafruit_Python_DHT.git#egg=adafruit_python_dht"]}
 
