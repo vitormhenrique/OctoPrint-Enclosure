@@ -104,7 +104,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             for temp_reader in self.temperature_reading:
                 if temp_reader['isEnabled']:
-                    if temp_reader['sensorType'] in ["11", "22", "2303"]:
+                    if temp_reader['sensorType'] in ["11", "22", "2302"]:
                         self._logger.info("sensorType dht")
                         temp, hum = self.readDhtTemp(temp_reader['sensorType'],temp_reader['gpioPin'])
 
