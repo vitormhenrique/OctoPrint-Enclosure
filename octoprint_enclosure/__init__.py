@@ -140,8 +140,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def readDhtTemp(self,sensor,pin):
         try:
-            import Adafruit_DHT
-            return Adafruit_DHT.read_retry(self.toInt(sensor), self.toInt(pin),2,0.5)
+            stdout = (Popen("sudo getDHTTemp.py "+sensor+" "+pin, shell=True, stdout=PIPE).stdout).read()
+            temp,hum = stdout.split("|")
+            return (self.toFloat(temp.strip()),self.toFloat(hum.strip()))
         except Exception as ex:
             template = "An exception of type {0} occurred on readDhtTemp. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
