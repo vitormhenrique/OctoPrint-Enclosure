@@ -106,7 +106,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if temp_reader['isEnabled']:
                     if temp_reader['sensorType'] in ["11", "22", "2303"]:
                         self._logger.info("sensorType dht")
-                        self.enclosureCurrentTemperature,enclosureHumidity=self.enclosureCurrentHumidity = self.readDhtTemp(temp_reader['sensorType'],temp_reader['gpioPin'])
+                        temp, hum = self.readDhtTemp(temp_reader['sensorType'],temp_reader['gpioPin'])
+
+                        if temp!=-1:
+                            self.enclosureCurrentTemperature = temp
+
+                        if hum!=-1:
+                            self.enclosureHumidity = hum
+
                     elif temp_reader['sensorType'] == "18b20":
                         self.enclosureCurrentTemperature = self.read18b20Temp()
                     else:
@@ -140,7 +147,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def readDhtTemp(self,sensor,pin):
         try:
-            stdout = (Popen("sudo getDHTTemp.py "+sensor+" "+pin, shell=True, stdout=PIPE).stdout).read()
+            cmd ="sudo python " + (os.path.realpath(__file__)).replace("__init__.pyc","")+"getDHTTemp.py "+str(sensor)+" "+str(pin)
+            self._logger.info(cmd)
+            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             temp,hum = stdout.split("|")
             return (self.toFloat(temp.strip()),self.toFloat(hum.strip()))
         except Exception as ex:
