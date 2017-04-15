@@ -147,7 +147,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def readDhtTemp(self,sensor,pin):
         try:
-            cmd ="sudo python " + (os.path.realpath(__file__)).replace("__init__.pyc","")+"getDHTTemp.py "+str(sensor)+" "+str(pin)
+            script = os.path.dirname(os.path.realpath(__file__)) + "/getDHTTemp.py "
+            cmd ="sudo python " +script+str(sensor)+" "+str(pin)
             if self._settings.get(["debug"]) == True:
                 self._logger.info("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
