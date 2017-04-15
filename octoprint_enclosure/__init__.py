@@ -143,7 +143,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             import Adafruit_DHT
             return Adafruit_DHT.read_retry(sensor, pin,2,0.5)
         except:
-            self._checkTempTimer.stop();
             self._plugin_manager.send_plugin_message(self._identifier, dict(isMsg=True,msg="Failed to import Adafruit_DHT. Please install the library and restart octoprint!."))
             pass
         return (0, 0)
