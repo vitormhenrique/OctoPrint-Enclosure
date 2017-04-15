@@ -1,2 +1,0 @@
-RPi.GPIO>=0.6
-git+git://github.com/adafruit/Adafruit_Python_DHT.git
