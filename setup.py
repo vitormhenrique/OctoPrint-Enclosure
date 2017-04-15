@@ -34,7 +34,7 @@ plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = ["RPi.GPIO>=0.6",
-		  "Adafruit_DHT==1.3.2"]
+		  "Adafruit_DHT"]
 
 #additional_setup_parameters = []
 
