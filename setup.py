@@ -35,7 +35,7 @@ plugin_license = "AGPLv3"
 # Any additional requirements besides OctoPrint should be listed here
 plugin_requires = ["RPi.GPIO>=0.6"]
 
-additional_setup_parameters = {"dependency_links": ["https://github.com/adafruit/Adafruit_Python_DHT/archive/master.zip#egg"]}
+#additional_setup_parameters = {"dependency_links": ["https://github.com/adafruit/Adafruit_Python_DHT/archive/master.zip#egg"]}
 
 #install_requires = requirements("requirements.txt")
 
