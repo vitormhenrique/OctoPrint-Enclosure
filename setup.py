@@ -36,7 +36,7 @@ plugin_license = "AGPLv3"
 plugin_requires = ["RPi.GPIO>=0.6",
 		    "Adafruit_DHT"]
 
-additional_setup_parameters = {"Adafruit_DHT": ["https://github.com/adafruit/Adafruit_Python_DHT/archive/master.zip"]}
+additional_setup_parameters = {"dependency_links": ["https://github.com/adafruit/Adafruit_Python_DHT/archive/master.zip#egg=Adafruit_DHT"]}
 
 #install_requires = requirements("requirements.txt")
 
