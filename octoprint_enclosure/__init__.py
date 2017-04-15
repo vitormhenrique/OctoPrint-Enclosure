@@ -141,11 +141,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def readDhtTemp(self,sensor,pin):
         try:
             import Adafruit_DHT
-            return Adafruit_DHT.read_retry(sensor, pin,2,0.5)
-        except:
-            self._plugin_manager.send_plugin_message(self._identifier, dict(isMsg=True,msg="Failed to import Adafruit_DHT. Please install the library and restart octoprint!."))
-            pass
-        return (0, 0)
+            return Adafruit_DHT.read_retry(self.toInt(sensor), self.toInt(pin),2,0.5)
+        except Exception as ex:
+            template = "An exception of type {0} occurred on checkEnclosureTemp. Arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            self._logger.warn(message)
+            return (0, 0)
 
     def read18b20Temp(self):
         os.system('modprobe w1-gpio')
