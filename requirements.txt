@@ -1,0 +1,1 @@
+git+git://github.com/adafruit/Adafruit_Python_DHT.git
