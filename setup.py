@@ -38,7 +38,7 @@ plugin_requires = ["RPi.GPIO>=0.6",
 
 #additional_setup_parameters = []
 
-additional_setup_parameters = {"dependency_links": ["https://github.com/adafruit/Adafruit_Python_DHT/archive/master.zip"]}
+additional_setup_parameters = {"dependency_links": ["github.com/adafruit/Adafruit_Python_DHT/archive/master.zip"]}
 
 #install_requires = requirements("requirements.txt")
 
