@@ -143,7 +143,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             import Adafruit_DHT
             return Adafruit_DHT.read_retry(self.toInt(sensor), self.toInt(pin),2,0.5)
         except Exception as ex:
-            template = "An exception of type {0} occurred on checkEnclosureTemp. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on readDhtTemp. Arguments:\n{1!r}"
             message = template.format(type(ex).__name__, ex.args)
             self._logger.warn(message)
             return (0, 0)
