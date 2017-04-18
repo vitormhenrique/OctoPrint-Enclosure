@@ -11,6 +11,8 @@ Here is a list of possibilities:
 * Multiple filament sensors for dual or more extrusion
 * Alarm when enclosure temperature reaches some sort of value
 
+Check pictures and more information on thingiverse: http://www.thingiverse.com/thing:2245493
+
 **Software**
 
 Install the plugin using the Plugin Manager bundled with OctoPrint, you can search for the Enclosure plugin or just use the url: https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip.
@@ -19,7 +21,7 @@ To control the encosure temperature or get temperature trigged events, you need 
 
 * For the DHT11, DHT22 and AM2302 follow this steps:
 
-Wire the sensor following the wiring diagram on the pictures, you can use any GPIO pin.
+Wire the sensor following the wiring diagram on the pictures on thingiverse, you can use any GPIO pin.
 
 For DHT11 and DHT22 sensors, don't forget to connect a 4.7K - 10K resistor from the data pin to VCC
 
@@ -43,7 +45,7 @@ Note that the first argument is the temperature sensor (11, 22, or 2302), and th
 
 * For the DS18B20 sensor:
 
-Follow the wiring diagram on the pictures. The DS18B20 uses "1-wire" communication protocol, you need to use 4.7K to 10K resistor from the data pin to VCC, DS18B20 only works on GPIO pin number 4. You also need to add OneWire support for your raspberry pi.
+Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, you need to use 4.7K to 10K resistor from the data pin to VCC, DS18B20 only works on GPIO pin number 4. You also need to add OneWire support for your raspberry pi.
 
 Start by adding the following line to /boot/config.txt
 
