@@ -1,3 +1,5 @@
+# OctoPrint-Enclosure
+
 **Control pretty much everything that you might want to do on your raspberry pi / octoprint / enclosure**
 
 
