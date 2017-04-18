@@ -9,7 +9,11 @@
       </tr>
       <tr>
         <th style="vertical-align: middle">{{ _('Enclosure') }}</th>
-        <td style="text-align: right; vertical-align: middle" data-bind="html: $root.enclosureTemp"></td>
+        <td style="text-align: right; vertical-align: middle">
+          <span data-bind="html: $root.enclosureTemp"></span>
+          <span class="add-on" data-bind="visible: $data.useFahrenheit">&deg;F</span>
+          <span class="add-on" data-bind="visible: !$data.useFahrenheit()">&deg;C</span>
+        </td>
         <td style="vertical-align: middle; overflow: visible">
           <div data-bind="foreach: $root.global_settings.settings.plugins.enclosure.temperature_control">
             <div class="input-append" data-bind="visible: isEnabled">
@@ -35,7 +39,10 @@
       </tr>
       <tr>
         <th style="vertical-align: middle">{{ _('Humidity') }}</th>
-        <td style="text-align: right; vertical-align: middle" data-bind="html: $root.enclosureHumidity"></td>
+        <td style="text-align: right; vertical-align: middle">
+          <span data-bind="html: $root.enclosureHumidity"></span>
+          <span class="add-on">%</span>
+        </td>
         <th></th>
       </tr>
     </table>
