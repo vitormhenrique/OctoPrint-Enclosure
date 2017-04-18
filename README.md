@@ -1,93 +1,139 @@
-# OctoPrint-Enclosure
+**Control pretty much everything that you might want to do on your raspberry pi / octoprint / enclosure**
 
-This plugin is intended to control your printer enclosure using raspberry pi GPIO (At the moment this plugin only support raspberry pi).
 
-You can control lights, fans and heaters, enclosure locker of your enclosure. You can also add events that should be trigged on certain especific cases.
-Cases can be a certain temperature reach, an GPIO falling or rising or end of fillament detection
+Here is a list of possibilities:
+* Temperature sensor on your enclosure or near your printer
+* Heater on your enclosure and keep the temperature nice and high for large ABS 
+* Active cooling for good PLA printing
+* Mechanical buttons to pause and resume printer jobs
+* Multiple filament sensors for dual or more extrusion
+* Alarm when enclosure temperature reaches some sort of value
 
-## Temperature Sensor
+**Software**
 
-Install via the bundled [Plugin Manager](https://github.com/foosel/OctoPrint/wiki/Plugin:-Plugin-Manager)
-or manually using this URL:
+Install the plugin using the Plugin Manager bundled with OctoPrint, you can search for the Enclosure plugin or just use the url: https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip.
 
-https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip
+To control the encosure temperature or get temperature trigged events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302 and DS18B20 temperature sensors.
 
-**Temperature Sensor**
+* For the DHT11, DHT22 and AM2302 follow this steps:
 
-You can choose to use a DHT11, DHT22, AM2302 sensor or a DS18B20.
+Wire the sensor following the wiring diagram on the pictures, you can use any GPIO pin.
 
-**For the DHT11, DHT22 and AM2302 follow this steps:**
+For DHT11 and DHT22 sensors, don't forget to connect a 4.7K - 10K resistor from the data pin to VCC
 
 You need to install Adafruit library to use the temperature sensor on raspberry pi.
 
 Open raspberry pi terminal and type:
 
-```
-cd ~
+<pre><code>cd ~
 git clone https://github.com/adafruit/Adafruit_Python_DHT.git
 cd Adafruit_Python_DHT
 sudo apt-get update
 sudo apt-get install build-essential python-dev python-openssl
-sudo python setup.py install
-```
+sudo python setup.py install</code></pre>
 
-More info on Adafruit [website](https://learn.adafruit.com/dht-humidity-sensing-on-raspberry-pi-with-gdocs-logging/software-install-updated)
+You can test the library by using:
 
-Note that sometimes you might see an error that the sensor can't be read even if you have your connections setup correctly.
-This is a limitation of reading DHT sensors from Linux--there's no guarantee the program will be given enough priority and time by the Linux kernel to reliably read the sensor.
-This plugin will try to read enclosure temperature and humidity every 10 seconds, it will probably fail few times, but again, for the purpose this is ok.
+<pre><code>cd examples
+sudo ./AdafruitDHT.py 2302 4</code></pre>
 
-**For the DS18B20 sensor:**
+Note that the first argument is the temperature sensor (11, 22, or 2302), and the second argument is the GPIO  that the sensor was connected.
 
-You need to enable your raspberry pie to use one-wire. You also NEED to use pin #4 to connect this type of sensor.
+* For the DS18B20 sensor:
 
-Follow instructions on [website](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing?view=all) to connect and get the sensor working.
-After that you will need to change on the plugin settings to use the GetTemperature1820.py script to read the temperature and configure the the sensor type that you are using on this case is 1820.  You also need to make the scripts executable:
+Follow the wiring diagram on the pictures. The DS18B20 uses "1-wire" communication protocol, you need to use 4.7K to 10K resistor from the data pin to VCC, DS18B20 only works on GPIO pin number 4. You also need to add OneWire support for your raspberry pi.
 
-Note that DS18B20 sensors will not provide  information regarding humidity of the enclosure.
+Start by adding the following line to /boot/config.txt
 
-## Temperature Control
+<pre><code>dtoverlay=w1-gpio</code></pre>
 
-To enable temperature control, you need to have a temperature sensor added to your enclosure connected to your raspberry pi.
-Temperature control can be a heater or a cooler.
+You should be able to test your sensor by rebooting your system with sudo reboot. When the Pi is back up and you're logged in again, type the commands you see below into a terminal window. When you are in the 'devices' directory, the directory starting '28-' may have a different name, so cd to the name of whatever directory is there.
 
-## Raspberry Pi Outputs
+<pre><code>sudo modprobe w1-gpio
+sudo modprobe w1-therm
+cd /sys/bus/w1/devices
+ls
+cd 28-xxxx (change this to match what serial number pops up)
+cat w1_slave</code></pre>
 
-Outputs will create buttons on the enclosure tab that will control gpio pins, here your imagination is the limit.
-You can use relays or mosfets connected to the raspberry pi to control fans, lights or anything else.
+The response will either have YES or NO at the end of the first line. If it is yes, then the temperature will be at the end of the second line, in 1/000 degrees C.
 
-## Raspberry Pi Inputs
+* GPIO
 
-Inputs are events that will trigger actions based on the configuration
+This release uses RPi.GPIO to control IO of raspberry pi, it should install and work automatically. If it doesn't please update your octoprint with the latest release of octopi.
 
-**Temperature:**
+**Hardware**
 
-You can add events that should be triggered when the enclosure temperature reaches a certain temperature, this is particularly helpful for a little extra safety, so you can add an alarm light, turn off the printer, or even try to build some sort of fire extinguisher.
+You can use relays / mosfets to control you lights, heater, lockers etc... If toy want to control mains voltage I recomend using PowerSwitch Tail II.
 
-**CAUTION: DO NOT RELY ON THIS PLUGIN AS PRIMARY FIRE DETECTION, YOU NEED TO HAVE PROPER SMOKE DETECTORS ON YOUR HOUSE**
+* Relay
 
-**Filament sensor:**
+The relays module that I used can be found [here](https://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
 
-You have the hability to add a filament sensor to the enclosure, it will automatically pause the print if you run out of filament, I can be any type of filament sensor, the sensor should connect to ground if is set as an "active low" when the fillament run out or 3.3v if the sensor is set as "active high" when detected the end of filament, it does not matter if it is normally open or closed, that will only interfere on your wiring. I'm using the following sensor:
+* Heater
+
+For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
+
+** CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK **
+
+** CAUTION 2: THIS HEATER IS NOT INTENDED TO FUNCTION THIS WAY AND IT MIGHT BE A FIRE HAZARD. DO IT AT YOUR OWN RISK **
+
+* Cooler
+
+You can get a [5V small fan](https://www.amazon.com/gp/product/B003FO0LG6/ref=oh_aui_search_detailpage?ie=UTF8&psc=1) and control it over a relay.
+
+* Filament sensor
+
+You have the ability to add a filament sensor to the enclosure, it will automatically pause the print and run a gcode command to change the filament if you run out of filament, I can be any type of filament sensor, the sensor should connect to ground if is set as an "active low" when the filament run out or 3.3v if the sensor is set as "active high" when detected the end of filament, it does not matter if it is normally open or closed, that will only interfere on your wiring. I'm using the following sensor:
 
 http://www.thingiverse.com/thing:1698397
 
-**GPIO:**
+**Configuration**
 
-Last type of events are GPIO, you can control outputs based on input, this is helpfull if you want to add buttons to your enclosure to turn on and off lights, fans, etc. After the button is pressed it thrigger the event and will keep that signal.
+You need to enable what do you want the plugin to control.
 
+Open the setting screen and find the plugin configuration. You can enable temperature reading and temperature control, You must select the type of sensor that you are using and the GPIO pin that is connected to.
 
-## General Information
+For temperature control you can enable automatically starting up the temperature control once the print starts with a set temperature.
 
-I used relays connected to the raspberry pi to control my heaters, fan and lights.
+Outputs are meant to control anything, lights, locker, extra enclosure fans etc... You can even use a PowerSwitch Tail II and completely shut down your printer after the print job is done. You can add delays and automatically start and shutdown the GPIO. 
 
-For heating my enclosure I got a $15 [lasko](http://www.amazon.com/gp/product/B003XDTWN2?psc=1&redirect=true&ref_=oh_aui_search_detailpage) inside my encosure. I opened it and added a relay to the mains wire.  If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx). The PowerSwitch Tail II is fully enclosed, making it a lot safer.
+Inputs have basically three different types:
 
-**CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK**
+* Temperature
+* Printer
+* GPIO
 
-**CAUTION 2: THIS HEATER IS NOT INTENDED TO FUNCTION THIS WAY AND IT MIGHT BE A FIRE HAZARD. DO IT AT YOUR OWN RISK**
+Temperature inputs will control a GPIO output after a certain temperature is met. This is useful if you want to add some sort of alarm near your printer, or even build some fire extinguisher on your enclosure. Note that I'm not responsible for any damage caused by fires, you should have proper smoke detectors on your house installed by professionals.
 
-The relays module that I used can be found [here](http://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In orther to not fry your r-pi connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
+Printer inputs will trigger Printer actions when the configured GPIO receives a signal. The actions can be Resume and Pause a print job or Change Filament. You can use the "change filament" action and set up the input GPIO according to your filament sensor, for example, if your filament sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the event on the falling edge.
+You can also add mechanical buttons to pause, resume and change filaments near or printer for convenience.
 
-**GPIO Library**
-This release uses RPi.GPIO to control IO of raspberry pi, it should install and work automatically. If it doesn't please update your octoprint with the latest release of octopi.
+GPIO events will control GPIO outputs when a condition is met, for example detect a press of a button.
+You can use this to control any previous configured OUTPUTS, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface.
+
+**Road map**
+There are still SOME features that I'll add to this plugin:
+* Control neopixels \ dotstart
+* Enable GCODE control for each setting
+
+Let me know about improvements that you might think.
+
+**Tab Order**
+
+I often use more this plugin than the time lapse tab, so having the plugin appear before the timelapse is better for me.
+
+You can do this by changing the config.yaml file as instructed on [octoprint documentation ](http://docs.octoprint.org/en/master/configuration/config_yaml.html). Unless defined differently via the command line config.yaml is located at ~/.octoprint.
+
+You just need to add the following section:
+
+<pre><code>appearance:
+  components:
+    order:
+      tab:
+      - temperature
+      - control
+      - gcodeviewer
+      - terminal
+      - plugin_enclosure
+      - timelapse<code><pre>
