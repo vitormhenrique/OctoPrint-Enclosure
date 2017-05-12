@@ -48,10 +48,47 @@
     </table>
   </div>
 </div>
+
+
 <div data-bind="foreach: global_settings.settings.plugins.enclosure.rpi_outputs">
+  <!-- ko if: ($data.outputType() == "regular")  -->
   <h4><p data-bind="html: label"></p></h4>
-  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin, 'on']),
-  enable: $root.enableBtn(), attr: {id: 'btn_on_' + ($data.gpioPin ? $data.gpioPin() : '')}" class="btn">Turn on</button>
-  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin, 'off']),
-  enable: $root.enableBtn(), attr: {id: 'btn_off_' + ($data.gpioPin ? $data.gpioPin() : '')}"   class="btn">Turn off</button>
+  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin(), 'on']),
+  enable: $root.enableBtn(), attr: {id: 'btn_on_' + $data.gpioPin()}" class="btn">Turn on</button>
+  <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpioPin(), 'off']),
+  enable: $root.enableBtn(), attr: {id: 'btn_off_' + $data.gpioPin()}"   class="btn">Turn off</button>
+  <!-- /ko -->
+  <!-- ko if: ($data.outputType() == "pwm")  -->
+  <h4><p data-bind="html: label"></p></h4>
+  <table class="table" style="width: 100%;align:left;margin-top:0px;margin-bottom:0px;">
+    <tr>
+      <th style="vertical-align: middle;border-top:0px;padding:0px">{{ _('Duty Cycle:') }}</th>
+      <td style="width: 20%;align:left;border-top:0px;padding:0px">
+        <input type="text" class="input-block-level" data-bind="attr: {id: 'dutycycle_' + $data.gpioPin()}">
+      </td>
+      <td style="width: 60%;align:left;border-top:0px;padding:0px">
+        <button type="submit" data-bind="click: $root.handlePWM.bind($data, [gpioPin()]), enable: $root.enableBtn(),
+          attr: {id: 'btn_pwm_' + $data.gpioPin()}" class="btn">Set PWM</button>
+      </td>
+    </tr>
+  </table>
+
+  <!-- /ko -->
+  <!-- ko if: ($data.outputType() == "neopixel")  -->
+  <h4><p data-bind="html: label"></p></h4>
+  <table class="table" style="width: 100%;align:left;margin-top:0px;margin-bottom:0px;">
+    <tr>
+      <td style="width: 20%;align:left;border-top:0px;padding:0px">
+        <input type="text" class="input-small" data-bind="value: color,
+          attr: {name: 'colorpicker', id: 'color_'+ $data.gpioPin()} ,
+          click: $root.showColorPicker()">
+      </td>
+      <td style="width: 80%;align:left;border-top:0px;padding:0px">
+        <button type="submit" data-bind="click: $root.handleNeopixel.bind($data, [gpioPin()]),
+          enable: $root.enableBtn(), attr: {id: 'btn_neopixel_' + $data.gpioPin()}"
+        class="btn">Set Color</button>
+      </td>
+    </tr>
+  </table>
+  <!-- /ko -->
 </div>
