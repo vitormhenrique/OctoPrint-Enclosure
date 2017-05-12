@@ -701,9 +701,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._logger.info("temperature_control: %s", self.temperature_control)
             self._logger.info("rpi_outputs: %s", self.rpi_outputs)
             self._logger.info("rpi_inputs: %s", self.rpi_inputs)
-            self._logger.info("notificationProvider: %s",self._settings.get(["notificationProvider"]))
-            self._logger.info("event_name: %s",self._settings.get(["event_name"]))
-            self._logger.info("apiKEY: %s",self._settings.get(["apiKEY"]))
         self.startGPIO()
         self.configureGPIO()
 
@@ -733,6 +730,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             notificationProvider = "disabled",
             apiKEY = "",
             event_name="printer_event",
+            showTempNavbar=False,
             notifications=[{'printFinish':True,'filamentChange':True,'printerAction':True,'temperatureAction':True,'gpioAction':True}]
         )
 

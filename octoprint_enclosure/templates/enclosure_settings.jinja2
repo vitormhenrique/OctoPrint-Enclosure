@@ -470,6 +470,14 @@
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
+            <input type="checkbox" data-bind="checked: global_settings.settings.plugins.enclosure.showTempNavbar">  {{ _('Show temp navbar') }}
+          </label>
+          <span class="help-inline">Display enclosure temperature and humidity on navbar</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
             <input type="checkbox" data-bind="checked: global_settings.settings.plugins.enclosure.useBoardPinNumber">  {{ _('Use Board Pin #') }}
           </label>
           <span class="help-inline">Use BOARD pin numbers instead of BCM pin numbers</span>
@@ -548,10 +556,5 @@
               </div>
             </div>
             <!-- /ko -->
-
-
-
-
           </form>
-
         </div>

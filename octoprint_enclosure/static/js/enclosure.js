@@ -22,6 +22,8 @@ $(function() {
         self.navbarTemp= ko.observable();
         self.navbarHum= ko.observable();
 
+        self.showTempNavbar= ko.observable();
+
         self.notificationProvider = ko.observable();
         self.event_name = ko.observable();
         self.apiKEY = ko.observable();
@@ -115,6 +117,8 @@ $(function() {
             self.filamentSensorGcode(self.settings.filamentSensorGcode());
 
             self.notificationProvider(self.settings.notificationProvider());
+            self.showTempNavbar(self.settings.showTempNavbar());
+            
             self.event_name(self.settings.event_name());
             self.apiKEY(self.settings.apiKEY());
             self.notifications(self.settings.notifications());
