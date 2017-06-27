@@ -461,7 +461,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 ((rpi_input['edge']=='fall') ^ GPIO.input(self.toInt(rpi_input['gpioPin']))):
                     for rpi_output in self.rpi_outputs:
                         if self.toInt(rpi_input['controlledIO']) == self.toInt(rpi_output['gpioPin']) and rpi_output['outputType']=='regular':
-                            val = GPIO.LOW if rpi_input['setControlledIO']=='low' else GPIO.HIGH
+                            if rpi_input['setControlledIO']=='toggle':
+                                val = GPIO.LOW if GPIO.input(self.toInt(rpi_output['gpioPin']))==GPIO.HIGH else GPIO.HIGH
+                            else:
+                                val = GPIO.LOW if rpi_input['setControlledIO']=='low' else GPIO.HIGH
                             self.writeGPIO(self.toInt(rpi_output['gpioPin']),val)
                             for notification in self.notifications:
                                 if notification['gpioAction']:
