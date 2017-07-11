@@ -186,6 +186,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         hum = 0
                     elif temp_reader['sensorType'] == "si7021":
                         temp, hum = self.readSI7021Temp(temp_reader['sensorAddress'])
+                    elif temp_reader['sensorType'] == "tmp102":
+                        temp = self.readTmp102Temp(temp_reader['sensorAddress'])
+                        hum = 0
                     else:
                         self._logger.info("sensorType no match")
                         temp = 0
@@ -296,6 +299,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         f.close()
         return lines
 
+    def readTmp102Temp(self, address):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/tmp102.py"
+            args = ["python", script, str(address)]
+            if self._settings.get(["debug"]) == True and not self.disable_temeprature_log:
+                self._logger.info("Temperature TMP102 cmd: %s", " ".join(args))
+            proc = Popen(args, stdout=PIPE)
+            stdout, _ = proc.communicate()
+            if self._settings.get(["debug"]) == True and not self.disable_temeprature_log:
+                self._logger.info("TMP102 result: %s", stdout)
+            return self.toFloat(stdout.strip())
+        except Exception as ex:
+            template = "An exception of type {0} occurred on readTmp102Temp. Arguments:\n{1!r}"
+            message = template.format(type(ex).__name__, ex.args)
+            self._logger.warn(message)
+            return 0
+
+
     def handleTemperatureControl(self):
         for control in self.temperature_control:
             if control['isEnabled'] == True:
@@ -342,7 +363,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def clearGPIO(self):
         try:
             for control in self.temperature_control:
-                GPIO.cleanup(self.toInt(control['gpioPin']))
+                if control['isEnabled']:
+                    GPIO.cleanup(self.toInt(control['gpioPin']))
             for rpi_output in self.rpi_outputs:
                 if self.toInt(rpi_output['gpioPin']) not in self.previous_rpi_outputs:
                     GPIO.cleanup(self.toInt(rpi_output['gpioPin']))
@@ -370,7 +392,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def configureGPIO(self):
         try:
             for control in self.temperature_control:
-                 GPIO.setup(self.toInt(control['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if control['activeLow'] else GPIO.LOW)
+                if control['isEnabled']:
+                    GPIO.setup(self.toInt(control['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if control['activeLow'] else GPIO.LOW)
             for rpi_output in self.rpi_outputs:
                 pin = self.toInt(rpi_output['gpioPin'])
                 if rpi_output['outputType'] == 'regular':
