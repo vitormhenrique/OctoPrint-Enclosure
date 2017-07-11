@@ -19,6 +19,7 @@
             <option value="18b20">DS18B20</option>
             <option value="si7021">SI7021</option>
             <option value="bme280">BME280</option>
+            <option value="tmp102">TMP102</option>
           </select>
           <span class="help-inline"> <span class="label label-important">Attention</span> You need to install and configure the necessary
           libraries for the temeprature sensor, check the documentation on <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
@@ -33,7 +34,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") -->
+      <!-- ko if: ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") || ($data.sensorType() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -49,7 +50,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko ifnot: ($data.sensorType() == "18b20") || ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") -->
+      <!-- ko ifnot: ($data.sensorType() == "18b20") || ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") || ($data.sensorType() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
