@@ -370,7 +370,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def configureGPIO(self):
         try:
             for control in self.temperature_control:
-                 GPIO.setup(self.toInt(control['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if control['activeLow'] else GPIO.LOW)
+                if control['isEnabled']:
+                    GPIO.setup(self.toInt(control['gpioPin']), GPIO.OUT, initial=GPIO.HIGH if control['activeLow'] else GPIO.LOW)
             for rpi_output in self.rpi_outputs:
                 pin = self.toInt(rpi_output['gpioPin'])
                 if rpi_output['outputType'] == 'regular':
