@@ -37,7 +37,7 @@
           </div>
         </td>
       </tr>
-      <tr>
+      <tr data-bind="visible: $root.enclosureHumidity">
         <th style="vertical-align: middle">{{ _('Humidity') }}</th>
         <td style="text-align: right; vertical-align: middle">
           <span data-bind="html: $root.enclosureHumidity"></span>
