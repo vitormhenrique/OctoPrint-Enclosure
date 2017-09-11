@@ -4,42 +4,51 @@ import time
 from ctypes import c_short
 from ctypes import c_byte
 from ctypes import c_ubyte
+
 if len(sys.argv) == 2:
-DEVICE = int(sys.argv[1],16)
+    DEVICE = int(sys.argv[1],16)
 else:
-print('-1 | -1')
+    print('-1 | -1')
     sys.exit(1)
+
 bus = smbus.SMBus(1) # Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-# Rev 1 Pi uses bus 0
+                     # Rev 1 Pi uses bus 0
+
 def getShort(data, index):
-# return two bytes from data as a signed 16-bit value
-return c_short((data[index+1] << 8) + data[index]).value
+  # return two bytes from data as a signed 16-bit value
+  return c_short((data[index+1] << 8) + data[index]).value
+
 def getUShort(data, index):
-# return two bytes from data as an unsigned 16-bit value
-return (data[index+1] << 8) + data[index]
+  # return two bytes from data as an unsigned 16-bit value
+  return (data[index+1] << 8) + data[index]
+
 def getChar(data,index):
-# return one byte from data as a signed char
+  # return one byte from data as a signed char
   result = data[index]
-if result > 127:
+  if result > 127:
     result -= 256
-return result
+  return result
+
 def getUChar(data,index):
-# return one byte from data as an unsigned char
+  # return one byte from data as an unsigned char
   result =  data[index] & 0xFF
-return result
+  return result
+
 def readBME280ID(addr=DEVICE):
-# Chip ID Register Address
-REG_ID     = 0xD0
+  # Chip ID Register Address
+  REG_ID     = 0xD0
   (chip_id, chip_version) = bus.read_i2c_block_data(addr, REG_ID, 2)
-return (chip_id, chip_version)
+  return (chip_id, chip_version)
+
 def readBME280All(addr=DEVICE):
-# Register Addresses
-REG_DATA = 0xF7
-REG_CONTROL = 0xF4
-REG_CONFIG  = 0xF5
-REG_CONTROL_HUM = 0xF2
-REG_HUM_MSB = 0xFD
-REG_HUM_LSB = 0xFE
+  # Register Addresses
+  REG_DATA = 0xF7
+  REG_CONTROL = 0xF4
+  REG_CONFIG  = 0xF5
+
+  REG_CONTROL_HUM = 0xF2
+  REG_HUM_MSB = 0xFD
+  REG_HUM_LSB = 0xFE
 
   # Oversample setting - page 27
   OVERSAMPLE_TEMP = 2
