@@ -183,7 +183,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         hum = 0
                     elif temp_reader['sensorType'] == "bme280":
                         temp, hum = self.readBME280Temp(temp_reader['sensorAddress'])
-                        hum = 0
                     elif temp_reader['sensorType'] == "si7021":
                         temp, hum = self.readSI7021Temp(temp_reader['sensorAddress'])
                     elif temp_reader['sensorType'] == "tmp102":
