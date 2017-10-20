@@ -2,6 +2,8 @@ $(function() {
     function EnclosureViewModel(parameters) {
         var self = this;
 
+        self.pluginName = "enclosure";
+
         self.global_settings = parameters[0];
         self.connection = parameters[1];
         self.printerStateViewModel = parameters[2];
@@ -152,7 +154,7 @@ $(function() {
         self.setTemperature = function(){
             if(self.isNumeric($("#enclosureSetTemp").val())){
                 $.ajax({
-                    url: "/plugin/enclosure/setEnclosureTemperature",
+                    url: self.buildPluginUrl("/setEnclosureTemperature"),
                     type: "GET",
                     dataType: "json",
                     data: {"enclosureSetTemp": Number($("#enclosureSetTemp").val())},
@@ -191,7 +193,7 @@ $(function() {
 
         self.turnOffHeater = function(){
             $.ajax({
-                url: "/plugin/enclosure/setEnclosureTemperature",
+                url: self.buildPluginUrl("/setEnclosureTemperature"),
                 type: "GET",
                 dataType: "json",
                 data: {"enclosureSetTemp":0},
@@ -204,7 +206,7 @@ $(function() {
 
         self.clearGPIOMode = function(){
             $.ajax({
-                url: "/plugin/enclosure/clearGPIOMode",
+                url: self.buildPluginUrl("/clearGPIOMode"),
                 type: "GET",
                 dataType: "json",
                  success: function(data) {
@@ -216,7 +218,7 @@ $(function() {
         self.getUpdateBtnStatus = function(){
 
             $.ajax({
-                url: "/plugin/enclosure/getUpdateBtnStatus",
+                url: self.buildPluginUrl("/getUpdateBtnStatus"),
                 type: "GET"
             });
         };
@@ -224,7 +226,7 @@ $(function() {
         self.requestEnclosureTemperature = function(){
             return $.ajax({
                     type: "GET",
-                    url: "/plugin/enclosure/getEnclosureTemperature",
+                    url: self.buildPluginUrl("/getEnclosureTemperature"),
                     async: false
                 }).responseText;
         };
@@ -232,7 +234,7 @@ $(function() {
         self.requestEnclosureSetTemperature = function(){
             return $.ajax({
                     type: "GET",
-                    url: "/plugin/enclosure/getEnclosureSetTemperature",
+                    url: self.buildPluginUrl("/getEnclosureSetTemperature"),
                     async: false
                 }).responseText;
         };
@@ -249,7 +251,7 @@ $(function() {
                     type: "GET",
                     dataType: "json",
                     data: {"io": data[0], "status": data[1]},
-                    url: "/plugin/enclosure/setIO",
+                    url: self.buildPluginUrl("/setIO"),
                     async: false
             });
         };
@@ -268,7 +270,7 @@ $(function() {
                       type: "GET",
                       dataType: "json",
                       data: {"io": io, "pwmVal": pwmVal},
-                      url: "/plugin/enclosure/setPWM",
+                      url: self.buildPluginUrl("/setPWM"),
               });
             }
         };
@@ -290,7 +292,7 @@ $(function() {
                       type: "GET",
                       dataType: "json",
                       data: {"io": io, "red": r,"green": g,"blue": b},
-                      url: "/plugin/enclosure/setNeopixel",
+                      url: self.buildPluginUrl("/setNeopixel"),
               });
             }
         };
@@ -365,6 +367,10 @@ $(function() {
 
         self.isNumeric = function(n){
           return !isNaN(parseFloat(n)) && isFinite(n);
+        };
+
+        self.buildPluginUrl = function(path) {
+            return window.PLUGIN_BASEURL + self.pluginName + path;
         };
     }
 
