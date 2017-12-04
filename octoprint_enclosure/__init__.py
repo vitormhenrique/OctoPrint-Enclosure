@@ -100,7 +100,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/getOutputStatus", methods=["GET"])
     def getOutputStatus(self):
-        return self.getOutputList()
+        return str(self.getOutputList()[0])
+
+    @octoprint.plugin.BlueprintPlugin.route("/getTest", methods=["GET"])
+    def getTest(self):
+        return flask.jsonify(success=True)
     
 
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
