@@ -100,12 +100,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/getOutputStatus", methods=["GET"])
     def getOutputStatus(self):
-        getOutputStatusresult = ''
+        getOutputStatusresult = ""
         for rpi_output in self.rpi_outputs:
             pin = self.toInt(rpi_output['gpioPin'])
             if rpi_output['outputType']=='regular':
                 val = GPIO.input(pin) if not rpi_output['activeLow'] else (not GPIO.input(pin))
-                getOutputStatusresult += pin + ':' + val + ','
+                getOutputStatusresult = getOutputStatusresult pin + ":" + val + ","
         return getOutputStatusresult
 
 
