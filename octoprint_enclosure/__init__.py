@@ -101,13 +101,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/getOutputStatus", methods=["GET"])
     def getOutputStatus(self):
         getOutputStatusresult = ''
+        getOutputStatusresultDict = {}
         for rpi_output in self.rpi_outputs:
             pin = self.toInt(rpi_output['gpioPin'])
             if rpi_output['outputType']=='regular':
                 val = GPIO.input(pin) if not rpi_output['activeLow'] else (not GPIO.input(pin))
                 getOutputStatusresult = getOutputStatusresult + str(pin) + ':' + str(val) + ', '
                 getOutputStatusresultDict[str(pin)] = str(val)
-        return flask.jsonify(getOutputStatusresultDict)
+        return flask.jsonify(getOutputStatusresult)
 
 
     @octoprint.plugin.BlueprintPlugin.route("/getTest", methods=["GET"])
