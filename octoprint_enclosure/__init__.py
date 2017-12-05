@@ -106,7 +106,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pin = self.toInt(rpi_output['gpioPin'])
             if rpi_output['outputType']=='regular':
                 val = GPIO.input(pin) if not rpi_output['activeLow'] else (not GPIO.input(pin))
-             if (len(getOutputStatusresult) > 0)
+             if (not getOutputStatusresult)
                     getOutputStatusresult = getOutputStatusresult + ', '
                 getOutputStatusresult = getOutputStatusresult + '"' + str(pin) + '":' + str(val)
                 
