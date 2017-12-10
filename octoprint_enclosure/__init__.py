@@ -98,6 +98,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.updateOutputUI()
         return flask.make_response("Ok.", 200)
 
+    @octoprint.plugin.BlueprintPlugin.route("/getOutputStatus", methods=["GET"])
+    def getOutputStatus(self):
+        getOutputStatusresult = ''
+        for rpi_output in self.rpi_outputs:
+            pin = self.toInt(rpi_output['gpioPin'])
+            if rpi_output['outputType']=='regular':
+                val = GPIO.input(pin) if not rpi_output['activeLow'] else (not GPIO.input(pin))
+            if getOutputStatusresult:
+                getOutputStatusresult = getOutputStatusresult + ', '
+            getOutputStatusresult = getOutputStatusresult + '"' + str(pin) + '": ' + str(val).lower()
+        return '{' + getOutputStatusresult + '}'
+    
+
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
     def getEnclosureTemperature(self):
         return str(self.enclosureCurrentTemperature)
