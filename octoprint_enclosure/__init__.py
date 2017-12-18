@@ -446,7 +446,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self.lastFilamentEndDetected = time.time()
                         for line in self._settings.get(["filamentSensorGcode"]).split('\n'):
                             if line:
-                                self._printer.commands(line.strip().capitalize())
+                                self._printer.commands(line.strip().upper())
                                 self._logger.info("Sending GCODE command: %s",line.strip( ).upper())
                                 time.sleep(0.2)
                         for notification in self.notifications:
