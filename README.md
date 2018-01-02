@@ -17,7 +17,7 @@ Check pictures and more information on thingiverse: http://www.thingiverse.com/t
 
 Install the plugin using the Plugin Manager bundled with OctoPrint, you can search for the Enclosure plugin or just use the url: https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip.
 
-To control the encosure temperature or get temperature trigged events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302 and DS18B20 temperature sensors.
+To control the encosure temperature or get temperature trigged events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302, DS18B20, SI7021, BME280 and TMP102 temperature sensors.
 
 * For the DHT11, DHT22 and AM2302 follow this steps:
 
