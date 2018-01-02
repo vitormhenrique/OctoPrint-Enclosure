@@ -23,7 +23,7 @@ To control the encosure temperature or get temperature trigged events, you need 
 
 Wire the sensor following the wiring diagram on the pictures on thingiverse, you can use any GPIO pin.
 
-For DHT11 and DHT22 sensors, don't forget to connect a 4.7K - 10K resistor from the data pin to VCC
+For DHT11 and DHT22 sensors, don't forget to connect a 4.7K - 10K resistor from the data pin to VCC. Also, be aware that DHT sensors some times can not work reliably on linux, this is a limitation of reading DHT sensors from Linux--there's no guarantee the program will be given enough priority and time by the Linux kernel to reliably read the sensor. Another common issue is the power supply. you need a constant and good 3.3V, sometimes a underpowered raspberry pi will not have a solid 3.3V power supply, so you could try powering the sensor with 5V and using a level shifter on the read pin.
 
 You need to install Adafruit library to use the temperature sensor on raspberry pi.
 
