@@ -144,7 +144,7 @@ appearance:
       - timelapse
 ```
       
-Find the plugin usefull? Buy me a coffe.
+Find the plugin useful? Buy me a coffe.
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
 
 
