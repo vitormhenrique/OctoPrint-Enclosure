@@ -2,6 +2,8 @@
 
 **Control pretty much everything that you might want to do on your raspberry pi / octoprint / enclosure**
 
+Find the plugin useful? Buy me a coffe.
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
 
 Here is a list of possibilities:
 * Temperature sensor on your enclosure or near your printer
@@ -143,9 +145,6 @@ appearance:
       - plugin_enclosure
       - timelapse
 ```
-      
-Find the plugin useful? Buy me a coffe.
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
 
 
      
