@@ -2,9 +2,6 @@
 
 **Control pretty much everything that you might want to do on your raspberry pi / octoprint / enclosure**
 
-Find the plugin useful? Buy me a coffe.
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
-
 Here is a list of possibilities:
 * Temperature sensor on your enclosure or near your printer
 * Heater on your enclosure and keep the temperature nice and high for large ABS 
@@ -12,6 +9,9 @@ Here is a list of possibilities:
 * Mechanical buttons to pause and resume printer jobs
 * Multiple filament sensors for dual or more extrusion
 * Alarm when enclosure temperature reaches some sort of value
+
+Find the plugin useful? Buy me a coffe.
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
 
 Check pictures and more information on thingiverse: http://www.thingiverse.com/thing:2245493
 
