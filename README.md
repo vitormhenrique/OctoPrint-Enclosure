@@ -141,3 +141,12 @@ You just need to add the following section:
       - terminal
       - plugin_enclosure
       - timelapse<code><pre>
+      
+Find the plugin usefull? Buy me a coffe.
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
+
+![alt text](https://img.shields.io/badge/Donate-PayPal-green.svg)
+
+
+     
+
