@@ -131,7 +131,8 @@ You can do this by changing the config.yaml file as instructed on [octoprint doc
 
 You just need to add the following section:
 
-<pre><code>appearance:
+```
+appearance:
   components:
     order:
       tab:
@@ -140,12 +141,11 @@ You just need to add the following section:
       - gcodeviewer
       - terminal
       - plugin_enclosure
-      - timelapse<code><pre>
-      
+      - timelapse
+```
+      
 Find the plugin usefull? Buy me a coffe.
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
-
-![alt text](https://img.shields.io/badge/Donate-PayPal-green.svg)
 
 
      
