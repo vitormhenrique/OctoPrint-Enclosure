@@ -23,6 +23,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                       octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
 
+
+
     previous_temp_control_status = False
     current_temp_control_status = False
     enclosure_set_temperature = 0.0

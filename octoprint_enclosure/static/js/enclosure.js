@@ -112,8 +112,8 @@ $(function () {
 
 
     self.getCleanTemperature = function (temp) {
-      if (temp === undefined || !_.isNumber(temp)) return "-";
-      if (temp < 10) return gettext("off");
+      if (temp === undefined || isNaN(parseFloat(temp))) return "-";
+      if (temp < 10) return String("off");
       return temp;
     }
 
@@ -168,7 +168,8 @@ $(function () {
           data: { "enclosureSetTemp": Number($("#enclosureSetTemp").val()) },
           success: function (data) {
             $("#enclosureSetTemp").val('');
-            $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature, data.enclosureCurrentTemperature));
+            cleanTemperature = self.getCleanTemperature(data.enclosureSetTemperature);
+            $("#enclosureSetTemp").attr("placeholder", cleanTemperature);
           }
         });
       } else {
@@ -212,7 +213,7 @@ $(function () {
         data: { "enclosureSetTemp": 0 },
         success: function (data) {
           $("#enclosureSetTemp").val('');
-          $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature, data.enclosureCurrentTemperature));
+          $("#enclosureSetTemp").attr("placeholder", self.getCleanTemperature(data.enclosureSetTemperature));
         }
       });
     };
@@ -250,13 +251,6 @@ $(function () {
         url: self.buildPluginUrl("/getEnclosureSetTemperature"),
         async: false
       }).responseText;
-    };
-
-    self.getStatusHeater = function (setTemp, currentTemp) {
-      if (parseFloat(setTemp) > 0.0) {
-        return self.getCleanTemperature(setTemp);
-      }
-      return "off";
     };
 
     self.handleIO = function (data, event) {

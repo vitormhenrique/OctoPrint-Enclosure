@@ -18,7 +18,7 @@
           <div data-bind="foreach: $root.global_settings.settings.plugins.enclosure.temperature_control">
             <div class="input-append" data-bind="visible: isEnabled">
               <input type="text" class="input-mini text-right tempInput" id="enclosureSetTemp"
-              data-bind="attr: {placeholder:getCleanTemperature($root.requestEnclosureSetTemperature())}">
+              data-bind="attr: {placeholder:$root.getCleanTemperature($root.requestEnclosureSetTemperature())}">
               <span class="add-on" data-bind="visible: $parent.useFahrenheit">&deg;F</span>
               <span class="add-on" data-bind="visible: !$parent.useFahrenheit()">&deg;C</span>
               <div class="btn-group" >
