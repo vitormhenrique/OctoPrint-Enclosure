@@ -18,7 +18,6 @@ $(function () {
     self.enclosureSetTemperature = ko.observable();
     self.enclosureHumidity = ko.observable();
 
-
     self.previousGpioStatus;
     self.previousGpioPWMStatus;
     self.navbarTemp = ko.observable();
@@ -143,7 +142,7 @@ $(function () {
     };
 
     self.onSettingsShown = function () {
-      self.fixUI();
+      // self.fixUI();
     };
 
     self.showColorPicker = function () {
@@ -196,7 +195,7 @@ $(function () {
       self.global_settings.settings.plugins.enclosure.rpi_inputs.push({
         label: ko.observable("Input " +
           (self.global_settings.settings.plugins.enclosure.rpi_inputs().length + 1)), gpioPin: 0, inputPull: "inputPullUp",
-        eventType: ko.observable("temperature"), setTemp: 100, controlledIO: ko.observable(""), setControlledIO: "low",
+        actionType: ko.observable("temperature"), setTemp: 100, controlledIO: ko.observable(""), setControlledIO: "low",
         edge: "fall", printerAction: "filament"
       });
     };

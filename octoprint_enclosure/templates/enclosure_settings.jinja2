@@ -139,7 +139,7 @@
       <label class="control-label">{{ _('Output Type') }}</label>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="regular" data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Regular') }}
+          <input type="radio" value="regular" data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Regular IO') }}
         </label>
       </div>
       <div class="controls">
@@ -164,6 +164,35 @@
           <input type="radio" value="temperature_control" data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Temperature Control') }}
           </span>
         </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="temperature_alarm" data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Temperature Alarm') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="gcode_output" data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Gcode') }}
+          </span>
+        </label>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <!-- ko if: ($data.outputType() == "regular")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> WRITE SOMETHING HERE
+            <span class="label label-important">Warning</span>
+            <!-- /ko -->
+            <!-- ko if: ($data.outputType() == "pwm")  -->
+            <span class="help-inline">
+              <span class="label label-info">Info:</span> TODO.</span>
+            <!-- /ko -->
+            <!-- ko if: ($data.outputType() == "neopixel_indirect")  -->
+            <span class="help-inline">
+              <span class="label label-info">Info:</span> TODO </span>
+            <!-- /ko -->
+        </div>
       </div>
     </div>
     <div class="control-group">
@@ -244,6 +273,36 @@
       </div>
     </div>
     <!-- /ko -->
+    <!-- ko if: ($data.outputType() == "temperature_alarm")  -->
+    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+      <div class="control-group">
+        <label class="control-label">{{ _('Set Temperature') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: setTemp">
+          <span class="help-inline">Set temperature that will trigger the event</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"> Controlled IO</label>
+        <div class="controls">
+          <select data-bind="options: $root.global_settings.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
+                    optionsValue: 'gpioPin', value: $data.controlledIO">
+          </select>
+          <span class="help-inline">When the event happen, you want control which IO?</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Set Controlled IO Value</label>
+        <div class="controls">
+          <select data-bind="value: setControlledIO">
+            <option value="low">Low</option>
+            <option value="high">High</option>
+          </select>
+          <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
     <!-- ko if: ($data.outputType() == "pwm")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Frequency') }}</label>
@@ -318,50 +377,60 @@
         <span class="help-inline">Name of Input</span>
       </div>
     </div>
-    <!-- ko if: $data.eventType-->
-    <div class="control-group">
-      <label class="control-label">{{ _('Event Type') }}</label>
-      <div class="controls">
-        <input type="radio" value="temperature" data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('Temperature') }}
-      </div>
-      <div class="controls">
-        <label class="radio">
-          <input type="radio" value="printer" data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('Printer') }}
-      </div>
-      <div class="controls">
-        <input type="radio" value="gpio" data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('GPIO Control') }}
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <!-- ko if: ($data.eventType() == "temperature")  -->
-        <span class="help-inline">
-          <span class="label label-info">Info:</span> Events will run actions when a certain temperature of the sensor is hit. You can control a OUTPUT
-          pin and set that to a LOW or HIGH value when that happens. You can use this as a safety measure and trigger alarm
-          lights for example.
-          <span class="label label-important">Warning</span>
-          You should always have proper smoke detector on your house. DO NOT use this as your only safety device.</span>
-        <!-- /ko -->
-        <!-- ko if: ($data.eventType() == "printer")  -->
-        <span class="help-inline">
-          <span class="label label-info">Info:</span> Events will run PRINTER actions when a condition is met, that can be a filament sensor, button, etc.
-          Actions can be Pause \ Resume \ Cancel a printer job, change the filament or disable Temperature Control. You can
-          use the "change filament" action and set up the input GPIO acording to your sensor, for example, if your filament
-          sensor conects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the
-          event on the falling edge.</span>
-        <!-- /ko -->
-        <!-- ko if: ($data.eventType() == "gpio")  -->
-        <span class="help-inline">
-          <span class="label label-info">Info:</span> Events will control GPIO outputs when a condition is met, for example detect a press of a button.
-          You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
-          / pritner using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
-        </span>
-        <!-- /ko -->
 
+    <div class="control-group">
+      <label class="control-label">{{ _('Input Type') }}</label>
+      <div class="controls">
+        <input type="radio" value="gpio" data-bind="checked: inputType, attr: {name: 'inputType_' + $index() }"> {{ _('Printer') }}
+      </div>
+      <div class="controls">
+        <input type="radio" value="temperature_sensor" data-bind="checked: inputType, attr: {name: 'inputType_' + $index() }"> {{ _('GPIO Control') }}
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <!-- ko if: ($data.inputType() == "gpio")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> GPIO will input status of the pin, HIGH / LOW </span>
+          <!-- /ko -->
+          <!-- ko if: ($data.inputType() == "temperature_sensor")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> Temperature Sensors will input temperature and humidity data.
+          </span>
+          <!-- /ko -->
+        </div>
       </div>
     </div>
-    <!-- ko if: ($data.eventType() == "printer" || $data.eventType() == "gpio")  -->
+    <!-- ko if: ($data.inputType() == "gpio")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Action Type') }}</label>
+      <div class="controls">
+        <input type="radio" value="printer" data-bind="checked: actionType, attr: {name: 'actionType_' + $index() }"> {{ _('Printer') }}
+      </div>
+      <div class="controls">
+        <input type="radio" value="gpio" data-bind="checked: actionType, attr: {name: 'actionType_' + $index() }"> {{ _('GPIO Control') }}
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <!-- ko if: ($data.actionType() == "printer")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> PRINTER actions when a condition is met, that can be a filament sensor, button,
+            etc. Actions can be Pause \ Resume \ Cancel a printer job, change the filament or disable Temperature Control.
+            You can use the "change filament" action and set up the input GPIO acording to your sensor, for example, if your
+            filament sensor conects to ground when detects the end of the filament, you should choose PULL UP resistors and
+            detect the event on the falling edge.</span>
+          <!-- /ko -->
+          <!-- ko if: ($data.actionType() == "gpio")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> Action will control GPIO outputs when a condition is met, for example detect a press of a button.
+            You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
+            / pritner using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
+          </span>
+          <!-- /ko -->
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
+  <!-- ko if: ($data.inputType() == "gpio")  -->
     <div data-bind="attr: {id: 'input_io_' + $index() }">
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-io1">{{ _('Input IO Number') }}</label>
@@ -385,7 +454,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko if: ($data.eventType() == "gpio")  -->
+    <!-- ko if: ($data.actionType() == "gpio")  -->
     <div data-bind="attr: {id: 'gpio_controlled_' + $index() }">
       <div class="control-group">
         <label class="control-label">Event Trigger</label>
@@ -420,37 +489,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko if: ($data.eventType() == "temperature")  -->
-    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
-      <div class="control-group">
-        <label class="control-label">{{ _('Set Temperature') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: setTemp">
-          <span class="help-inline">Set temperature that will trigger the event</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label"> Controlled IO</label>
-        <div class="controls">
-          <select data-bind="options: $root.global_settings.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
-            optionsValue: 'gpioPin', value: $data.controlledIO">
-          </select>
-          <span class="help-inline">When the event happen, you want control which IO?</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Set Controlled IO Value</label>
-        <div class="controls">
-          <select data-bind="value: setControlledIO">
-            <option value="low">Low</option>
-            <option value="high">High</option>
-          </select>
-          <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
-        </div>
-      </div>
-    </div>
-    <!-- /ko -->
-    <!-- ko if: ($data.eventType() == "printer")  -->
+    <!-- ko if: ($data.actionType() == "printer")  -->
     <div class="control-group" data-bind="attr: {id: 'filament_controlled_' + $index() }">
       <div class="control-group">
         <label class="control-label">Event Trigger</label>
@@ -478,7 +517,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- /ko -->
+
     <div class="control-group">
       <a title="Delete IO" class="btn btn-danger pull-right" data-bind="click: function() { $parent.removeRpiInput($data) }">
         <i class="icon-trash"></i>

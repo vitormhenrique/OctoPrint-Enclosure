@@ -253,7 +253,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         for rpi_input in self.rpi_inputs:
             if self.to_float(rpi_input['setTemp']) == 0:
                 continue
-            if rpi_input['eventType'] == 'temperature' and (self.to_float(rpi_input['setTemp']) < self.to_float(self.enclosure_current_temperature)):
+            if rpi_input['actionType'] == 'temperature' and (self.to_float(rpi_input['setTemp']) < self.to_float(self.enclosure_current_temperature)):
                 for rpi_output in self.rpi_outputs:
                     if self.to_int(rpi_input['controlledIO']) == self.to_int(rpi_output['gpioPin']):
                         val = GPIO.LOW if rpi_output['activeLow'] else GPIO.HIGH
@@ -472,11 +472,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     'inputPull'] == 'inputPullUp' else GPIO.PUD_DOWN
                 GPIO.setup(self.to_int(
                     rpi_input['gpioPin']), GPIO.IN, pullResistor)
-                if rpi_input['eventType'] == 'gpio' and self.to_int(rpi_input['gpioPin']) != 0:
+                if rpi_input['actionType'] == 'gpio' and self.to_int(rpi_input['gpioPin']) != 0:
                     edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
                     GPIO.add_event_detect(self.to_int(
                         rpi_input['gpioPin']), edge, callback=self.handle_gpio_Control, bouncetime=200)
-                if rpi_input['eventType'] == 'printer' and rpi_input['printerAction'] != 'filament' and self.to_int(rpi_input['gpioPin']) != 0:
+                if rpi_input['actionType'] == 'printer' and rpi_input['printerAction'] != 'filament' and self.to_int(rpi_input['gpioPin']) != 0:
                     edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
                     GPIO.add_event_detect(self.to_int(
                         rpi_input['gpioPin']), edge, callback=self.handle_printer_action, bouncetime=200)
@@ -490,7 +490,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def handle_filamment_detection(self, channel):
         try:
             for rpi_input in self.rpi_inputs:
-                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['eventType'] == 'printer' and rpi_input['printerAction'] == 'filament' \
+                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['actionType'] == 'printer' and rpi_input['printerAction'] == 'filament' \
                         and ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpioPin']))):
                     if time.time() - self.last_filament_end_detected > self._settings.get_int(["filamentSensorTimeout"]):
                         self._logger.info("Detected end of filament.")
@@ -520,7 +520,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.stop_filament_detection()
         try:
             for rpi_input in self.rpi_inputs:
-                if rpi_input['eventType'] == 'printer' and rpi_input['printerAction'] == 'filament' and self.to_int(rpi_input['gpioPin']) != 0:
+                if rpi_input['actionType'] == 'printer' and rpi_input['printerAction'] == 'filament' and self.to_int(rpi_input['gpioPin']) != 0:
                     edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
                     if GPIO.input(self.to_int(rpi_input['gpioPin'])) == (edge == GPIO.RISING):
                         self._printer.pause_print()
@@ -538,7 +538,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def stop_filament_detection(self):
         try:
             for rpi_input in self.rpi_inputs:
-                if rpi_input['eventType'] == 'printer' and rpi_input['printerAction'] == 'filament':
+                if rpi_input['actionType'] == 'printer' and rpi_input['printerAction'] == 'filament':
                     GPIO.remove_event_detect(self.to_int(rpi_input['gpioPin']))
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
@@ -554,7 +554,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def handle_gpio_Control(self, channel):
         try:
             for rpi_input in self.rpi_inputs:
-                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['eventType'] == 'gpio' and \
+                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['actionType'] == 'gpio' and \
                         ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpioPin']))):
                     for rpi_output in self.rpi_outputs:
                         if self.to_int(rpi_input['controlledIO']) == self.to_int(rpi_output['gpioPin']) and rpi_output['outputType'] == 'regular':
@@ -580,7 +580,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def handle_printer_action(self, channel):
         try:
             for rpi_input in self.rpi_inputs:
-                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['eventType'] == 'printer' and \
+                if channel == self.to_int(rpi_input['gpioPin']) and rpi_input['actionType'] == 'printer' and \
                         ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpioPin']))):
                     if rpi_input['printerAction'] == 'resume':
                         self._logger.info("Printer action resume.")
