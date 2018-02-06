@@ -1,0 +1,98 @@
+<div data-bind="foreach: settingsViewModel.settings.plugins.enclosure.temperature_reading">
+    <div data-bind="visible: isEnabled">
+        <h4>{{ _('Enclosure Temperature') }}</h4>
+        <table class="table table-bordered table-hover" style="table-layout: fixed; width: 100%; margin-top: 20px">
+            <tr>
+                <th style="width: 18%"></th>
+                <th style="width: 12%; text-align: right">{{ _('Actual') }}</th>
+                <th style="width: 35%">{{ _('Target') }}</th>
+            </tr>
+            <tr>
+                <th style="vertical-align: middle">{{ _('Enclosure') }}</th>
+                <td style="text-align: right; vertical-align: middle">
+                    <span data-bind="html: $root.enclosureTemp"></span>
+                    <span class="add-on" data-bind="visible: $data.use_fahrenheit">&deg;F</span>
+                    <span class="add-on" data-bind="visible: !$data.use_fahrenheit()">&deg;C</span>
+                </td>
+                <td style="vertical-align: middle; overflow: visible">
+                    <div data-bind="foreach: $root.settingsViewModel.settings.plugins.enclosure.temperature_control">
+                        <div class="input-append" data-bind="visible: isEnabled">
+                            <input type="text" class="input-mini text-right tempInput" id="enclosureSetTemp" data-bind="attr: {placeholder:$root.getCleanTemperature($root.requestEnclosureSetTemperature())}">
+                            <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;F</span>
+                            <span class="add-on" data-bind="visible: !$parent.use_fahrenheit()">&deg;C</span>
+                            <div class="btn-group">
+                                <button type="submit" data-bind="click: $root.setTemperature, enable: $root.enableBtn()" class="btn">{{ _('Set') }}</button>
+                                <button class="btn dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.enableBtn()">
+                                    <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="#" data-bind="click: $root.turnOffHeater">{{ _('Off') }}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                    </div>
+                </td>
+            </tr>
+            <tr data-bind="visible: $root.enclosureHumidity">
+                <th style="vertical-align: middle">{{ _('Humidity') }}</th>
+                <td style="text-align: right; vertical-align: middle">
+                    <span data-bind="html: $root.enclosureHumidity"></span>
+                    <span class="add-on">%</span>
+                </td>
+                <th></th>
+            </tr>
+        </table>
+    </div>
+</div>
+
+
+<div data-bind="foreach: settingsViewModel.settings.plugins.enclosure.rpi_outputs">
+    <!-- ko if: ($data.output_type() == "regular")  -->
+    <h4>
+        <p data-bind="html: label"></p>
+    </h4>
+    <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpio_pin(), 'on']),
+  enable: $root.enableBtn(), attr: {id: 'btn_on_' + $data.gpio_pin()}" class="btn">Turn on</button>
+    <button type="submit" data-bind="click: $root.handleIO.bind($data, [gpio_pin(), 'off']),
+  enable: $root.enableBtn(), attr: {id: 'btn_off_' + $data.gpio_pin()}" class="btn">Turn off</button>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "pwm")  -->
+    <h4>
+        <p data-bind="html: label"></p>
+    </h4>
+    <table class="table" style="width: 100%;align:left;margin-top:0px;margin-bottom:0px;">
+        <tr>
+            <th style="vertical-align: middle;border-top:0px;padding:0px">{{ _('Duty Cycle:') }}</th>
+            <td style="width: 20%;align:left;border-top:0px;padding:0px">
+                <input type="text" class="input-block-level" data-bind="attr: {id: 'duty_cycle_' + $data.gpio_pin()}">
+            </td>
+            <td style="width: 60%;align:left;border-top:0px;padding:0px">
+                <button type="submit" data-bind="click: $root.handlePWM.bind($data, [gpio_pin()]), enable: $root.enableBtn(),
+          attr: {id: 'btn_pwm_' + $data.gpio_pin()}" class="btn">Set PWM</button>
+            </td>
+        </tr>
+    </table>
+
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "neopixel")  -->
+    <h4>
+        <p data-bind="html: label"></p>
+    </h4>
+    <table class="table" style="width: 100%;align:left;margin-top:0px;margin-bottom:0px;">
+        <tr>
+            <td style="width: 20%;align:left;border-top:0px;padding:0px">
+                <input type="text" class="input-small" data-bind="value: neopixel_color,
+          attr: {name: 'colorpicker', id: 'color_'+ $data.gpio_pin()} ,
+          click: $root.showColorPicker()">
+            </td>
+            <td style="width: 80%;align:left;border-top:0px;padding:0px">
+                <button type="submit" data-bind="click: $root.handleNeopixel.bind($data, [gpio_pin()]),
+          enable: $root.enableBtn(), attr: {id: 'btn_neopixel_' + $data.gpio_pin()}" class="btn">Set Color</button>
+            </td>
+        </tr>
+    </table>
+    <!-- /ko -->
+</div>
