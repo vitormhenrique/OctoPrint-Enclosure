@@ -33,6 +33,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     event_queue = []
     temperature_control_status = []
     temperature_sensor_data = []
+    last_filament_end_detected = []
 
     def start_timer(self):
         """
@@ -152,7 +153,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         pwm_val = flask.request.values["pwmVal"]
         for rpi_output in self.rpi_outputs:
             if self.to_int(gpio_index) == self.to_int(rpi_output['index']):
-                self.write_pwm(self.to_int(rpi_output['gpio_pin']), self.to_int(pwm_val))
+                self.write_pwm(self.to_int(
+                    rpi_output['gpio_pin']), self.to_int(pwm_val))
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setNeopixel", methods=["GET"])
@@ -169,7 +171,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 address = rpi_output['microcontroller_address']
                 if not address:
                     self.send_neopixel_command(
-                        self.to_int(rpi_output['gpio_pin']), 
+                        self.to_int(rpi_output['gpio_pin']),
                         led_count, led_brightness, red, green, blue, address)
                 else:
                     self.send_neopixel_command_direct(
@@ -457,7 +459,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         temperature_control['gpio_pin']), val)
                 for control_status in self.temperature_control_status:
                     if control_status['index'] == temperature_control['index']:
-                        self.temperature_control_status['status'] = current_status
+                        control_status['status'] = current_status
 
     def start_gpio(self):
         try:
@@ -495,19 +497,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def clear_gpio(self):
         try:
-            for control in self.temperature_control:
-                if control['isEnabled']:
-                    GPIO.cleanup(self.to_int(control['gpio_pin']))
-            for rpi_output in self.rpi_outputs:
-                if self.to_int(rpi_output['gpio_pin']) not in self.rpi_outputs_not_changed:
-                    GPIO.cleanup(self.to_int(rpi_output['gpio_pin']))
-            for rpi_input in self.rpi_inputs:
+
+            for gpio_out in list(filter(lambda item: item['output_type'] == 'regular' or
+                                        item['output_type'] == 'pwm' or
+                                        item['output_type'] == 'temperature_control' or
+                                        item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
+                GPIO.cleanup(self.to_int(gpio_out['gpio_pin']))
+
+            for gpio_in in list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs)):
                 try:
                     GPIO.remove_event_detect(
-                        self.to_int(rpi_input['gpio_pin']))
+                        self.to_int(gpio_in['gpio_pin']))
                 except:
                     pass
-                GPIO.cleanup(self.to_int(rpi_input['gpio_pin']))
+                GPIO.cleanup(self.to_int(gpio_in['gpio_pin']))
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
             message = template.format(
@@ -535,38 +538,35 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def configure_gpio(self):
         try:
-            for control in self.temperature_control:
-                if control['isEnabled']:
-                    GPIO.setup(self.to_int(
-                        control['gpio_pin']), GPIO.OUT, initial=GPIO.HIGH if control['active_low'] else GPIO.LOW)
-            for rpi_output in self.rpi_outputs:
-                pin = self.to_int(rpi_output['gpio_pin'])
-                if rpi_output['output_type'] == 'regular':
-                    if self.to_int(rpi_output['gpio_pin']) not in self.rpi_outputs_not_changed:
-                        initialValue = GPIO.HIGH if rpi_output['active_low'] else GPIO.LOW
-                        GPIO.setup(pin, GPIO.OUT, initial=initialValue)
-                if rpi_output['output_type'] == 'pwm':
-                    for pwm in (pwm for pwm in self.pwm_intances if pin in pwm):
-                        self.pwm_intances.remove(pwm)
-                    self.clear_channel(pin)
-                    GPIO.setup(pin, GPIO.OUT)
-                    p = GPIO.PWM(pin, self.to_int(rpi_output['pwm_frequency']))
-                    self.pwm_intances.append({pin: p})
-                if rpi_output['output_type'] == 'neopixel':
-                    self.clear_channel(pin)
-            for rpi_input in self.rpi_inputs:
-                pullResistor = GPIO.PUD_UP if rpi_input[
-                    'input_pull_resistor'] == 'input_pull_up' else GPIO.PUD_DOWN
+
+            for gpio_out in list(filter(lambda item: item['output_type'] == 'regular' or
+                                        item['output_type'] == 'temperature_control', self.rpi_outputs)):
+                initialValue = GPIO.HIGH if gpio_out['active_low'] else GPIO.LOW
+                pin = self.to_int(gpio_out['gpio_pin'])
+                GPIO.setup(pin, GPIO.OUT, initial=initialValue)
+            for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
+                pin = self.to_int(gpio_out_pwm['gpio_pin'])
+                index = self.to_int(gpio_out_pwm['index'])
+                for pwm in (pwm_dict for pwm_dict in self.pwm_intances if index in pwm_dict):
+                    self.pwm_intances.remove(pwm)
+                self.clear_channel(pin)
+                GPIO.setup(pin, GPIO.OUT)
+                pwm_instance = GPIO.PWM(pin, self.to_int(
+                    gpio_out_pwm['pwm_frequency']))
+                self.pwm_intances.append({index: pwm_instance})
+            for gpio_out_neopixel in list(filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
+                pin = self.to_int(gpio_out_neopixel['gpio_pin'])
+                self.clear_channel(pin)
+
+            for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs)):
+                pullResistor = GPIO.PUD_UP if rpi_input['input_pull_resistor'] == 'input_pull_up' else GPIO.PUD_DOWN
                 GPIO.setup(self.to_int(
                     rpi_input['gpio_pin']), GPIO.IN, pullResistor)
-                if rpi_input['action_type'] == 'gpio' and self.to_int(rpi_input['gpio_pin']) != 0:
-                    edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
+                edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
+                if rpi_input['action_type'] == 'gpio_control':
                     GPIO.add_event_detect(self.to_int(
                         rpi_input['gpio_pin']), edge, callback=self.handle_gpio_control, bouncetime=200)
-                if (rpi_input['action_type'] == 'printer_control' and
-                    rpi_input['printer_action'] != 'filament' and
-                        self.to_int(rpi_input['gpio_pin']) != 0):
-                    edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
+                if (rpi_input['action_type'] == 'printer_control' and rpi_input['printer_action'] != 'filament'):
                     GPIO.add_event_detect(self.to_int(
                         rpi_input['gpio_pin']), edge, callback=self.handle_printer_action, bouncetime=200)
         except Exception as ex:
@@ -578,13 +578,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handle_filamment_detection(self, channel):
         try:
-            for rpi_input in self.rpi_inputs:
-                if (channel == self.to_int(rpi_input['gpio_pin']) and rpi_input['action_type'] == 'printer_control' and
-                    rpi_input['printer_action'] == 'filament' and
-                        ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
-                    if time.time() - self.last_filament_end_detected > self._settings.get_int(["filamentSensorTimeout"]):
+            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
+                                               item['action_type'] == 'printer_control' and
+                                               item['printer_action'] == 'filament', self.rpi_inputs)):
+                if ((filament_sensor['edge'] == 'fall') ^ (GPIO.input(self.to_int(filament_sensor['gpio_pin']))) and
+                        filament_sensor['filament_sensor_enabled']):
+                    last_detected_time = list(filter(lambda item: item['index'] == filament_sensor['index'],
+                                                     self.last_filament_end_detected)).pop()['time']
+                    if time.time() - last_detected_time > self._settings.get_int(["filament_sensor_timeout"]):
                         self._logger.info("Detected end of filament.")
-                        self.last_filament_end_detected = time.time()
+                        for item in self.last_filament_end_detected:
+                            if item['index'] == filament_sensor['index']:
+                                item['time'] = time.time()
                         for line in self._settings.get(["filament_sensor_gcode"]).split('\n'):
                             if line:
                                 self._printer.commands(line.strip().upper())
@@ -594,7 +599,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         for notification in self.notifications:
                             if notification['filamentChange']:
                                 msg = "Filament change action caused by sensor: " + \
-                                    str(rpi_input['label'])
+                                    str(filament_sensor['label'])
                                 self.send_notification(msg)
                     else:
                         self._logger.info(
@@ -609,17 +614,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def start_filament_detection(self):
         self.stop_filament_detection()
         try:
-            for rpi_input in self.rpi_inputs:
-                if (rpi_input['action_type'] == 'printer_control' and
-                    rpi_input['printer_action'] == 'filament' and
-                        self.to_int(rpi_input['gpio_pin']) != 0):
-                    edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
-                    if GPIO.input(self.to_int(rpi_input['gpio_pin'])) == (edge == GPIO.RISING):
-                        self._printer.pause_print()
-                        self._logger.info("Started printing with no filament.")
-                    else:
-                        GPIO.add_event_detect(self.to_int(
-                            rpi_input['gpio_pin']), edge, callback=self.handle_filamment_detection, bouncetime=200)
+            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
+                                               item['action_type'] == 'printer_control' and
+                                               item['printer_action'] == 'filament', self.rpi_inputs)):
+                edge = GPIO.RISING if filament_sensor['edge'] == 'rise' else GPIO.FALLING
+                if GPIO.input(self.to_int(filament_sensor['gpio_pin'])) == (edge == GPIO.RISING):
+                    self._printer.pause_print()
+                    self._logger.info("Started printing with no filament.")
+                else:
+                    self.last_filament_end_detected.append(
+                        dict(index=filament_sensor['index'], time=0))
+                    GPIO.add_event_detect(self.to_int(
+                        filament_sensor['gpio_pin']), edge, callback=self.handle_filamment_detection, bouncetime=200)
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
             message = template.format(
@@ -629,10 +635,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def stop_filament_detection(self):
         try:
-            for rpi_input in self.rpi_inputs:
-                if rpi_input['action_type'] == 'printer_control' and rpi_input['printer_action'] == 'filament':
-                    GPIO.remove_event_detect(
-                        self.to_int(rpi_input['gpio_pin']))
+            self.last_filament_end_detected = []
+            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
+                                               item['action_type'] == 'printer_control' and
+                                               item['printer_action'] == 'filament', self.rpi_inputs)):
+                GPIO.remove_event_detect(
+                    self.to_int(filament_sensor['gpio_pin']))
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
             message = template.format(
@@ -651,7 +659,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_input['action_type'] == 'gpio' and
                         ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
                     for rpi_output in self.rpi_outputs:
-                        if (self.to_int(rpi_input['controlled_io']) == self.to_int(rpi_output['gpio_pin']) and
+                        if (self.to_int(rpi_input['controlled_io']) == self.to_int(rpi_output['index']) and
                                 rpi_output['output_type'] == 'regular'):
                             if rpi_input['controlled_io_set_value'] == 'toggle':
                                 val = GPIO.LOW if GPIO.input(self.to_int(
@@ -675,8 +683,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def handle_printer_action(self, channel):
         try:
             for rpi_input in self.rpi_inputs:
-                if channel == self.to_int(rpi_input['gpio_pin']) and rpi_input['action_type'] == 'printer_control' and \
-                        ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin']))):
+                if (channel == self.to_int(rpi_input['gpio_pin']) and
+                    rpi_input['action_type'] == 'printer_control' and
+                        ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
                     if rpi_input['printer_action'] == 'resume':
                         self._logger.info("Printer action resume.")
                         self._printer.resume_print()
@@ -739,15 +748,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def update_output_ui(self):
         try:
-            result = []
-            result_pwm = []
+            gpio_status = []
+            pwm_status = []
 
             for rpi_output in self.rpi_outputs:
                 pin = self.to_int(rpi_output['gpio_pin'])
                 if rpi_output['output_type'] == 'regular':
                     val = GPIO.input(pin) if not rpi_output['active_low'] else (
                         not GPIO.input(pin))
-                    result.append({pin: val})
+                    gpio_status.append({pin: val})
                 if rpi_output['output_type'] == 'pwm':
                     for pwm in self.pwm_intances:
                         if pin in pwm:
@@ -756,10 +765,25 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                 val = self.to_int(pwmVal)
                             else:
                                 val = 100
-                            result_pwm.append({pin: val})
+                            pwm_status.append({pin: val})
                         # self._logger.info("result_pwm: %s", result_pwm)
             self._plugin_manager.send_plugin_message(
-                self._identifier, dict(rpi_output=result, rpi_output_pwm=result_pwm))
+                self._identifier, dict(rpi_output=gpio_status, rpi_output_pwm=pwm_status))
+        except Exception as ex:
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            message = template.format(
+                type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
+            self._logger.warn(message)
+            pass
+
+    def update_set_temperature(self):
+        try:
+            result = []
+            for filament_sensor in list(filter(lambda item: item['output_type'] == 'temperature_control', self.rpi_outputs)):
+                result.append(dict(
+                    index=filament_sensor['index'], temperature=filament_sensor['temperature_control_set_temperature']))
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(set_temperature=result))
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
             message = template.format(
@@ -855,15 +879,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self.event_queue.append(threading.Timer(self.to_float(rpi_output['startup_time']),
                                                             self.send_neopixel_command,
                                                             args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address]))
+
+                if rpi_output['auto_startup'] and rpi_output['output_type'] == 'temperature_control':
+                    rpi_output['temperature_control_set_temperature'] = rpi_output['temperature_control_default_temperature']
+                self.update_set_temperature()
                 for task in self.event_queue:
                     task.start()
-            for control in self.temperature_control:
-                if control['auto_startup'] is True:
-                    self.enclosure_set_temperature = self.to_int(
-                        control['defaultTemp'])
-                    self._plugin_manager.send_plugin_message(
-                        self._identifier, dict(enclosureSetTemp=self.enclosure_set_temperature))
-
         elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
             self.stop_filament_detection()
             self.enclosure_set_temperature = 0
