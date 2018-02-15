@@ -66,7 +66,7 @@
     <div class="control-group">
       <label class="control-label">{{ _('Id') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: index" disabled="true"> 
+        <input type="text" class="input-block-level" data-bind="value: index_id" disabled="true"> 
         <span class="help-inline">Id used for API control</span>
       </div>
     </div>
@@ -146,7 +146,7 @@
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.rpi_inputs_temperature_sensors, optionsText: 'label',
-                      optionsValue: 'index', value: $data.linked_temperature_sensor">
+                      optionsValue: 'index_id', value: $data.linked_temperature_sensor">
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
@@ -201,7 +201,7 @@
         <label class="control-label"> Controlled IO</label>
         <div class="controls">
           <select data-bind="options: $root.rpi_outputs_regular, optionsText: 'label',
-                    optionsValue: 'index', value: $data.controlled_io">
+                    optionsValue: 'index_id', value: $data.controlled_io">
           </select>
           <span class="help-inline">When the event happen, you want control which IO?</span>
         </div>
@@ -476,7 +476,7 @@
       <label class="control-label"> Controlled IO</label>
       <div class="controls">
         <select data-bind="options: $root.settingsViewModel.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
-                optionsValue: 'index', value: $data.controlled_io">
+                optionsValue: 'index_id', value: $data.controlled_io">
         </select>
         <span class="help-inline">When the event happen, you want control which IO?</span>
       </div>

@@ -1,0 +1,42 @@
+#enclosure-table {
+    table-layout: fixed;
+    width: 100%;
+    margin-top: 20px;
+}
+
+#enclosure-table th,
+#enclosure-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+
+#enclosure-table th.temperature_sensor,
+#enclosure-table td.temperature_sensor {
+    width: 15%;
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#enclosure-table th.temperature_actual,
+#enclosure-table td.temperature_actual {
+    width: 20%;
+}
+
+#enclosure-table th.humidity_actual,
+#enclosure-table td.humidity_actual {
+    width: 20%;
+}
+
+#enclosure-table th.temperature_control,
+#enclosure-table td.temperature_control {
+    width: 15%;
+}
+
+#enclosure-table th.temperature_target,
+#enclosure-table td.temperature_target {
+    width: 30%;
+    overflow: visible;
+}

@@ -16,6 +16,8 @@ import requests
 import inspect
 import threading
 
+# 28-0000062410dc
+
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                       octoprint.plugin.TemplatePlugin,
@@ -77,25 +79,23 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.rpi_inputs = self._settings.get(["rpi_inputs"])
         self.notifications = self._settings.get(["notifications"])
         self.fix_data()
+        self.generate_temperature_control_status()
         self.rpi_outputs_not_changed = []
         self.start_timer()
-        self.start_gpio()
+        self.setup_gpio()
         self.configure_gpio()
         self.update_output_ui()
 
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTemperature", methods=["GET"])
     def set_enclosure_temperature(self):
-        set_temperature = flask.request.values["set_temperature"]
-        index = flask.request.values["index"]
-        for temperature_control in list(filter(lambda item:
-                                               item['output_type'] == 'temperature_control' and
-                                               item['index'] == index, self.rpi_outputs)):
+        set_temperature = self.to_float(flask.request.values["set_temperature"])
+        index_id = self.to_int(flask.request.values["index_id"])
+
+        for temperature_control in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
             temperature_control['temperature_control_set_temperature'] = set_temperature
-            if self._settings.get(["debug"]) is True:
-                self._logger.info(
-                    "DEBUG -> Seting output index %s to temperature: %s", index, set_temperature)
-        self.handle_temperature_control()
+
+        # self.handle_temperature_control()
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/getEnclosureSetTemperature", methods=["GET"])
@@ -139,20 +139,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
     def set_io(self):
-        gpio_index = flask.request.values["index"]
+        gpio_index = flask.request.values["index_id"]
         value = True if flask.request.values["status"] == "on" else False
         for rpi_output in self.rpi_outputs:
-            if self.to_int(gpio_index) == self.to_int(rpi_output['index']):
+            if self.to_int(gpio_index) == self.to_int(rpi_output['index_id']):
                 val = (not value) if rpi_output['active_low'] else value
                 self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setPWM", methods=["GET"])
     def set_pwm(self):
-        gpio_index = flask.request.values["index"]
+        gpio_index = flask.request.values["index_id"]
         pwm_val = flask.request.values["pwmVal"]
         for rpi_output in self.rpi_outputs:
-            if self.to_int(gpio_index) == self.to_int(rpi_output['index']):
+            if self.to_int(gpio_index) == self.to_int(rpi_output['index_id']):
                 self.write_pwm(self.to_int(
                     rpi_output['gpio_pin']), self.to_int(pwm_val))
         return flask.jsonify(success=True)
@@ -160,12 +160,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/setNeopixel", methods=["GET"])
     def set_neopixel(self):
         """ set_neopixel method get request from octoprint and send the comand to arduino or neopixel"""
-        gpio_index = flask.request.values["index"]
+        gpio_index = flask.request.values["index_id"]
         red = flask.request.values["red"]
         green = flask.request.values["green"]
         blue = flask.request.values["blue"]
         for rpi_output in self.rpi_outputs:
-            if self.to_int(gpio_index) == self.to_int(rpi_output['index']):
+            if self.to_int(gpio_index) == self.to_int(rpi_output['index_id']):
                 led_count = rpi_output['neopixel_count']
                 led_brightness = rpi_output['neopixel_brightness']
                 address = rpi_output['microcontroller_address']
@@ -184,8 +184,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         """ Fix setting dada commin from old releases of the plugin"""
 
         if not self._settings.get(["settingsVersion"]) == "3.6":
-            self._settings.set(["rpi_outputs"], [])
-            self._settings.set(["rpi_inputs"], [])
+            # self._settings.set(["rpi_outputs"], [])
+            # self._settings.set(["rpi_inputs"], [])
+            # self.rpi_outputs = self._settings.get(["rpi_outputs"])
+            # self.rpi_inputs = self._settings.get(["rpi_inputs"])
             self._logger.warn("######### settings not compatible #########")
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address):
@@ -210,7 +212,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Sending neopixel cmd: %s", cmd)
             Popen(cmd, shell=True)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -237,7 +239,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Sending neopixel cmd: %s", cmd)
             Popen(cmd, shell=True)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -246,21 +248,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def check_enclosure_temp(self):
         try:
             sensor_data = []
-            for sensor in list(
-                    filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
+            for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
                 temp, hum = self.get_sensor_data(sensor)
                 if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
                     self._logger.info(
                         "Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
                 sensor_data.append(
-                    dict(id=sensor['index'], temperature=temp, humidity=hum))
+                    dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(sensor_data=sensor_data))
             self.temperature_sensor_data = sensor_data
             self.handle_temperature_control()
-            self.handle_temperature_events()
+            # self.handle_temperature_events()
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -273,7 +274,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 temp, hum = self.read_dht_temp(
                     sensor['temperature_sensor_type'], sensor['gpio_pin'])
             elif sensor['temperature_sensor_type'] == "18b20":
-                temp = self.read_18b20_temp()
+                temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                 hum = 0
             elif sensor['temperature_sensor_type'] == "bme280":
                 temp, hum = self.read_bme280_temp(
@@ -295,23 +296,22 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 hum = round(self.to_float(hum), 1)
                 return temp, hum
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             pass
 
     def handle_temperature_events(self):
-        for temperature_alarm in list(filter(lambda item: item['output_type'] == 'temperature_alarm', self.rpi_outputs)):
+        for temperature_alarm in [item for item in self.rpi_outputs if item['output_type'] == 'temperature_alarm']:
             if self.to_float(temperature_alarm['alarm_set_temperature']) == 0:
                 continue
-            linked_data = list(filter(
-                lambda sensor: sensor['index'] == temperature_alarm['linked_temperature_sensor'],
-                self.temperature_sensor_data)).pop()
+            linked_data = [item for item in self.temperature_sensor_data if item['index_id'] ==
+                           temperature_alarm['linked_temperature_sensor']].pop()
             sensor_temperature = linked_data['temperature']
             if self.to_float(temperature_alarm['alarm_set_temperature']) < sensor_temperature:
                 for rpi_controlled_output in self.rpi_outputs:
-                    if self.to_int(temperature_alarm['controlled_io']) == self.to_int(rpi_controlled_output['index']):
+                    if self.to_int(temperature_alarm['controlled_io']) == self.to_int(rpi_controlled_output['index_id']):
                         val = GPIO.LOW if rpi_controlled_output['active_low'] else GPIO.HIGH
                         self.write_gpio(self.to_int(
                             rpi_controlled_output['gpio_pin']), val)
@@ -334,7 +334,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -353,7 +353,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -372,20 +372,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             return (0, 0)
 
-    def read_18b20_temp(self):
+    def read_18b20_temp(self, serial_number):
         os.system('modprobe w1-gpio')
         os.system('modprobe w1-therm')
 
-        lines = self.read_raw_18b20_temp()
+        lines = self.read_raw_18b20_temp(serial_number)
         while lines[0].strip()[-3:] != 'YES':
             time.sleep(0.2)
-            lines = self.read_raw_18b20_temp()
+            lines = self.read_raw_18b20_temp(serial_number)
         equals_pos = lines[1].find('t=')
         if equals_pos != -1:
             temp_string = lines[1][equals_pos + 2:]
@@ -393,9 +393,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             return '{0:0.1f}'.format(temp_c)
         return 0
 
-    def read_raw_18b20_temp(self):
+    def read_raw_18b20_temp(self, serial_number):
         base_dir = '/sys/bus/w1/devices/'
-        device_folder = glob.glob(base_dir + '28*')[0]
+        device_folder = glob.glob(base_dir + str(serial_number) + '*')[0]
         device_file = device_folder + '/w1_slave'
         device_file_result = open(device_file, 'r')
         lines = device_file_result.readlines()
@@ -414,54 +414,61 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("TMP102 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             return 0
 
     def handle_temperature_control(self):
-        for temperature_control in list(filter(lambda item:
-                                               item['output_type'] == 'temperature_control', self.rpi_outputs)):
+        try:
+            for temperature_control in list(filter(lambda item: item['output_type'] == 'temperature_control', self.rpi_outputs)):
 
-            set_temperature = self.to_float(
-                temperature_control['temperature_control_set_temperature'])
+                set_temperature = self.to_float(
+                    temperature_control['temperature_control_set_temperature'])
 
-            if set_temperature == 0:
-                current_status = False
-            else:
-                linked_data = list(filter(lambda sensor:
-                                          sensor['index'] == temperature_control['linked_temperature_sensor'],
-                                          self.temperature_sensor_data)).pop()
-                current_temperature = self.to_float(linked_data['temperature'])
+                linked_id = temperature_control['linked_temperature_sensor']
 
-                current_status = set_temperature < current_temperature
-
-                if temperature_control['temperature_control_type'] is 'cooler':
-                    current_status != current_status
-
-            previous_status = filter(
-                lambda item: item['index'] == temperature_control['index'],
-                self.temperature_control_status).pop()['status']
-
-            if current_status != previous_status:
-                if current_status:
-                    self._logger.info(
-                        "Turning gpio to control temperature on.")
-                    val = False if temperature_control['active_low'] else True
-                    self.write_gpio(self.to_int(
-                        temperature_control['gpio_pin']), val)
+                if set_temperature == 0:
+                    current_status = False
                 else:
-                    self._logger.info(
-                        "Turning gpio to control temperature off.")
-                    val = True if temperature_control['active_low'] else False
-                    self.write_gpio(self.to_int(
-                        temperature_control['gpio_pin']), val)
-                for control_status in self.temperature_control_status:
-                    if control_status['index'] == temperature_control['index']:
-                        control_status['status'] = current_status
+                    linked_data = [
+                        data for data in self.temperature_sensor_data if data['index_id'] == linked_id].pop()
 
-    def start_gpio(self):
+                    current_temperature = self.to_float(linked_data['temperature'])
+
+                    current_status = self.to_float(set_temperature) > self.to_float(current_temperature)
+
+                    if temperature_control['temperature_control_type'] is 'cooler':
+                        current_status = not current_status
+
+                previous_status = filter(
+                    lambda item: item['index_id'] == temperature_control['index_id'],
+                    self.temperature_control_status).pop()['status']
+
+                if current_status != previous_status:
+                    if current_status:
+                        self._logger.info(
+                            "Turning gpio to control temperature on.")
+                        val = False if temperature_control['active_low'] else True
+                        self.write_gpio(self.to_int(
+                            temperature_control['gpio_pin']), val)
+                    else:
+                        self._logger.info(
+                            "Turning gpio to control temperature off.")
+                        val = True if temperature_control['active_low'] else False
+                        self.write_gpio(self.to_int(
+                            temperature_control['gpio_pin']), val)
+                    for control_status in self.temperature_control_status:
+                        if control_status['index_id'] == temperature_control['index_id']:
+                            control_status['status'] = current_status
+        except Exception as ex:
+                template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
+                message = template.format(
+                    type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
+                self._logger.warn(message)
+
+    def setup_gpio(self):
         try:
             currentMode = GPIO.getmode()
             setMode = GPIO.BOARD if self._settings.get(
@@ -473,7 +480,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                     item['output_type'] == 'neopixel_direct', self.rpi_outputs))
                 gpios.append(list(filter(
                     lambda item: item['input_type'] == 'gpio', self.rpi_inputs)))
-                if gpios.count() > 0:
+                if gpios:
                     GPIO.setmode(setMode)
                     tempstr = "BOARD" if setMode == GPIO.BOARD else "BCM"
                     self._logger.info("Setting GPIO mode to %s", tempstr)
@@ -489,7 +496,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self._identifier, dict(isMsg=True, msg=warn_msg))
             GPIO.setwarnings(False)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -512,7 +519,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     pass
                 GPIO.cleanup(self.to_int(gpio_in['gpio_pin']))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -522,7 +529,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             GPIO.cleanup(self.to_int(channel))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -533,7 +540,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         for temperature_control in list(filter(lambda item:
                                                item['output_type'] == 'temperature_control', self.rpi_outputs)):
             status.append(
-                dict(index=temperature_control['index'], status=False))
+                dict(index_id=temperature_control['index_id'], status=False))
         self.temperature_control_status = status
 
     def configure_gpio(self):
@@ -546,14 +553,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 GPIO.setup(pin, GPIO.OUT, initial=initialValue)
             for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_pwm['gpio_pin'])
-                index = self.to_int(gpio_out_pwm['index'])
-                for pwm in (pwm_dict for pwm_dict in self.pwm_intances if index in pwm_dict):
+                index_id = self.to_int(gpio_out_pwm['index_id'])
+                for pwm in (pwm_dict for pwm_dict in self.pwm_intances if index_id in pwm_dict):
                     self.pwm_intances.remove(pwm)
                 self.clear_channel(pin)
                 GPIO.setup(pin, GPIO.OUT)
                 pwm_instance = GPIO.PWM(pin, self.to_int(
                     gpio_out_pwm['pwm_frequency']))
-                self.pwm_intances.append({index: pwm_instance})
+                self.pwm_intances.append({index_id: pwm_instance})
             for gpio_out_neopixel in list(filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
                 self.clear_channel(pin)
@@ -570,7 +577,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     GPIO.add_event_detect(self.to_int(
                         rpi_input['gpio_pin']), edge, callback=self.handle_printer_action, bouncetime=200)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -580,15 +587,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
                                                item['action_type'] == 'printer_control' and
-                                               item['printer_action'] == 'filament', self.rpi_inputs)):
+                                               item['printer_action'] == 'filament' and
+                                               filament_sensor['gpio_pin'] == channel, self.rpi_inputs)):
                 if ((filament_sensor['edge'] == 'fall') ^ (GPIO.input(self.to_int(filament_sensor['gpio_pin']))) and
                         filament_sensor['filament_sensor_enabled']):
-                    last_detected_time = list(filter(lambda item: item['index'] == filament_sensor['index'],
+                    last_detected_time = list(filter(lambda item: item['index_id'] == filament_sensor['index_id'],
                                                      self.last_filament_end_detected)).pop()['time']
                     if time.time() - last_detected_time > self._settings.get_int(["filament_sensor_timeout"]):
                         self._logger.info("Detected end of filament.")
                         for item in self.last_filament_end_detected:
-                            if item['index'] == filament_sensor['index']:
+                            if item['index_id'] == filament_sensor['index_id']:
                                 item['time'] = time.time()
                         for line in self._settings.get(["filament_sensor_gcode"]).split('\n'):
                             if line:
@@ -605,7 +613,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self._logger.info(
                             "Prevented end of filament detection, filament sensor timeout not elapsed.")
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -623,11 +631,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self._logger.info("Started printing with no filament.")
                 else:
                     self.last_filament_end_detected.append(
-                        dict(index=filament_sensor['index'], time=0))
+                        dict(index_id=filament_sensor['index_id'], time=0))
                     GPIO.add_event_detect(self.to_int(
                         filament_sensor['gpio_pin']), edge, callback=self.handle_filamment_detection, bouncetime=200)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -642,7 +650,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 GPIO.remove_event_detect(
                     self.to_int(filament_sensor['gpio_pin']))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -659,7 +667,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_input['action_type'] == 'gpio' and
                         ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
                     for rpi_output in self.rpi_outputs:
-                        if (self.to_int(rpi_input['controlled_io']) == self.to_int(rpi_output['index']) and
+                        if (self.to_int(rpi_input['controlled_io']) == self.to_int(rpi_output['index_id']) and
                                 rpi_output['output_type'] == 'regular'):
                             if rpi_input['controlled_io_set_value'] == 'toggle':
                                 val = GPIO.LOW if GPIO.input(self.to_int(
@@ -674,7 +682,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                         rpi_input['controlled_io']) + " to: " + str(rpi_input['controlled_io_set_value'])
                                     self.send_notification(msg)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -707,7 +715,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                 " caused by input: " + str(rpi_input['label'])
                             self.send_notification(msg)
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -720,7 +728,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Writing on gpio: %s value %s", gpio, value)
             self.update_output_ui()
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -740,7 +748,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self.update_output_ui()
                     break
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -770,7 +778,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(rpi_output=gpio_status, rpi_output_pwm=pwm_status))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -781,11 +789,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             result = []
             for filament_sensor in list(filter(lambda item: item['output_type'] == 'temperature_control', self.rpi_outputs)):
                 result.append(dict(
-                    index=filament_sensor['index'], temperature=filament_sensor['temperature_control_set_temperature']))
+                    index_id=filament_sensor['index_id'], temperature=filament_sensor['temperature_control_set_temperature']))
             self._plugin_manager.send_plugin_message(
                 self._identifier, dict(set_temperature=result))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -827,7 +835,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     for err in j['errors']:
                         self._logger.info('Error: {}'.format(err['message']))
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1}. Arguments:\n{1!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
@@ -870,11 +878,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     stringColor = rpi_output['neopixel_color']
                     stringColor = stringColor.replace('rgb(', '')
 
-                    red = stringColor[:stringColor.index(',')]
-                    stringColor = stringColor[stringColor.index(',') + 1:]
-                    green = stringColor[:stringColor.index(',')]
-                    stringColor = stringColor[stringColor.index(',') + 1:]
-                    blue = stringColor[:stringColor.index(')')]
+                    red = stringColor[:stringColor.index_id(',')]
+                    stringColor = stringColor[stringColor.index_id(',') + 1:]
+                    green = stringColor[:stringColor.index_id(',')]
+                    stringColor = stringColor[stringColor.index_id(',') + 1:]
+                    blue = stringColor[:stringColor.index_id(')')]
 
                     self.event_queue.append(threading.Timer(self.to_float(rpi_output['startup_time']),
                                                             self.send_neopixel_command,
@@ -926,7 +934,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     # ~~ SettingsPlugin mixin
     def on_settings_save(self, data):
 
-        self._logger.info("data: %s", data)
+        # self._logger.info("data: %s", data)
 
         outputsBeforeSave = self.get_output_list()
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
@@ -946,7 +954,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if self._settings.get(["debug"]) is True:
             self._logger.info("rpi_outputs: %s", self.rpi_outputs)
             self._logger.info("rpi_inputs: %s", self.rpi_inputs)
-        self.start_gpio()
+        self.setup_gpio()
         self.configure_gpio()
         self.generate_temperature_control_status()
 
@@ -989,7 +997,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def get_assets(self):
         return dict(
             js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
-            css=["css/bootstrap-colorpicker.css"]
+            css=["css/bootstrap-colorpicker.css", "css/enclosure.css"],
+            less=['less/my_styles.less']
         )
 
     # ~~ Softwareupdate hook

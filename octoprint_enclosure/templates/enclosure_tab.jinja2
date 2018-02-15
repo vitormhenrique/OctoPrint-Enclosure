@@ -1,0 +1,74 @@
+<div class="row-fluid">
+
+    <!-- <pre data-bind="text: ko.toJSON($root.rpi_inputs_temperature_sensors(), null, 2)"></pre> -->
+
+    <table id="enclosure-table" class="table table-bordered table-hover">
+        <tbody>
+            <tr>
+                <th class="temperature_sensor"></th>
+                <th class="temperature_actual" title="{{ _('Current actual temperature as reported by your sensor') }}">{{ _('Temperature') }}</th>
+                <!-- ko if: ($root.hasAnySensorWithHumidity())  -->
+                <th class="humidity_actual" title="{{ _('Current humidity') }}">{{ _('Humidity') }}</th>
+                <!-- /ko -->
+                <th class="temperature_control">{{ _('Control') }}</th>
+                <th class="temperature_target" title="{{ _('Current target temperature') }}">{{ _('Target') }}</th>
+            </tr>
+
+            <!-- ko foreach: $root.rpi_inputs_temperature_sensors() -->
+            <tr>
+                <th class="temperature_sensor" data-bind="text: label, attr: {title: label, rowspan: $root.linkedTemperatureControl(index_id())().length}"></th>
+                <td class="temperature_actual" data-bind="html: temperature_sensor_temperature, attr: {title: temperature_sensor_temperature, rowspan: $root.linkedTemperatureControl(index_id())().length}"></td>
+                <!-- ko if: ($root.humidityCapableSensor(temperature_sensor_type))  -->
+                <td class="humidity_actual" data-bind="html: temperature_sensor_humidity, attr: {title: temperature_sensor_humidity, rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                    <span class="add-on">%</span>
+                </td>
+                <!-- /ko -->
+        
+
+                <!-- ko if: ( $root.linkedTemperatureControl(index_id())().length > 0)  -->
+                <!-- ko with:  $root.linkedTemperatureControl(index_id())()[0] -->
+                <th class="temperature_control" data-bind="html: label, attr: {title: label}"></th>
+                <td class="temperature_target">
+                    <form class="form-inline" style="margin:0" data-bind="submit: function(element) { $root.setTemperature($data, element) }">
+                        <div class="input-prepend input-append"> 
+                            <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="value: temperature_control_new_temperature, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temperature_control_set_temperature()), id: 'temp_control_' + index_id()}">
+                            <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;F</span>
+                            <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;C</span>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" data-bind="enable: $root.enableBtn()" class="btn btn-primary" title="{{ _('Set') }}"><i class="fa fa-check"></i></button>
+                            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.enableBtn()">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="javascript:void(0)" data-bind="click: $root.turnOffHeater">{{ _('Off') }}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </td>
+                <!-- /ko -->
+                <!-- /ko -->
+
+                <!-- ko if: ( !$root.linkedTemperatureControl(index_id())().length > 0)  -->
+                <td class="temperature_control"></td>
+                <td class="temperature_target"></td>
+                <!-- /ko -->
+            </tr>
+            <!-- ko foreach: $root.linkedTemperatureControl(index_id())-->
+                <!-- ko ifnot: ($index() ==  0)  -->
+            <tr>
+                <th class="temperature_control" data-bind="html: label, attr: {title: label}"></th>
+                <td class="temperature_target">Set Temp</td>
+            </tr>
+                <!-- /ko -->
+            <!-- /ko -->
+
+            <!-- /ko -->
+        </tbody>
+    </table>
+
+
+
+</div>
