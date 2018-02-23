@@ -1,7 +1,9 @@
+<!-- <pre data-bind="text: ko.toJSON($root.rpi_outputs(), null, 2)"></pre> -->
+
+<!-- ko if: ($root.rpi_inputs_temperature_sensors().length > 0)  -->
 <div class="row-fluid">
-
+    <h4>Temperature</h4>
     <!-- <pre data-bind="text: ko.toJSON($root.rpi_inputs_temperature_sensors(), null, 2)"></pre> -->
-
     <table id="enclosure-table" class="table table-bordered table-hover">
         <tbody>
             <tr>
@@ -10,33 +12,43 @@
                 <!-- ko if: ($root.hasAnySensorWithHumidity())  -->
                 <th class="humidity_actual" title="{{ _('Current humidity') }}">{{ _('Humidity') }}</th>
                 <!-- /ko -->
+                <!-- ko if: ($root.hasAnyTemperatureControl())  -->
                 <th class="temperature_control">{{ _('Control') }}</th>
                 <th class="temperature_target" title="{{ _('Current target temperature') }}">{{ _('Target') }}</th>
+                <!-- /ko -->
             </tr>
 
             <!-- ko foreach: $root.rpi_inputs_temperature_sensors() -->
             <tr>
                 <th class="temperature_sensor" data-bind="text: label, attr: {title: label, rowspan: $root.linkedTemperatureControl(index_id())().length}"></th>
-                <td class="temperature_actual" data-bind="html: temperature_sensor_temperature, attr: {title: temperature_sensor_temperature, rowspan: $root.linkedTemperatureControl(index_id())().length}"></td>
-                <!-- ko if: ($root.humidityCapableSensor(temperature_sensor_type))  -->
-                <td class="humidity_actual" data-bind="html: temperature_sensor_humidity, attr: {title: temperature_sensor_humidity, rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                <td class="temperature_actual" data-bind="text: temp_sensor_temp, attr: {title: temp_sensor_temp, rowspan: $root.linkedTemperatureControl(index_id())().length}"></td>
+                <!-- ko if: ($root.humidityCapableSensor(temp_sensor_type()))  -->
+                <td class="humidity_actual" data-bind="html: temp_sensor_humidity, attr: {title: temp_sensor_humidity, rowspan: $root.linkedTemperatureControl(index_id())().length}">
                     <span class="add-on">%</span>
                 </td>
                 <!-- /ko -->
-        
 
-                <!-- ko if: ( $root.linkedTemperatureControl(index_id())().length > 0)  -->
+                <!-- ko if: ($root.hasAnySensorWithHumidity())  -->
+                <!-- ko ifnot: ($root.humidityCapableSensor(temp_sensor_type()))  -->
+                <td>N/A</td>
+                <!-- /ko -->
+                <!-- /ko -->
+
+
+                <!-- ko if: ($root.linkedTemperatureControl(index_id())().length > 0 || $root.hasAnyTemperatureControl())  -->
                 <!-- ko with:  $root.linkedTemperatureControl(index_id())()[0] -->
                 <th class="temperature_control" data-bind="html: label, attr: {title: label}"></th>
                 <td class="temperature_target">
                     <form class="form-inline" style="margin:0" data-bind="submit: function(element) { $root.setTemperature($data, element) }">
-                        <div class="input-prepend input-append"> 
-                            <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="value: temperature_control_new_temperature, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temperature_control_set_temperature()), id: 'temp_control_' + index_id()}">
+                        <div class="input-prepend input-append">
+                            <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="value: temp_ctr_new_set_temp, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temp_ctr_set_temp()), id: 'temp_control_' + index_id()}">
                             <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;F</span>
                             <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;C</span>
                         </div>
                         <div class="btn-group">
-                            <button type="submit" data-bind="enable: $root.enableBtn()" class="btn btn-primary" title="{{ _('Set') }}"><i class="fa fa-check"></i></button>
+                            <button type="submit" data-bind="enable: $root.enableBtn()" class="btn btn-primary" title="{{ _('Set') }}">
+                                <i class="fa fa-check"></i>
+                            </button>
                             <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.enableBtn()">
                                 <span class="caret"></span>
                             </button>
@@ -51,24 +63,51 @@
                 <!-- /ko -->
                 <!-- /ko -->
 
+                <!-- ko if: ($root.hasAnyTemperatureControl())  -->
                 <!-- ko if: ( !$root.linkedTemperatureControl(index_id())().length > 0)  -->
                 <td class="temperature_control"></td>
                 <td class="temperature_target"></td>
                 <!-- /ko -->
+                <!-- /ko -->
             </tr>
+            <!-- ko if: ($root.hasAnyTemperatureControl())  -->
             <!-- ko foreach: $root.linkedTemperatureControl(index_id())-->
-                <!-- ko ifnot: ($index() ==  0)  -->
+            <!-- ko ifnot: ($index() ==  0)  -->
             <tr>
                 <th class="temperature_control" data-bind="html: label, attr: {title: label}"></th>
                 <td class="temperature_target">Set Temp</td>
             </tr>
-                <!-- /ko -->
+            <!-- /ko -->
+            <!-- /ko -->
+
             <!-- /ko -->
 
             <!-- /ko -->
         </tbody>
     </table>
-
-
-
 </div>
+<!-- /ko -->
+
+<!-- ko foreach: $root.rpi_outputs() -->
+    <!-- ko if: ($data.output_type() == "regular")  -->
+
+    <h4>
+        <span data-bind="html: label"> </span>
+        <!-- ko if: ($data.gpio_status())  -->
+        <span class="badge badge-success help-inline">on</span>
+        <!-- /ko -->
+        <!-- ko ifnot: ($data.gpio_status())  -->
+        <span class="badge badge-important help-inline">off</span>
+        <!-- /ko -->
+    </h4>
+
+    <!-- ko if: ($data.gpio_status())  -->
+        <button data-bind="click: $root.handleIO" class="btn">Turn off</button>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.gpio_status())  -->
+        <button data-bind="click: $root.handleIO" class="btn">Turn on</button>
+    <!-- /ko -->
+
+    <!-- /ko -->
+<!-- /ko -->
+

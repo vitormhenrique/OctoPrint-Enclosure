@@ -146,7 +146,7 @@
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.rpi_inputs_temperature_sensors, optionsText: 'label',
-                      optionsValue: 'index_id', value: $data.linked_temperature_sensor">
+                      optionsValue: 'index_id', value: $data.linked_temp_sensor">
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
@@ -157,33 +157,33 @@
       <label class="control-label">{{ _('Temp Control Type') }}</label>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="heater" name="optradio" data-bind="checked: temperature_control_type"> {{ _('Heater') }}</label>
+          <input type="radio" value="heater" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Heater') }}</label>
       </div>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="cooler" name="optradio" data-bind="checked: temperature_control_type"> {{ _('Cooler') }}</label>
+          <input type="radio" value="cooler" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">{{ _('Default Temperature') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: temperature_control_default_temperature">
-        <span class="help-inline">Default temperature that temperature control will be set</span>
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_temp">
+        <span class="help-inline">Default temperature that temperature control will be set when the print starts.</span>
       </div>
     </div>
     <div class="control-group">
       <label class="control-label">{{ _('Temperature Deadband') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: temperature_control_deadband">
-        <span class="help-inline">Allowabe drift on temperature control.</span>
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_deadband">
+        <span class="help-inline">Allowabe drift on temperature control. Set it to zero to disable.</span>
       </div>
     </div>
-    <!-- ko if: ($data.temperature_control_type() == "heater")  -->
+    <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Maximum Temperature') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: temperature_control_max_temperature">
-        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled.</span>
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
+        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until it's set temperature is set again.</span>
       </div>
     </div>
     <!-- /ko -->
@@ -193,7 +193,7 @@
       <div class="control-group">
         <label class="control-label">{{ _('Set Temperature') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: alarm_set_temperature">
+          <input type="text" class="input-block-level" data-bind="value: alarm_set_temp">
           <span class="help-inline">Set temperature that will trigger the event</span>
         </div>
       </div>
@@ -338,7 +338,7 @@
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
-          <select data-bind="value: temperature_sensor_type">
+          <select data-bind="value: temp_sensor_type">
             <option value="">Select Sensor</option>
             <option value="11">DHT11</option>
             <option value="22">DHT22</option>
@@ -354,7 +354,7 @@
             <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
         </div>
       </div>
-      <!-- ko if: ($data.temperature_sensor_type() == "18b20")  -->
+      <!-- ko if: ($data.temp_sensor_type() == "18b20")  -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -371,7 +371,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.temperature_sensor_type() == "si7021") || ($data.temperature_sensor_type() == "bme280") || ($data.temperature_sensor_type() == "tmp102") -->
+      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -384,13 +384,13 @@
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Address') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: temperature_sensor_address">
+          <input type="text" class="input-block-level" data-bind="value: temp_sensor_address">
           <span class="help-inline">Sensor address in HEX value, you can find it by runing
             <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko ifnot: ($data.temperature_sensor_type() == "18b20") || ($data.temperature_sensor_type() == "si7021") || ($data.temperature_sensor_type() == "bme280") || ($data.temperature_sensor_type() == "tmp102") -->
+      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -532,7 +532,7 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: temperature_sensor_navbar"> {{ _('Show temperature on navbar') }}
+          <input type="checkbox" data-bind="checked: temp_sensor_navbar"> {{ _('Show temperature on navbar') }}
         </label>
         <span class="help-inline">Enable and disable temperature on navbar</span>
       </div>

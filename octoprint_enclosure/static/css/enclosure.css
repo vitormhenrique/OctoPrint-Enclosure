@@ -40,3 +40,15 @@
     width: 30%;
     overflow: visible;
 }
+
+.glyphs-on {
+    color: blue;
+    text-shadow: 4px 4px 15px blue;
+}
+
+.glyphs-off {
+    color: red;
+    text-shadow: 4px 4px 15px red;
+}
+
+

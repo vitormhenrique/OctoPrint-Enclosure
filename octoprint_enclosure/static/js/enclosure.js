@@ -38,7 +38,7 @@ $(function () {
     self.notifications = ko.observable();
 
     self.humidityCapableSensor = function(sensor){
-      if (['11', '22'].indexOf(sensor) >= 0){
+      if (['11', '22', '2302', 'bme280', 'si7021'].indexOf(sensor) >= 0){
         return true;
       }
       return false;
@@ -47,55 +47,80 @@ $(function () {
     self.linkedTemperatureControl = function(sensor_index){
       return ko.pureComputed(function () {
         return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
-          return (item.linked_temperature_sensor() == sensor_index);
+          if (item.linked_temp_sensor){
+            return (item.linked_temp_sensor() == sensor_index);
+          }else{
+            return false;
+          }
         });
       });
     };
 
     self.hasAnySensorWithHumidity = function(){
+      return_value = false;
       self.rpi_inputs_temperature_sensors().forEach(function (sensor) {
-        if (self.humidityCapableSensor(sensor.temperature_sensor_type())) {
-          return true;
+        if (self.humidityCapableSensor(sensor.temp_sensor_type())) {
+          return_value = true;
+          return false;
+        }
+      });      
+      return return_value;
+    };
+
+    self.hasAnyTemperatureControl = function(){
+      return_value = false
+      self.rpi_outputs().forEach(function (output) {
+        if (output.output_type()=="temperature_control") {
+          return_value = true
+          return false;
         } 
       });
-      return false;
+      return return_value;
     };
 
     self.onDataUpdaterPluginMessage = function (plugin, data) {
+
+      if (typeof plugin == 'undefined'){
+        return;
+      }
+
       if (plugin != "enclosure") {
         return;
       }
 
       if (data.hasOwnProperty("sensor_data")) {
         data.sensor_data.forEach(function (sensor_data) {
-          var linked_temperature_sensor = ko.utils.arrayFilter(self.rpi_inputs(), function (temperature_sensor) {
-            return (sensor_data['id'] == temperature_sensor.index_id());
+          var linked_temp_sensor = ko.utils.arrayFilter(self.rpi_inputs_temperature_sensors(), function (temperature_sensor) {
+            return (sensor_data['index_id'] == temperature_sensor.index_id());
           }).pop();
-
-          if (linked_temperature_sensor){
-            linked_temperature_sensor.temperature_sensor_temperature(sensor_data['temperature'])
-            linked_temperature_sensor.temperature_sensor_humidity(sensor_data['humidity'])
+          if (linked_temp_sensor){
+            linked_temp_sensor.temp_sensor_temp(sensor_data['temperature'])
+            linked_temp_sensor.temp_sensor_humidity(sensor_data['humidity'])
           }
-
         })
-        // linked_item.temperature_sensor_temperature()
-      };
+      }
 
+      if (data.hasOwnProperty("set_temperature")) {
+        data.set_temperature.forEach(function (set_temperature) {
+          var linked_temp_control = ko.utils.arrayFilter(self.rpi_outputs(), function (temp_control) {
+            return (set_temperature['index_id'] == temp_control.index_id());
+          }).pop();
+          if (linked_temp_control) {
+            linked_temp_control.temp_ctr_set_temp(set_temperature['set_temperature'])
+          }
+        })
+      }
 
-
-
-      // if (data.hasOwnProperty("enclosureHumidity")) {
-      //   self.enclosureHumidity(data.enclosureHumidity);
-      //   self.navbarHum(_.sprintf("Hum: %.1f%%", data.enclosureHumidity));
-      // }
-
-      // if (data.hasOwnProperty("enclosureSetTemp")) {
-      //   if (parseFloat(data.enclosureSetTemp) > 0.0) {
-      //     $("#enclosureSetTemp").attr("placeholder", data.enclosureSetTemp);
-      //   } else {
-      //     $("#enclosureSetTemp").attr("placeholder", "off");
-      //   }
-      // }
+      if (data.hasOwnProperty("rpi_output")) {
+        data.rpi_output.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.gpio_status(output['status'])
+          }
+        })
+      }
 
       // if (!data.rpi_output) {
       //   data.rpi_output = self.previous_gpio_status;
@@ -153,12 +178,9 @@ $(function () {
       return temp;
     }
 
-
-    self.onBeforeBinding = function () {
-
+    self.bindSettings = function(){
       self.rpi_outputs(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs());
       self.rpi_inputs(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs());
-
       self.debug(self.settingsViewModel.settings.plugins.enclosure.debug())
       self.debug_temperature_log(self.settingsViewModel.settings.plugins.enclosure.debug_temperature_log())
       self.filament_sensor_gcode(self.settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode())
@@ -166,6 +188,10 @@ $(function () {
       self.notification_event_name(self.settingsViewModel.settings.plugins.enclosure.notification_event_name())
       self.notification_api_key(self.settingsViewModel.settings.plugins.enclosure.notification_api_key())
       self.notifications(self.settingsViewModel.settings.plugins.enclosure.notifications())
+    };
+
+    self.onBeforeBinding = function () {
+      self.bindSettings();
 
       // self.settings = self.settingsViewModel.settings.plugins.enclosure;
       // self.temperature_reading(self.settings.temperature_reading());
@@ -173,8 +199,11 @@ $(function () {
     };
 
     self.onStartupComplete = function () {
-      // var test = self.linkedTemperatureControl(1);
-      // console.log(test());
+      // self.requestEnclosureSetTemperature();
+
+      // $(".toggle").bootstrapToggle();
+      // self.requestEnclosureTemperature();
+      
     };
 
     self.onDataUpdaterReconnect = function () {
@@ -192,7 +221,8 @@ $(function () {
     }
 
     self.onSettingsHidden = function () {
-      // self.getUpdateBtnStatus();
+      // self.bindSettings();
+      // self.requestEnclosureTemperature();
     };
 
     self.getRegularOutputs = function () {
@@ -202,7 +232,7 @@ $(function () {
     };
     self.setTemperature = function (item, form) {
 
-      var newSetTemperature = item.temperature_control_new_temperature();
+      var newSetTemperature = item.temp_ctr_new_set_temp();
       if (form !== undefined) {
         $(form).find("input").blur();
       }
@@ -215,8 +245,8 @@ $(function () {
           dataType: "json",
           data: request,
           success: function (data) {
-            item.temperature_control_new_temperature("");
-            item.temperature_control_set_temperature(newSetTemperature);
+            item.temp_ctr_new_set_temp("");
+            item.temp_ctr_set_temp(newSetTemperature);
           },
           error: function (textStatus, errorThrown) {
             new PNotify({
@@ -246,7 +276,7 @@ $(function () {
         label: ko.observable("Ouput " + nextIndex),
         output_type: ko.observable("regular"),
         gpio_pin: ko.observable(0),
-        gpio_status: ko.observable(0),
+        gpio_status: ko.observable(false),
         active_low: ko.observable(true),
         auto_startup: ko.observable(false),
         controlled_io: ko.observable(0),
@@ -254,14 +284,14 @@ $(function () {
         startup_time: ko.observable(0),
         auto_shutdown: ko.observable(false),
         shutdown_time: ko.observable(0),
-        linked_temperature_sensor: ko.observable(),
-        alarm_set_temperature: ko.observable(0),
-        temperature_control_type: ko.observable(""),
-        temperature_control_deadband: ko.observable(0),
-        temperature_control_set_temperature: ko.observable(0),
-        temperature_control_new_temperature: ko.observable(""),
-        temperature_control_default_temperature: ko.observable(0),
-        temperature_control_max_temperature: ko.observable(0),
+        linked_temp_sensor: ko.observable(),
+        alarm_set_temp: ko.observable(0),
+        temp_ctr_type: ko.observable("heater"),
+        temp_ctr_deadband: ko.observable(0),
+        temp_ctr_set_temp: ko.observable(0),
+        temp_ctr_new_set_temp: ko.observable(""),
+        temp_ctr_default_temp: ko.observable(0),
+        temp_ctr_max_temp: ko.observable(0),
         pwm_frequency: ko.observable(50),
         pwm_status: ko.observable(50),
         duty_cycle: ko.observable(0),
@@ -293,10 +323,10 @@ $(function () {
         input_type: ko.observable("gpio"),
         gpio_pin: ko.observable(0),
         input_pull_resistor: ko.observable("input_pull_up"),
-        temperature_sensor_type: ko.observable("DS18B20"),
-        temperature_sensor_address: ko.observable(""),
-        temperature_sensor_temperature: ko.observable(0),
-        temperature_sensor_humidity: ko.observable(0),
+        temp_sensor_type: ko.observable("DS18B20"),
+        temp_sensor_address: ko.observable(""),
+        temp_sensor_temp: ko.observable(""),
+        temp_sensor_humidity: ko.observable(""),
         ds18b20_serial: ko.observable(""),
         use_fahrenheit: ko.observable(false),
         action_type: ko.observable("gpio_control"),
@@ -304,7 +334,7 @@ $(function () {
         controlled_io_set_value: ko.observable("low"),
         edge: ko.observable("fall"),
         printer_action: ko.observable("filament"),
-        temperature_sensor_navbar: ko.observable(true),
+        temp_sensor_navbar: ko.observable(true),
         filament_sensor_timeout: ko.observable(120),
         filament_sensor_enabled: ko.observable(true)
       });
@@ -315,7 +345,7 @@ $(function () {
     };
 
     self.turnOffHeater = function (item) {
-      console.log(item);
+      // console.log(item);
       // $.ajax({
       //   url: self.buildPluginUrl("/setEnclosureTemperature"),
       //   type: "GET",
@@ -345,15 +375,15 @@ $(function () {
       });
     };
 
-    self.getUpdateBtnStatus = function () {
-
+    self.getUpdateUI = function () {
       $.ajax({
-        url: self.buildPluginUrl("/getUpdateBtnStatus"),
+        url: self.buildPluginUrl("/updateUI"),
         type: "GET"
       });
     };
 
     self.requestEnclosureTemperature = function () {
+      console.log("Requesting enclosure temperature");
       return $.ajax({
         type: "GET",
         url: self.buildPluginUrl("/getEnclosureTemperature"),
@@ -362,23 +392,33 @@ $(function () {
     };
 
     self.requestEnclosureSetTemperature = function () {
-      return $.ajax({
-        type: "GET",
+      $.ajax({
         url: self.buildPluginUrl("/getEnclosureSetTemperature"),
-        async: false
-      }).responseText;
+        type: "GET",
+        error: function (textStatus, errorThrown) {
+          new PNotify({
+            title: "Enclosure",
+            text: "Error geting set temperatures",
+            type: "error"
+          });
+      }});
     };
 
-    self.handleIO = function (data, event) {
+    self.handleIO = function (item, form) {
+
+      var request = {
+        "status": !item.gpio_status(),
+        "index_id": item.index_id()
+      };
+
       $.ajax({
         type: "GET",
         dataType: "json",
-        data: {
-          "io": data[0],
-          "status": data[1]
-        },
+        data: request,
         url: self.buildPluginUrl("/setIO"),
-        async: false
+        success: function (data) {
+          self.getUpdateUI();
+        }
       });
     };
 
