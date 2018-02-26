@@ -101,7 +101,7 @@
 <!-- /ko -->
 
 <!-- ko foreach: $root.rpi_outputs() -->
-    <!-- ko if: ($data.output_type() == "regular")  -->
+    <!-- ko if: ($data.output_type() == "regular" || (!data.hide_btn_ui()))  -->
 
     <h4>
         <span data-bind="html: label"> </span>

@@ -17,6 +17,12 @@ $(function () {
       });
     });
 
+    self.rpi_possible_outputs = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+        return (item.output_type() === "regular" || item.output_type() === "gcode_output");
+      });
+    });
+
     self.rpi_outputs_pwm = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
         return (item.output_type() === "pwm");
@@ -280,6 +286,7 @@ $(function () {
         output_type: ko.observable("regular"),
         gpio_pin: ko.observable(0),
         gpio_status: ko.observable(false),
+        hide_btn_ui: ko.observable(false),
         active_low: ko.observable(true),
         auto_startup: ko.observable(false),
         controlled_io: ko.observable(0),
@@ -334,7 +341,7 @@ $(function () {
         temp_sensor_humidity: ko.observable(""),
         ds18b20_serial: ko.observable(""),
         use_fahrenheit: ko.observable(false),
-        action_type: ko.observable("gpio_control"),
+        action_type: ko.observable("output_control"),
         controlled_io: ko.observable(""),
         controlled_io_set_value: ko.observable("low"),
         edge: ko.observable("fall"),

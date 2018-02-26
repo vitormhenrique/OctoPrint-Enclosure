@@ -87,6 +87,20 @@
       </div>
     </div>
     <!-- /ko -->
+
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
+        </label>
+        <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
       <div class="controls">
@@ -411,7 +425,7 @@
     <div class="control-group">
       <label class="control-label">{{ _('Action Type') }}</label>
       <div class="controls">
-        <input type="radio" value="gpio_control" data-bind="checked: action_type, attr: {name: 'actionType_' + $index() }"> {{ _('GPIO Control') }}
+        <input type="radio" value="output_control" data-bind="checked: action_type, attr: {name: 'actionType_' + $index() }"> {{ _('Output Control') }}
       </div>
       <div class="controls">
         <input type="radio" value="printer_control" data-bind="checked: action_type, attr: {name: 'actionType_' + $index() }"> {{ _('Printer') }}
@@ -426,7 +440,7 @@
             sensor conects to ground when detects the end of the filament, you should choose PULL UP resistors and detect
             the event on the falling edge.</span>
           <!-- /ko -->
-          <!-- ko if: ($data.action_type() == "gpio_control")  -->
+          <!-- ko if: ($data.action_type() == "output_control")  -->
           <span class="help-inline">
             <span class="label label-info">Info:</span> Action will control GPIO outputs when a condition is met, for example detect a press of a button.
             You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
@@ -471,14 +485,14 @@
         </div>
       </div>
     </div>
-    <!-- ko if: ($data.action_type() == "gpio_control")  -->
+    <!-- ko if: ($data.action_type() == "output_control")  -->
     <div class="control-group">
       <label class="control-label"> Controlled IO</label>
       <div class="controls">
-        <select data-bind="options: $root.rpi_outputs_regular, optionsText: 'label',
+        <select data-bind="options: $root.rpi_possible_outputs, optionsText: 'label',
                 optionsValue: 'index_id', value: $data.controlled_io">
         </select>
-        <span class="help-inline">When the event happen, you want control which IO?</span>
+        <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
       </div>
     </div>
     <div class="control-group">

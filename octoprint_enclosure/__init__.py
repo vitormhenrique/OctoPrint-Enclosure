@@ -161,6 +161,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_output['gpio_pin']), self.to_int(pwm_val))
         return flask.jsonify(success=True)
 
+    @octoprint.plugin.BlueprintPlugin.route("/sendGcodeCommand", methods=["GET"])
+    def requested_gcode_command(self):
+        gpio_index = self.to_int(flask.request.values["index_id"])
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == gpio_index].pop()
+        self.send_gcode_command(rpi_output['gcode'])
+        return flask.jsonify(success=True)
+
     @octoprint.plugin.BlueprintPlugin.route("/setNeopixel", methods=["GET"])
     def set_neopixel(self):
         """ set_neopixel method get request from octoprint and send the comand to arduino or neopixel"""
@@ -647,7 +654,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
                 GPIO.setup(gpio_pin, GPIO.IN, pullResistor)
                 edge = GPIO.RISING if rpi_input['edge'] == 'rise' else GPIO.FALLING
-                if rpi_input['action_type'] == 'gpio_control':
+                if rpi_input['action_type'] == 'output_control':
                     self._logger.info(
                         "Adding GPIO event detect on pin %s with edge: %s", gpio_pin, edge)
                     GPIO.add_event_detect(gpio_pin, edge, callback=self.handle_gpio_control, bouncetime=200)
@@ -748,25 +755,39 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             controlled_io = self.to_int(rpi_input['controlled_io'])
             if ((rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin)):
                 rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == controlled_io].pop()
-
-                if rpi_input['controlled_io_set_value'] == 'toggle':
-                    val = GPIO.LOW if GPIO.input(self.to_int(
-                        rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
-                else:
-                    val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                self.write_gpio(self.to_int(
-                    rpi_output['gpio_pin']), val)
-                for notification in self.notifications:
-                    if notification['gpioAction']:
-                        msg = "GPIO control action caused by input " + str(rpi_input['label']) + ". Setting GPIO" + str(
-                            rpi_input['controlled_io']) + " to: " + str(rpi_input['controlled_io_set_value'])
-                        self.send_notification(msg)
+                if rpi_output['output_type'] == 'regular':
+                    if rpi_input['controlled_io_set_value'] == 'toggle':
+                        val = GPIO.LOW if GPIO.input(self.to_int(
+                            rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
+                    else:
+                        val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
+                    self.write_gpio(self.to_int(
+                        rpi_output['gpio_pin']), val)
+                    for notification in self.notifications:
+                        if notification['gpioAction']:
+                            msg = "GPIO control action caused by input " + str(rpi_input['label']) + ". Setting GPIO" + str(
+                                rpi_input['controlled_io']) + " to: " + str(rpi_input['controlled_io_set_value'])
+                            self.send_notification(msg)
+                if rpi_output['output_type'] == 'gcode_output':
+                    self.send_gcode_command(rpi_output['gcode'])
+                    for notification in self.notifications:
+                        if notification['gpioAction']:
+                            msg = "GPIO control action caused by input " + str(rpi_input['label']) + ". Sending GCODE command"
+                            self.send_notification(msg)
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
                 type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             pass
+
+    def send_gcode_command(self, command):
+        for line in command.split('\n'):
+            if line:
+                self._printer.commands(line.strip().upper())
+                self._logger.info(
+                    "Sending GCODE command: %s", line.strip().upper())
+                time.sleep(0.2)
 
     def handle_printer_action(self, channel):
         try:
