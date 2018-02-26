@@ -21,9 +21,18 @@
             <!-- ko foreach: $root.rpi_inputs_temperature_sensors() -->
             <tr>
                 <th class="temperature_sensor" data-bind="text: label, attr: {title: label, rowspan: $root.linkedTemperatureControl(index_id())().length}"></th>
-                <td class="temperature_actual" data-bind="text: temp_sensor_temp, attr: {title: temp_sensor_temp, rowspan: $root.linkedTemperatureControl(index_id())().length}"></td>
+                <td class="temperature_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                    <span data-bind="text: temp_sensor_temp, attr: {title: temp_sensor_temp}"> </span>
+                    <!-- ko if: (use_fahrenheit())  -->
+                    <span class="add-on">&deg;F</span>
+                    <!-- /ko -->
+                    <!-- ko ifnot: (use_fahrenheit())  -->
+                    <span class="add-on">&deg;C</span>
+                    <!-- /ko -->
+                </td>
                 <!-- ko if: ($root.humidityCapableSensor(temp_sensor_type()))  -->
-                <td class="humidity_actual" data-bind="html: temp_sensor_humidity, attr: {title: temp_sensor_humidity, rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                <td class="humidity_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                    <span data-bind="text: temp_sensor_humidity, attr: {title: temp_sensor_humidity}"> </span>
                     <span class="add-on">%</span>
                 </td>
                 <!-- /ko -->
@@ -34,7 +43,6 @@
                 <!-- /ko -->
                 <!-- /ko -->
 
-
                 <!-- ko if: ($root.linkedTemperatureControl(index_id())().length > 0 || $root.hasAnyTemperatureControl())  -->
                 <!-- ko with:  $root.linkedTemperatureControl(index_id())()[0] -->
                 <th class="temperature_control" data-bind="html: label, attr: {title: label}"></th>
@@ -42,8 +50,12 @@
                     <form class="form-inline" style="margin:0" data-bind="submit: function(element) { $root.setTemperature($data, element) }">
                         <div class="input-prepend input-append">
                             <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="value: temp_ctr_new_set_temp, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temp_ctr_set_temp()), id: 'temp_control_' + index_id()}">
-                            <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;F</span>
-                            <span class="add-on" data-bind="visible: $parent.use_fahrenheit">&deg;C</span>
+                            <!-- ko if: ($parent.use_fahrenheit())  -->
+                                <span class="add-on">&deg;F</span>
+                            <!-- /ko -->
+                            <!-- ko ifnot: ($parent.use_fahrenheit())  -->
+                                <span class="add-on">&deg;C</span>
+                            <!-- /ko -->
                         </div>
                         <div class="btn-group">
                             <button type="submit" data-bind="enable: $root.enableBtn()" class="btn btn-primary" title="{{ _('Set') }}">
@@ -70,6 +82,7 @@
                 <!-- /ko -->
                 <!-- /ko -->
             </tr>
+
             <!-- ko if: ($root.hasAnyTemperatureControl())  -->
             <!-- ko foreach: $root.linkedTemperatureControl(index_id())-->
             <!-- ko ifnot: ($index() ==  0)  -->
@@ -79,7 +92,6 @@
             </tr>
             <!-- /ko -->
             <!-- /ko -->
-
             <!-- /ko -->
 
             <!-- /ko -->

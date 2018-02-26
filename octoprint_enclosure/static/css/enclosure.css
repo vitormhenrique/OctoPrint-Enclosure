@@ -27,7 +27,7 @@
 
 #enclosure-table th.humidity_actual,
 #enclosure-table td.humidity_actual {
-    width: 20%;
+    width: 15%;
 }
 
 #enclosure-table th.temperature_control,
@@ -37,7 +37,7 @@
 
 #enclosure-table th.temperature_target,
 #enclosure-table td.temperature_target {
-    width: 30%;
+    width: 35%;
     overflow: visible;
 }
 

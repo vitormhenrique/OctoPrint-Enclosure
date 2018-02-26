@@ -12,19 +12,19 @@ $(function () {
     self.rpi_inputs = ko.observableArray();
 
     self.rpi_outputs_regular = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
         return (item.output_type() === "regular");
       });
     });
 
     self.rpi_outputs_pwm = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
         return (item.output_type() === "pwm");
       });
     });
 
     self.rpi_inputs_temperature_sensors = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs(), function (item) {
+      return ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
         return (item.input_type() === "temperature_sensor");
       });
     });
@@ -48,7 +48,7 @@ $(function () {
       return ko.pureComputed(function () {
         return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
           if (item.linked_temp_sensor){
-            return (item.linked_temp_sensor() == sensor_index);
+            return (item.linked_temp_sensor() == sensor_index && item.output_type() == "temperature_control");
           }else{
             return false;
           }
@@ -221,7 +221,7 @@ $(function () {
     }
 
     self.onSettingsHidden = function () {
-      // self.bindSettings();
+      self.bindSettings();
       // self.requestEnclosureTemperature();
     };
 
@@ -230,6 +230,7 @@ $(function () {
         return rpi_outputs.output_type == 'regular';
       });
     };
+
     self.setTemperature = function (item, form) {
 
       var newSetTemperature = item.temp_ctr_new_set_temp();
@@ -239,14 +240,16 @@ $(function () {
 
       if(self.isNumeric(newSetTemperature)){
         var request = {set_temperature:newSetTemperature, index_id:item.index_id()};
+
         $.ajax({
           url: self.buildPluginUrl("/setEnclosureTemperature"),
           type: "GET",
           dataType: "json",
           data: request,
-          success: function (data) {
+          success: function (data) {         
             item.temp_ctr_new_set_temp("");
             item.temp_ctr_set_temp(newSetTemperature);
+            self.getUpdateUI();  
           },
           error: function (textStatus, errorThrown) {
             new PNotify({
@@ -303,12 +306,14 @@ $(function () {
       });
 
       // var test = self.settingsViewModel.settings.plugins.enclosure.rpi_outputs();
-
       // console.log(self.rpi_outputs_regular());
+
+      self.bindSettings();
     };
 
     self.removeRpiOutput = function (data) {
       self.settingsViewModel.settings.plugins.enclosure.rpi_outputs.remove(data);
+      self.bindSettings();
     };
 
     self.addRpiInput = function () {
@@ -338,26 +343,26 @@ $(function () {
         filament_sensor_timeout: ko.observable(120),
         filament_sensor_enabled: ko.observable(true)
       });
+
+      self.bindSettings();
     };
 
     self.removeRpiInput = function (definition) {
       self.settingsViewModel.settings.plugins.enclosure.rpi_inputs.remove(definition);
+      self.bindSettings();
     };
 
     self.turnOffHeater = function (item) {
-      // console.log(item);
-      // $.ajax({
-      //   url: self.buildPluginUrl("/setEnclosureTemperature"),
-      //   type: "GET",
-      //   dataType: "json",
-      //   data: {
-      //     "enclosureSetTemp": 0
-      //   },
-      //   success: function (data) {
-      //     $("#enclosureSetTemp").val('');
-      //     $("#enclosureSetTemp").attr("placeholder", self.getCleanTemperature(data.enclosureSetTemperature));
-      //   }
-      // });
+      var request = { set_temperature: 0, index_id: item.index_id() };
+      $.ajax({
+        url: self.buildPluginUrl("/setEnclosureTemperature"),
+        type: "GET",
+        dataType: "json",
+        data: request,
+        success: function (data) {
+          self.getUpdateUI();  
+        }
+      });
     };
 
     self.clearGPIOMode = function () {
@@ -382,27 +387,27 @@ $(function () {
       });
     };
 
-    self.requestEnclosureTemperature = function () {
-      console.log("Requesting enclosure temperature");
-      return $.ajax({
-        type: "GET",
-        url: self.buildPluginUrl("/getEnclosureTemperature"),
-        async: false
-      }).responseText;
-    };
+    // self.requestEnclosureTemperature = function () {
+    //   console.log("Requesting enclosure temperature");
+    //   return $.ajax({
+    //     type: "GET",
+    //     url: self.buildPluginUrl("/getEnclosureTemperature"),
+    //     async: false
+    //   }).responseText;
+    // };
 
-    self.requestEnclosureSetTemperature = function () {
-      $.ajax({
-        url: self.buildPluginUrl("/getEnclosureSetTemperature"),
-        type: "GET",
-        error: function (textStatus, errorThrown) {
-          new PNotify({
-            title: "Enclosure",
-            text: "Error geting set temperatures",
-            type: "error"
-          });
-      }});
-    };
+    // self.requestEnclosureSetTemperature = function () {
+    //   $.ajax({
+    //     url: self.buildPluginUrl("/getEnclosureSetTemperature"),
+    //     type: "GET",
+    //     error: function (textStatus, errorThrown) {
+    //       new PNotify({
+    //         title: "Enclosure",
+    //         text: "Error geting set temperatures",
+    //         type: "error"
+    //       });
+    //   }});
+    // };
 
     self.handleIO = function (item, form) {
 

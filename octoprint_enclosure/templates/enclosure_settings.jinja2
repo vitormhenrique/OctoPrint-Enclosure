@@ -475,7 +475,7 @@
     <div class="control-group">
       <label class="control-label"> Controlled IO</label>
       <div class="controls">
-        <select data-bind="options: $root.settingsViewModel.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
+        <select data-bind="options: $root.rpi_outputs_regular, optionsText: 'label',
                 optionsValue: 'index_id', value: $data.controlled_io">
         </select>
         <span class="help-inline">When the event happen, you want control which IO?</span>
