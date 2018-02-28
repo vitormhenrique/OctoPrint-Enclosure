@@ -144,11 +144,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.handle_temp_hum_control()
         return flask.jsonify(success=True)
 
-    # @octoprint.plugin.BlueprintPlugin.route("/getEnclosureSetTemperature", methods=["GET"])
-    # def get_enclosure_set_temperature(self):
-    #     self.update_ui_set_temperature()
-    #     return flask.jsonify(success=True)
-
     @octoprint.plugin.BlueprintPlugin.route("/clearGPIOMode", methods=["GET"])
     def clear_gpio_mode(self):
         GPIO.cleanup()
@@ -271,10 +266,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         """ Fix setting dada commin from old releases of the plugin"""
 
         if not self._settings.get(["settingsVersion"]) == "3.6":
-            # self._settings.set(["rpi_outputs"], [])
-            # self._settings.set(["rpi_inputs"], [])
-            # self.rpi_outputs = self._settings.get(["rpi_outputs"])
-            # self.rpi_inputs = self._settings.get(["rpi_inputs"])
+            self._settings.set(["rpi_outputs"], [])
+            self._settings.set(["rpi_inputs"], [])
+            self._settings.set(["settingsVersion"], "3.6")
+            self.rpi_outputs = self._settings.get(["rpi_outputs"])
+            self.rpi_inputs = self._settings.get(["rpi_inputs"])
             self._logger.warn("######### settings not compatible #########")
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect):

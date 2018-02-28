@@ -1,0 +1,8 @@
+#   18b20 sensor serial --> 28-0000062410dc
+#   18b20 sensor serial --> 28-000006044a8d
+#   SI7021 addrress --> 40
+#   BTN 22 -> active low | close to the blue thing)
+#   BTN 23 -> active high
+#   LED GREEN -> 17 active on high
+#   LED RED -> 24 active on low
+#   Neopixel -> pin 18 (needs sudo)
