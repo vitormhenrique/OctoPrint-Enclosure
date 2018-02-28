@@ -11,27 +11,33 @@ $(function () {
     self.rpi_outputs = ko.observableArray();
     self.rpi_inputs = ko.observableArray();
 
-    self.rpi_outputs_regular = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
-        return (item.output_type() === "regular");
+    self.settings_outputs_regular = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+        return (item.output_type() === "regular" && !item.toggle_timer());
       });
     });
-
-    self.rpi_possible_outputs = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
-        return (item.output_type() === "regular" || item.output_type() === "gcode_output");
-      });
-    });
-
-    self.rpi_outputs_pwm = ko.pureComputed(function () {
-      return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
-        return (item.output_type() === "pwm");
+    
+    self.settings_possible_outputs = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+        return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output");
       });
     });
 
     self.rpi_inputs_temperature_sensors = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
         return (item.input_type() === "temperature_sensor");
+      });
+    });
+
+    self.settings_temperature_sensors = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs(), function (item) {
+        return (item.input_type() === "temperature_sensor");
+      });
+    });
+
+    self.settings_hum_sensors = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settings_temperature_sensors(), function (sensor) {
+        return (self.humidityCapableSensor(sensor.temp_sensor_type()));
       });
     });
 
@@ -50,11 +56,22 @@ $(function () {
       return false;
     };
 
+    self.isRegularOutput = function(index_id){
+      return_value = false;
+      self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().forEach(function (output) {
+        if (output.index_id() == index_id && item.output_type() == "regular") {
+          return_value = true;
+          return false;
+        }
+      });
+      return return_value;
+    };
+
     self.linkedTemperatureControl = function(sensor_index){
       return ko.pureComputed(function () {
-        return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+        return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
           if (item.linked_temp_sensor){
-            return (item.linked_temp_sensor() == sensor_index && item.output_type() == "temperature_control");
+            return (item.linked_temp_sensor() == sensor_index && item.output_type() == "temp_hum_control");
           }else{
             return false;
           }
@@ -73,10 +90,32 @@ $(function () {
       return return_value;
     };
 
+    self.hasAnyNavbarOutput = function(){
+      return_value = false;
+      self.rpi_outputs().forEach(function (output) {
+        if ((output.output_type()=="regular" || output.output_type()=="gcode_output") && output.show_on_navbar()) {
+          return_value = true;
+          return false;
+        }
+      });      
+      return return_value;
+    };
+
+    self.hasAnyNavbarTemperature = function(){
+      return_value = false;
+      self.rpi_inputs_temperature_sensors().forEach(function (sensor) {
+        if (sensor.temp_sensor_navbar()) {
+          return_value = true;
+          return false;
+        }
+      });      
+      return return_value;
+    };
+
     self.hasAnyTemperatureControl = function(){
       return_value = false
       self.rpi_outputs().forEach(function (output) {
-        if (output.output_type()=="temperature_control") {
+        if (output.output_type()=="temp_hum_control") {
           return_value = true
           return false;
         } 
@@ -112,56 +151,72 @@ $(function () {
             return (set_temperature['index_id'] == temp_control.index_id());
           }).pop();
           if (linked_temp_control) {
-            linked_temp_control.temp_ctr_set_temp(set_temperature['set_temperature'])
+            linked_temp_control.temp_ctr_set_value(set_temperature['set_temperature'])
           }
         })
       }
 
-      if (data.hasOwnProperty("rpi_output")) {
-        data.rpi_output.forEach(function (output) {
+      if (data.hasOwnProperty("rpi_output_regular")) {
+        data.rpi_output_regular.forEach(function (output) {
           var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
             return (output['index_id'] == item.index_id());
           }).pop();
           if (linked_output) {
             linked_output.gpio_status(output['status'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
           }
         })
       }
 
-      // if (!data.rpi_output) {
-      //   data.rpi_output = self.previous_gpio_status;
-      // }
+      if (data.hasOwnProperty("rpi_output_temp_hum_ctrl")) {
+        data.rpi_output_temp_hum_ctrl.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-      // if (!data.rpi_output_pwm) {
-      //   data.rpi_output_pwm = self.previous_gpio_pwm_status;
-      // }
+      if (data.hasOwnProperty("rpi_output_pwm")) {
+        data.rpi_output_pwm.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.duty_cycle(output['pwm_value'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-      // if (data.rpi_output) {
-      //   data.rpi_output.forEach(function (gpio) {
-      //     key = Object.keys(gpio)[0];
-      //     if (gpio[key]) {
-      //       $("#btn_off_" + key).removeClass('active');
-      //       $("#btn_on_" + key).addClass('active');
-      //     } else {
-      //       $("#btn_off_" + key).addClass('active');
-      //       $("#btn_on_" + key).removeClass('active');
-      //     }
-      //   });
-      //   self.previous_gpio_status = data.rpi_output;
-      // }
+      if (data.hasOwnProperty("rpi_output_neopixel")) {
+        data.rpi_output_neopixel.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.neopixel_color(output['color'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-      // if (data.rpi_output_pwm) {
-      //   data.rpi_output_pwm.forEach(function (gpio) {
-      //     key = Object.keys(gpio)[0];
-      //     val = gpio[key];
-      //     if (parseFloat(val) != 100) {
-      //       $("#duty_cycle_" + key).attr("placeholder", val);
-      //     } else {
-      //       $("#duty_cycle_" + key).attr("placeholder", "off");
-      //     }
-      //   });
-      //   self.previous_gpio_pwm_status = data.rpi_output_pwm;
-      // }
+      if (data.hasOwnProperty("filament_sensor_status")) {
+        data.filament_sensor_status.forEach(function (filament_sensor) {
+          var linked_filament_sensor = ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
+            return (filament_sensor['index_id'] == item.index_id());
+          }).pop();
+          if (linked_filament_sensor) {
+            linked_filament_sensor.filament_sensor_enabled(filament_sensor['filament_sensor_enabled'])
+          }
+        })
+      }
 
       if (data.isMsg) {
         new PNotify({
@@ -172,9 +227,12 @@ $(function () {
       }
     };
 
-    self.enableBtn = ko.computed(function () {
-      // return self.connectionViewModel.loginState.isUser() && self.printerStateViewModel.isOperational();
+    self.isUser = ko.computed(function () {
       return self.connectionViewModel.loginState.isUser();
+    });
+
+    self.isOperational = ko.computed(function () {
+      return self.connectionViewModel.loginState.isUser() && self.printerStateViewModel.isOperational();
     });
 
 
@@ -182,6 +240,12 @@ $(function () {
       if (temp === undefined || isNaN(parseFloat(temp))) return "-";
       if (temp < 10) return String("off");
       return temp;
+    }
+
+    self.getDutyCycle = function (duty_cycle) {    
+      if (duty_cycle === undefined || isNaN(parseFloat(duty_cycle))) return "-";
+      if (parseInt(duty_cycle) == 0) return String("off");
+      return duty_cycle;
     }
 
     self.bindSettings = function(){
@@ -198,25 +262,13 @@ $(function () {
 
     self.onBeforeBinding = function () {
       self.bindSettings();
+    };
 
-      // self.settings = self.settingsViewModel.settings.plugins.enclosure;
-      // self.temperature_reading(self.settings.temperature_reading());
-      // // self.temperature_control(self.settings.temperature_control.slice(0));
+    self.onSettingsBeforeSave = function() {
+      self.bindSettings();
     };
 
     self.onStartupComplete = function () {
-      // self.requestEnclosureSetTemperature();
-
-      // $(".toggle").bootstrapToggle();
-      // self.requestEnclosureTemperature();
-      
-    };
-
-    self.onDataUpdaterReconnect = function () {
-      // self.getUpdateBtnStatus();
-    };
-
-    self.onSettingsShown = function () {
 
     };
 
@@ -227,19 +279,18 @@ $(function () {
     }
 
     self.onSettingsHidden = function () {
-      self.bindSettings();
-      // self.requestEnclosureTemperature();
+      self.showColorPicker();
     };
 
     self.getRegularOutputs = function () {
-      return self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().filter(function (rpi_outputs) {
+      return self.rpi_outputs().filter(function (rpi_outputs) {
         return rpi_outputs.output_type == 'regular';
       });
     };
 
     self.setTemperature = function (item, form) {
 
-      var newSetTemperature = item.temp_ctr_new_set_temp();
+      var newSetTemperature = item.temp_ctr_new_set_value();
       if (form !== undefined) {
         $(form).find("input").blur();
       }
@@ -248,13 +299,13 @@ $(function () {
         var request = {set_temperature:newSetTemperature, index_id:item.index_id()};
 
         $.ajax({
-          url: self.buildPluginUrl("/setEnclosureTemperature"),
+          url: self.buildPluginUrl("/setEnclosureTempHum"),
           type: "GET",
           dataType: "json",
           data: request,
           success: function (data) {         
-            item.temp_ctr_new_set_temp("");
-            item.temp_ctr_set_temp(newSetTemperature);
+            item.temp_ctr_new_set_value("");
+            item.temp_ctr_set_value(newSetTemperature);
             self.getUpdateUI();  
           },
           error: function (textStatus, errorThrown) {
@@ -288,6 +339,9 @@ $(function () {
         gpio_status: ko.observable(false),
         hide_btn_ui: ko.observable(false),
         active_low: ko.observable(true),
+        toggle_timer: ko.observable(false),
+        toggle_timer_on: ko.observable(0),
+        toggle_timer_off: ko.observable(0),
         auto_startup: ko.observable(false),
         controlled_io: ko.observable(0),
         controlled_io_set_value: ko.observable("Low"),
@@ -298,29 +352,28 @@ $(function () {
         alarm_set_temp: ko.observable(0),
         temp_ctr_type: ko.observable("heater"),
         temp_ctr_deadband: ko.observable(0),
-        temp_ctr_set_temp: ko.observable(0),
-        temp_ctr_new_set_temp: ko.observable(""),
+        temp_ctr_set_value: ko.observable(0),
+        temp_ctr_new_set_value: ko.observable(""),
         temp_ctr_default_temp: ko.observable(0),
         temp_ctr_max_temp: ko.observable(0),
         pwm_frequency: ko.observable(50),
         pwm_status: ko.observable(50),
         duty_cycle: ko.observable(0),
-        neopixel_color: ko.observable("rgb(255,0,0)"),
+        default_duty_cycle: ko.observable(0),
+        new_duty_cycle: ko.observable(""),
+        neopixel_color: ko.observable("rgb(0,0,0)"),
+        new_neopixel_color: ko.observable(""),
         neopixel_count: ko.observable(0),
         neopixel_brightness: ko.observable(255),
         microcontroller_address: ko.observable(0),
-        gcode: ko.observable("")
+        gcode: ko.observable(""),
+        show_on_navbar: ko.observable(false)
       });
 
-      // var test = self.settingsViewModel.settings.plugins.enclosure.rpi_outputs();
-      // console.log(self.rpi_outputs_regular());
-
-      self.bindSettings();
     };
 
     self.removeRpiOutput = function (data) {
       self.settingsViewModel.settings.plugins.enclosure.rpi_outputs.remove(data);
-      self.bindSettings();
     };
 
     self.addRpiInput = function () {
@@ -350,19 +403,16 @@ $(function () {
         filament_sensor_timeout: ko.observable(120),
         filament_sensor_enabled: ko.observable(true)
       });
-
-      self.bindSettings();
     };
 
     self.removeRpiInput = function (definition) {
       self.settingsViewModel.settings.plugins.enclosure.rpi_inputs.remove(definition);
-      self.bindSettings();
     };
 
     self.turnOffHeater = function (item) {
       var request = { set_temperature: 0, index_id: item.index_id() };
       $.ajax({
-        url: self.buildPluginUrl("/setEnclosureTemperature"),
+        url: self.buildPluginUrl("/setEnclosureTempHum"),
         type: "GET",
         dataType: "json",
         data: request,
@@ -394,28 +444,6 @@ $(function () {
       });
     };
 
-    // self.requestEnclosureTemperature = function () {
-    //   console.log("Requesting enclosure temperature");
-    //   return $.ajax({
-    //     type: "GET",
-    //     url: self.buildPluginUrl("/getEnclosureTemperature"),
-    //     async: false
-    //   }).responseText;
-    // };
-
-    // self.requestEnclosureSetTemperature = function () {
-    //   $.ajax({
-    //     url: self.buildPluginUrl("/getEnclosureSetTemperature"),
-    //     type: "GET",
-    //     error: function (textStatus, errorThrown) {
-    //       new PNotify({
-    //         title: "Enclosure",
-    //         text: "Error geting set temperatures",
-    //         type: "error"
-    //       });
-    //   }});
-    // };
-
     self.handleIO = function (item, form) {
 
       var request = {
@@ -434,41 +462,107 @@ $(function () {
       });
     };
 
-    self.handlePWM = function (data, event) {
-      io = parseInt(data[0]);
-      pwmVal = parseInt($("#duty_cycle_" + io).val());
-      if (pwmVal < 0 || pwmVal > 100 || isNaN(pwmVal)) {
-        $("#duty_cycle_" + io).val('')
+    self.handleGcode = function (item, form) {
+      var request = {
+        "index_id": item.index_id()
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/sendGcodeCommand")
+      });
+    };
+
+    self.switchAutoStartUp = function (item) {
+
+      var request = {
+        "status": !item.auto_startup(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setAutoStartUp"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.switchAutoShutdown = function (item) {
+      var request = {
+        "status": !item.auto_shutdown(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setAutoShutdown"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.switchFilamentSensor = function (item) {
+      var request = {
+        "status": !item.filament_sensor_enabled(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setFilamentSensor"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.handlePWM = function (item) {
+      var pwm_value = item.new_duty_cycle();
+
+      pwm_value = parseInt(pwm_value);
+
+      if (pwm_value < 0 || pwm_value > 100 || isNaN(pwm_value)) {
+        item.new_duty_cycle("")
         new PNotify({
           title: "Enclosure",
           text: "Duty Cycle value needs to be between 0 and 100!",
           type: "error"
         });
       } else {
-        // console.log(pwmVal);
-        $("#duty_cycle_" + io).val('')
-        $("#duty_cycle_" + io).attr("placeholder", pwmVal);
+        var request = { new_duty_cycle: pwm_value, index_id: item.index_id() };
         $.ajax({
           type: "GET",
           dataType: "json",
-          data: {
-            "io": io,
-            "pwmVal": pwmVal
-          },
+          data: request,
           url: self.buildPluginUrl("/setPWM"),
+          success: function (data) {
+            item.new_duty_cycle("");
+            item.duty_cycle(pwm_value);
+            self.getUpdateUI();
+          }
         });
       }
     };
 
-    self.handleNeopixel = function (data, event) {
-      io = parseInt(data[0]);
-      tempStr = ($("#color_" + io).val()).replace("rgb(", "");
+    self.handleNeopixel = function (item) {
 
-      r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      var index = item.index_id() ;
+      var or_tempStr = item.new_neopixel_color();
+      var tempStr = or_tempStr.replace("rgb(", "");
+
+      var r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
       tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
-      g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      var g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
       tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
-      b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
+      var b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
 
       if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || isNaN(r) || isNaN(g) || isNaN(b)) {
         new PNotify({
@@ -481,12 +575,16 @@ $(function () {
           type: "GET",
           dataType: "json",
           data: {
-            "io": io,
+            "index_id": index,
             "red": r,
             "green": g,
             "blue": b
           },
           url: self.buildPluginUrl("/setNeopixel"),
+          success: function (data) {
+            item.new_neopixel_color("");
+            self.getUpdateUI();
+          }
         });
       }
     };
@@ -505,7 +603,7 @@ $(function () {
     // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
     dependencies: ["settingsViewModel", "connectionViewModel", "printerStateViewModel"],
     // Elements to bind to, e.g. #settings_plugin_tasmota-mqtt, #tab_plugin_tasmota-mqtt, ...
-    elements: ["#tab_plugin_enclosure", "#settings_plugin_enclosure", "#navbar_plugin_enclosure"]
+    elements: ["#tab_plugin_enclosure", "#settings_plugin_enclosure", "#navbar_plugin_enclosure_1", "#navbar_plugin_enclosure_2"]
   });
 
 });

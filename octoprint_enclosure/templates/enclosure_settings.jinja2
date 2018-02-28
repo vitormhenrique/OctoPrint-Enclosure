@@ -37,7 +37,7 @@
       </div>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="temperature_control" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Temperature Control') }}
+          <input type="radio" value="temp_hum_control" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Temperature / Humidity Control') }}
           </span>
         </label>
       </div>
@@ -66,7 +66,7 @@
     <div class="control-group">
       <label class="control-label">{{ _('Id') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: index_id" disabled="true"> 
+        <input type="text" class="input-block-level" data-bind="value: index_id" disabled="true">
         <span class="help-inline">Id used for API control</span>
       </div>
     </div>
@@ -88,18 +88,37 @@
     </div>
     <!-- /ko -->
 
-
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ) -->
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "pwm" ) -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
+          <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
         </label>
-        <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
+        <span class="help-inline">Toggle output every amount of secconds. It will start when the print starts and stop when print is complete. 
+          For PWM pins it will use the default PWM value when ON.
+        </span>
+      </div>
+    </div>
+    <!-- ko if: ($data.toggle_timer()) -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Time Toggle On') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
+        <span class="help-inline">Time delay in secconds that the GPIO will remain ON</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Time Toggle OFF') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
+        <span class="help-inline">Time delay in secconds that the GPIO will remain when OFF</span>
       </div>
     </div>
     <!-- /ko -->
+    <!-- /ko -->
 
+
+    <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
@@ -145,7 +164,10 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temperature_control")  -->
+
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control")  -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -155,18 +177,54 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temperature_control")  -->
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
+        </label>
+        <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: show_on_navbar"> {{ _('Show Button on Navbar') }}
+        </label>
+        <span class="help-inline">Add shortcut on navbar to toggle output</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+
+    <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control")  -->
+    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.output_type() == "cooler")  -->
     <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
-        <select data-bind="options: $root.rpi_inputs_temperature_sensors, optionsText: 'label',
+        <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
                       optionsValue: 'index_id', value: $data.linked_temp_sensor">
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko if: ($data.output_type() == "temperature_control")  -->
+    <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
+    <div class="control-group">
+      <label class="control-label">Temperature Sensor</label>
+      <div class="controls">
+        <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                      optionsValue: 'index_id', value: $data.linked_temp_sensor">
+        </select>
+        <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "temp_hum_control")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Temp Control Type') }}</label>
       <div class="controls">
@@ -177,7 +235,13 @@
         <label class="radio">
           <input type="radio" value="cooler" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
       </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="dehumidifier" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
+      </div>
     </div>
+
+    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Default Temperature') }}</label>
       <div class="controls">
@@ -192,12 +256,15 @@
         <span class="help-inline">Allowabe drift on temperature control. Set it to zero to disable.</span>
       </div>
     </div>
+    <!-- /ko -->
+
     <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Maximum Temperature') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
-        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until it's set temperature is set again.</span>
+        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
+          it's set temperature is set again.</span>
       </div>
     </div>
     <!-- /ko -->
@@ -214,7 +281,7 @@
       <div class="control-group">
         <label class="control-label"> Controlled IO</label>
         <div class="controls">
-          <select data-bind="options: $root.rpi_outputs_regular, optionsText: 'label',
+          <select data-bind="options: $root.settings_outputs_regular, optionsText: 'label',
                     optionsValue: 'index_id', value: $data.controlled_io">
           </select>
           <span class="help-inline">When the event happen, you want control which IO?</span>
@@ -243,7 +310,7 @@
     <div class="control-group">
       <label class="control-label">{{ _('Default Duty Cycle') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: duty_cycle">
+        <input type="text" class="input-block-level" data-bind="value: default_duty_cycle">
         <span class="help-inline">Value is in percentage, between 0 and 100</span>
       </div>
     </div>
@@ -291,6 +358,7 @@
       </div>
     </div>
     <!-- /ko -->
+
     <div class="control-group">
       <a title="Delete IO" class="btn btn-danger pull-right" data-bind="click: function() { $parent.removeRpiOutput($data) }">
         <i class="icon-trash"></i>
@@ -489,12 +557,13 @@
     <div class="control-group">
       <label class="control-label"> Controlled IO</label>
       <div class="controls">
-        <select data-bind="options: $root.rpi_possible_outputs, optionsText: 'label',
+        <select data-bind="options: $root.settings_possible_outputs, optionsText: 'label',
                 optionsValue: 'index_id', value: $data.controlled_io">
         </select>
         <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
       </div>
     </div>
+    <!-- ko if: ($root.isRegularOutput($data.controlled_io))  -->
     <div class="control-group">
       <label class="control-label">Set Controlled IO Value</label>
       <div class="controls">
@@ -507,6 +576,7 @@
       </div>
     </div>
     <!-- /ko -->
+    <!-- /ko -->
     <!-- ko if: ( $data.action_type() == "printer_control")  -->
     <div class="control-group">
       <label class="control-label">{{ _('Printer Action') }}</label>
@@ -516,7 +586,7 @@
           <option value="resume">Printer Resume</option>
           <option value="pause">Printer Pause</option>
           <option value="cancel">Printer Cancel</option>
-          <option value="stop_temperature_control">Stop Temperature Control</option>
+          <option value="stop_temp_hum_control">Stop Temperature Control</option>
         </select>
         <span class="help-inline"> You can use filament change on your filament detectors and add buttons to resume and pause the print job.</span>
       </div>
@@ -541,7 +611,7 @@
     </div>
     <!-- /ko -->
     <!-- /ko -->
-    <!-- /ko --> 
+    <!-- /ko -->
     <!-- ko if: ($data.input_type() == "temperature_sensor")  -->
     <div class="control-group">
       <div class="controls">
@@ -575,6 +645,15 @@
   </a>
   <div id="advanced_enclosure" class="accordion-body collapse">
     <form class="form-horizontal">
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.gcode_control"> {{ _('Enable gcode control') }}
+          </label>
+          <span class="help-inline">Use gcode to control outputs, check the documentation on
+            <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
+        </div>
+      </div>
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
