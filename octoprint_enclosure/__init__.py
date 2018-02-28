@@ -18,17 +18,6 @@ import inspect
 import threading
 import json
 
-
-#   18b20 sensor serial --> 28-0000062410dc
-#   18b20 sensor serial --> 28-000006044a8d
-#   SI7021 addrress --> 40
-#   BTN 22 -> active low | close to the blue thing)
-#   BTN 23 -> active high
-#   LED GREEN -> 17 active on high
-#   LED RED -> 24 active on low
-#   Neopixel -> pin 18 (needs sudo)
-
-
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                       octoprint.plugin.TemplatePlugin,
                       octoprint.plugin.SettingsPlugin,
@@ -167,11 +156,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 gpio_status.append(dict(index_id=index, status=val))
         self._logger.warn("######### gpio_status: %s", gpio_status)
         return flask.Response(json.dumps(gpio_status),  mimetype='application/json')
-
-    # @octoprint.plugin.BlueprintPlugin.route("/getEnclosureTemperature", methods=["GET"])
-    # def get_enclosure_temperature(self):
-    #     self.update_ui_current_temperature()
-    #     return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
     def set_io(self):
