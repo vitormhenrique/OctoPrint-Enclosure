@@ -11,7 +11,7 @@ Here is a list of possibilities:
 * Alarm when enclosure temperature reaches some sort of value
 
 Find the plugin useful? Buy me a coffe.
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](PayPal.Me/VitorHenrique/2)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
 Check pictures and more information on thingiverse: http://www.thingiverse.com/thing:2245493
 
