@@ -153,7 +153,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 index = self.to_int(rpi_output['index_id'])
                 # result.append(dict(index_id=rpi_output['index_id'], value=val))
                 gpio_status.append(dict(index_id=index, status=val))
-        self._logger.warn("######### gpio_status: %s", gpio_status)
         return flask.Response(json.dumps(gpio_status),  mimetype='application/json')
 
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
@@ -354,7 +353,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 else:
                     off_value = True if output['active_low'] else False
                     self.write_gpio(gpio_pin, off_value)
-                    self._logger.warn("Print done. no thead to start")
                 self.update_ui_outputs()
                 return
 
@@ -415,11 +413,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._identifier, dict(set_temperature=result))
 
     def stop_queue_item(self, queue_id):
-        self._logger.warn("Trying to stop %s", queue_id)
-        self._logger.warn("event_queue %s", self.event_queue)
         for task in self.event_queue:
             if task['queue_id'] == queue_id:
-                self._logger.warn("task to found")
                 task['thread'].cancel()
                 self.event_queue.remove(task)
 
@@ -1240,8 +1235,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
-
-        self._logger.warn("Adding output %s to queue", queue_id)
 
         thread = threading.Timer(delay_seconds,
                                  self.write_gpio,
