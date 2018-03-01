@@ -168,19 +168,19 @@ You can enable GCODE commands to control configured **outputs**.
 
 The list of supported gcodes:
 
-Regular outputs
+* Regular outputs
 <pre><code>ENC O[id] S[value]</code></pre>
 Id is generated on the setting plugin, value can be 0 to turn OFF the output or 1 to turn ON output. Ex: sending ENC O2 S1 would turn ON output 2.
 
-PWM outputs
+* PWM outputs
 <pre><code>ENC O[id] S[pwm value]</code></pre>
 Id is generated on the setting plugin, value is the duty cycle from 0 to 100. Ex: sending ENC O5 S75 would turn set duty cycle of 75% on output 5.
 
-Neopixel
+* Neopixel
 <pre><code>ENC O[id] R[red value] G[green value] B[blue value]</code></pre>
 Id is generated on the setting plugin, value should be between 0 to 255. R, G, and B are the colors for that value. Ex: sending ENC O1 R255 G0 B0 would set neopixel with id 1 color to full red.
 
-Temperature / Humidity Control
+* Temperature / Humidity Control
 <pre><code>ENC O[id] W[wait value] S[set value]</code></pre>
 Id is generated on the setting plugin, W specify if the plugin should wait or not for the enclosure to reach the temperature (1 is to wait), S will set the set temperature. Ex: ENC O1 W1 S45 will set temperature control with id 1 to 45 and wait until the temperature is reached to continue printing.
 
