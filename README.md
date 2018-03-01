@@ -5,6 +5,8 @@
 Here is a list of possibilities:
 * Add temperature sensors on your enclosure or near your printer
 * Add Active heaters on your enclosure and keep the temperature nice and high for large ABS 
+* PWM controlled outputs
+* PWM controlled outputs based on temperature sensor
 * Active cooling for good PLA printing
 * Schedule GPIO's to turn on and off with a fixed period of time during printing.
 * Mechanical buttons to pause and resume printer jobs
