@@ -59,7 +59,7 @@ $(function () {
     self.isRegularOutput = function(index_id){
       return_value = false;
       self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().forEach(function (output) {
-        if (output.index_id() == index_id && item.output_type() == "regular") {
+        if (output.index_id() == index_id && output.output_type() == "regular") {
           return_value = true;
           return false;
         }
