@@ -348,7 +348,7 @@ $(function () {
         startup_time: ko.observable(0),
         auto_shutdown: ko.observable(false),
         shutdown_time: ko.observable(0),
-        linked_temp_sensor: ko.observable(),
+        linked_temp_sensor: ko.observable(""),
         alarm_set_temp: ko.observable(0),
         temp_ctr_type: ko.observable("heater"),
         temp_ctr_deadband: ko.observable(0),

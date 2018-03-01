@@ -5,6 +5,7 @@
 </a>
 
 <ul class="dropdown-menu" data-bind="foreach: $root.rpi_inputs_temperature_sensors()">
+    <!-- ko if: ($data.temp_sensor_navbar())  -->
     <li>
         <a href="javascript:void(0)">
             <span data-bind="html: label"> </span>
@@ -28,6 +29,7 @@
             <span class="add-on">%</span>
         </a>
     </li>
+    <!-- /ko -->
     <!-- /ko -->
 </ul>
 <!-- /ko -->
