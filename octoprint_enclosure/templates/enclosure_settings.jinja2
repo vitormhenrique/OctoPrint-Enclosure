@@ -96,7 +96,7 @@
             <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
           </label>
           <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty B, temperature B. 
-            This output will automatomatically start when a print starts and will default to the default dutu cycle when print is complete.
+            This output will automatomatically start when a print starts and will default to the default duty cycle when print is complete.
           </span>
         </div>
       </div>
@@ -159,7 +159,7 @@
     <!-- /ko -->
 
 
-    <!-- ko if: ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) -->
+    <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
     <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
@@ -604,7 +604,7 @@
         <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
       </div>
     </div>
-    <!-- ko if: ($root.isRegularOutput($data.controlled_io()))  -->
+    <!-- ko if: ($root.isRegularOutput($data.controlled_io))  -->
     <div class="control-group">
       <label class="control-label">Set Controlled IO Value</label>
       <div class="controls">

@@ -189,7 +189,7 @@
 </h4>
 <!-- /ko -->
 
-<!-- ko if: ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) -->
+<!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
 <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm") -->
 <div>
