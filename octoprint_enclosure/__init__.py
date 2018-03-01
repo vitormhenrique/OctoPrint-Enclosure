@@ -103,7 +103,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     # ~~ StartupPlugin mixin
     def on_after_startup(self):
-        self.fix_data()
         self.pwm_intances = []
         self.event_queue = []
         self.rpi_outputs_not_changed = []
@@ -114,8 +113,22 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.setup_gpio()
         self.configure_gpio()
         self.update_ui()
+        self.start_outpus_with_server()
         self.start_timer()
         self.print_complete = False
+
+    def get_settings_version(self):
+        return 4
+
+    def on_settings_migrate(self, target, current=None):
+        self._logger.warn("######### settings not compatible #########")
+        self._logger.warn("######### current settings version %s target settings version %s #########",
+                          current, target)
+        self._settings.set(["rpi_outputs"], [])
+        self._settings.set(["rpi_inputs"], [])            
+        self.rpi_outputs = self._settings.get(["rpi_outputs"])
+        self.rpi_inputs = self._settings.get(["rpi_inputs"])
+
 
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTempHum", methods=["GET"])
@@ -249,20 +262,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     led_count, led_brightness, red, green, blue, address, neopixel_dirrect, gpio_index)
 
         return flask.jsonify(success=True)
-
-    # ~~ Plugin Internal methods
-    def fix_data(self):
-        """ Fix setting dada commin from old releases of the plugin"""
-
-        if not self._settings.get(["settingsVersion"]) == "3.7":
-            self._logger.warn("######### settings not compatible #########")
-            self._logger.warn("######### current settings version %s: #########",
-                              self._settings.get(["settingsVersion"]))
-            self._settings.set(["rpi_outputs"], [])
-            self._settings.set(["rpi_inputs"], [])
-            self._settings.set(["settingsVersion"], "3.7")
-            self.rpi_outputs = self._settings.get(["rpi_outputs"])
-            self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect, index_id, queue_id=None):
         """Send neopixel command
@@ -1237,6 +1236,28 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.add_neopixel_output_to_queue(
                 rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
 
+    def start_outpus_with_server(self):
+        for rpi_output in self.rpi_outputs:
+                if rpi_output['startup_with_server']:
+                    gpio = self.to_int(rpi_output['gpio_pin'])
+                    if rpi_output['output_type'] == 'regular':
+                        value = False if rpi_output['active_low'] else True
+                        self.write_gpio(gpio, value)
+                    if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
+                        value = self.to_int(rpi_output['default_duty_cycle'])
+                        self.write_pwm(gpio, value)
+                    if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
+                        red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
+                        led_count = output['neopixel_count']
+                        led_brightness = output['neopixel_brightness']
+                        address = output['microcontroller_address']
+                        index_id = self.to_int(output['index_id'])
+                        neopixel_dirrect = output['output_type'] == 'neopixel_direct'
+                        self.send_neopixel_command(self.to_int(output['gpio_pin']), led_count, led_brightness, red, green, blue, 
+                                                   address, neopixel_dirrect, index_id)
+                    if rpi_output['output_type'] == 'temp_hum_control':
+                        rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
+
     def schedule_auto_startup_outputs(self, rpi_output, delay_seconds):
         sufix = 'auto_startup'
         if rpi_output['output_type'] == 'regular':
@@ -1251,7 +1272,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
             self.add_neopixel_output_to_queue(
                 rpi_output, delay_seconds, red, green, blue, sufix)
-        if rpi_output['auto_startup'] and rpi_output['output_type'] == 'temp_hum_control':
+        if rpi_output['output_type'] == 'temp_hum_control':
             rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
 
     def get_color_from_rgb(self, stringColor):

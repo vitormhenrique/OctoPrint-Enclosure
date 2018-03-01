@@ -165,9 +165,17 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
+          <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
+        </label>
+        <span class="help-inline">Choose if output should turn on automatomatically when octoprint starts</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_startup"> {{ _('Auto Startup') }}
         </label>
-        <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
+        <span class="help-inline">Choose if output should turn on automatomatically when print starts</span>
       </div>
     </div>
     <!-- /ko -->
@@ -190,7 +198,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
         </label>
-        <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
+        <span class="help-inline">Choose if output should turn off automatomatically when print finishes</span>
       </div>
     </div>
     <!-- /ko -->

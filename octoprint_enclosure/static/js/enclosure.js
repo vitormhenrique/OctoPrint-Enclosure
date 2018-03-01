@@ -345,6 +345,7 @@ $(function () {
         toggle_timer: ko.observable(false),
         toggle_timer_on: ko.observable(0),
         toggle_timer_off: ko.observable(0),
+        startup_with_server: ko.observable(false),
         auto_startup: ko.observable(false),
         controlled_io: ko.observable(0),
         controlled_io_set_value: ko.observable("Low"),
