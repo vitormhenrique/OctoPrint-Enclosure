@@ -18,6 +18,7 @@ import inspect
 import threading
 import json
 
+
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                       octoprint.plugin.TemplatePlugin,
                       octoprint.plugin.SettingsPlugin,
@@ -36,7 +37,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     temp_hum_control_status = []
     temperature_sensor_data = []
     last_filament_end_detected = []
-    print_start_time_date = 0
     print_complete = False
 
     def start_timer(self):
@@ -83,7 +83,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     @staticmethod
     def create_date(value):
-        temp_string = self.print_start_time_date.strftime(
+        temp_string = datetime.now().strftime(
             '%m/%d/%Y') + " " + value
         return datetime.strptime(temp_string, '%m/%d/%Y %H:%M')
 
@@ -92,7 +92,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         return max(min(maxn, n), minn)
 
     @staticmethod
-    def getGcodeValue(command_string, gcode):
+    def get_gcode_value(command_string, gcode):
         semicolon = command_string.find(';')
         if not semicolon == -1:
             command_string = command_string[:semicolon]
@@ -117,7 +117,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.configure_gpio()
         self.update_ui()
         self.start_timer()
-        self.print_start_time_date = 0
         self.print_complete = False
 
     # ~~ Blueprintplugin mixin
@@ -171,6 +170,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def set_auto_startup(self):
         index = flask.request.values["index_id"]
         value = True if flask.request.values["status"] == 'true' else False
+
+        if not value:
+            sufix = 'auto_startup'
+            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            self.stop_queue_item(queue_id)
         for output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(output['index_id']):
                 output['auto_startup'] = value
@@ -183,6 +187,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def set_auto_shutdown(self):
         index = flask.request.values["index_id"]
         value = True if flask.request.values["status"] == 'true' else False
+
+        if not value:
+            sufix = 'auto_shutdown'
+            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            self.stop_queue_item(queue_id)
+
         for output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(output['index_id']):
                 output['auto_shutdown'] = value
@@ -250,14 +260,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         """ Fix setting dada commin from old releases of the plugin"""
 
         if not self._settings.get(["settingsVersion"]) == "3.6":
+            self._logger.warn("######### settings not compatible #########")
+            self._logger.warn("######### current settings version %s: #########",
+                              self._settings.get(["settingsVersion"]))
             self._settings.set(["rpi_outputs"], [])
             self._settings.set(["rpi_inputs"], [])
             self._settings.set(["settingsVersion"], "3.6")
             self.rpi_outputs = self._settings.get(["rpi_outputs"])
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
-            self._logger.warn("######### settings not compatible #########")
 
-    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect):
+    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect, queue_id=None):
         """Send neopixel command
 
         Arguments:
@@ -286,6 +298,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if self._settings.get(["debug"]) is True:
                 self._logger.info("Sending neopixel cmd: %s", cmd)
             Popen(cmd, shell=True)
+            if queue_id is not None:
+                self.stop_queue_item(queue_id)
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
             message = template.format(
@@ -399,6 +413,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             result.append(set_temperature)
         self._plugin_manager.send_plugin_message(
             self._identifier, dict(set_temperature=result))
+
+    def stop_queue_item(self, queue_id):
+        self._logger.warn("Trying to stop %s", queue_id)
+        self._logger.warn("event_queue %s", self.event_queue)
+        for task in self.event_queue:
+            if task['queue_id'] == queue_id:
+                self._logger.warn("task to found")
+                task['thread'].cancel()
+                self.event_queue.remove(task)
 
     def update_ui_outputs(self):
         try:
@@ -894,9 +917,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._logger.warn(message)
             pass
 
-    def cancel_events_on_event_queue(self):
+    def cancel_all_events_on_queue(self):
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Trying to stop tasks")
         for task in self.event_queue:
-            task.cancel()
+            try:
+                task['thread'].cancel()
+            except:
+                self._logger.warn("Failed to stop task %s.", task)
+                pass
 
     def handle_gpio_control(self, channel):
         try:
@@ -981,12 +1010,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._logger.warn(message)
             pass
 
-    def write_gpio(self, gpio, value):
+    def write_gpio(self, gpio, value, queue_id=None):
         try:
             GPIO.output(gpio, value)
             if self._settings.get(["debug"]) is True:
                 self._logger.info("Writing on gpio: %s value %s", gpio, value)
             self.update_ui()
+            if queue_id is not None:
+                self.stop_queue_item(queue_id)
         except Exception as ex:
             template = "An exception of type {0} occurred on {1} when writing on pin {2}. Arguments:\n{3!r}"
             message = template.format(
@@ -994,7 +1025,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._logger.warn(message)
             pass
 
-    def write_pwm(self, gpio, pwm_value):
+    def write_pwm(self, gpio, pwm_value, queue_id=None):
         try:
             for pwm in self.pwm_intances:
                 if gpio in pwm:
@@ -1006,6 +1037,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self._logger.info(
                             "Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
+                    if queue_id is not None:
+                        self.stop_queue_item(queue_id)
                     break
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
@@ -1065,7 +1098,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     # ~~ EventPlugin mixin
     def on_event(self, event, payload):
-
         if event == Events.CONNECTED:
             self.update_ui()
 
@@ -1074,61 +1106,42 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         if event == Events.PRINT_STARTED:
             self.print_complete = False
-            self.cancel_events_on_event_queue()
+            self.cancel_all_events_on_queue()
             self.start_filament_detection()
-            self.print_start_time_date = datetime.now()
             for rpi_output in self.rpi_outputs:
                 if rpi_output['auto_startup']:
-                    delay_seconds = self.get_delay_from_output(rpi_output)
-                    if rpi_output['output_type'] == 'regular':
-                        value = False if rpi_output['active_low'] else True
-                        self.add_regular_output_to_queue(
-                            delay_seconds, rpi_output, value)
-                    if rpi_output['output_type'] == 'pwm':
-                        value = self.to_int(rpi_output['default_duty_cycle'])
-                        self.add_pwm_output_to_queue(
-                            delay_seconds, rpi_output, value)
-                    if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-                        red, green, blue = self.get_color_from_rgb(rpi_output)
-                        self.add_neopixel_output_to_queue(
-                            rpi_output, delay_seconds, red, green, blue)
-                    if rpi_output['auto_startup'] and rpi_output['output_type'] == 'temp_hum_control':
-                        rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_temp']
-
+                    delay_seconds = self.get_startup_delay_from_output(
+                        rpi_output)
+                    self.schedule_auto_startup_outputs(
+                        rpi_output, delay_seconds)
                 if rpi_output['toggle_timer']:
                     if rpi_output['output_type'] == 'regular' or rpi_output['output_type'] == 'pwm':
                         self.toggle_output(rpi_output['index_id'], True)
-
-            for task in self.event_queue:
-                task.start()
-            self.event_queue = []
+                if self.is_hour(rpi_output['shutdown_time']):
+                    shutdown_delay_seconds = self.get_shutdown_delay_from_output(
+                        rpi_output)
+                    self.schedule_auto_shutdown_outputs(
+                        rpi_output, shutdown_delay_seconds)
+            self.run_tasks()
             self.update_ui()
 
-        elif event in (Events.PRINT_DONE, Events.PRINT_FAILED, Events.PRINT_CANCELLED):
+        elif event == Events.PRINT_DONE:
             self.stop_filament_detection()
             self.print_complete = True
-
             for rpi_output in self.rpi_outputs:
-                if rpi_output['auto_shutdown']:
-                    delay_seconds = self.get_shutdown_delay_from_output(
-                        rpi_output)
-                    if rpi_output['output_type'] == 'regular':
-                        value = True if rpi_output['active_low'] else False
-                        self.add_regular_output_to_queue(
-                            delay_seconds, rpi_output, value)
-                    if rpi_output['output_type'] == 'pwm':
-                        value = 0
-                        self.add_pwm_output_to_queue(
-                            delay_seconds, rpi_output, value)
-                    if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-                        self.add_neopixel_output_to_queue(
-                            rpi_output, delay_seconds, 0, 0, 0)
+                shutdown_time = rpi_output['shutdown_time']
+                if rpi_output['auto_shutdown'] and not self.is_hour(shutdown_time):
+                    delay_seconds = self.to_float(shutdown_time)
+                    self.schedule_auto_shutdown_outputs(
+                        rpi_output, delay_seconds)
                     if rpi_output['output_type'] == 'temp_hum_control':
                         rpi_output['temp_ctr_set_value'] = 0
-            for task in self.event_queue:
-                task.start()
-            self.event_queue = []
+            self.run_tasks()
             self.update_ui()
+
+        elif event in (Events.PRINT_CANCELLED, Events.PRINT_FAILED):
+            self.stop_filament_detection()
+            self.cancel_all_events_on_queue()
 
         if event == Events.PRINT_DONE:
             for notification in self.notifications:
@@ -1140,6 +1153,44 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     msg = "Print job finished: " + file_name + \
                         "finished printing in " + file_name, elapsed_time
                     self.send_notification(msg)
+
+    def run_tasks(self):
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Trying to start tasks")
+        for task in self.event_queue:
+            if not task['thread'].is_alive():
+                task['thread'].start()
+
+    def schedule_auto_shutdown_outputs(self, rpi_output, shutdown_delay_seconds):
+        sufix = 'auto_shutdown'
+        if rpi_output['output_type'] == 'regular':
+            value = True if rpi_output['active_low'] else False
+            self.add_regular_output_to_queue(
+                shutdown_delay_seconds, rpi_output, value, sufix)
+        if rpi_output['output_type'] == 'pwm':
+            value = 0
+            self.add_pwm_output_to_queue(
+                shutdown_delay_seconds, rpi_output, value, sufix)
+        if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
+            self.add_neopixel_output_to_queue(
+                rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
+
+    def schedule_auto_startup_outputs(self, rpi_output, delay_seconds):
+        sufix = 'auto_startup'
+        if rpi_output['output_type'] == 'regular':
+            value = False if rpi_output['active_low'] else True
+            self.add_regular_output_to_queue(
+                delay_seconds, rpi_output, value, sufix)
+        if rpi_output['output_type'] == 'pwm':
+            value = self.to_int(rpi_output['default_duty_cycle'])
+            self.add_pwm_output_to_queue(
+                delay_seconds, rpi_output, value, sufix)
+        if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
+            red, green, blue = self.get_color_from_rgb(rpi_output)
+            self.add_neopixel_output_to_queue(
+                rpi_output, delay_seconds, red, green, blue, sufix)
+        if rpi_output['auto_startup'] and rpi_output['output_type'] == 'temp_hum_control':
+            rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_temp']
 
     def get_color_from_rgb(self, rpi_output):
         stringColor = rpi_output['neopixel_color']
@@ -1153,59 +1204,60 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def get_shutdown_delay_from_output(self, rpi_output):
         shutdown_time = rpi_output['shutdown_time']
-        start_up_time = rpi_output['startup_time']
 
-        if self.is_hour(shutdown_time) and self.is_hour(start_up_time):
-            shut_down_date_time = create_date(shutdown_time)
-            start_up_date_time = create_date(start_up_time)
-            if shut_down_date_time < start_up_date_time:
-                shut_down_date_time = shut_down_date_time + timedelta(days=1)
-            if shut_down_date_time < datetime.now():
-                delay_seconds = 0.0
-            else:
-                delay_seconds = (shut_down_date_time -
-                                 datetime.now()).total_seconds()
+        shut_down_date_time = self.create_date(shutdown_time)
 
-        elif self.is_hour(shutdown_time) and not self.is_hour(start_up_time):
-            shut_down_date_time = create_date(shutdown_time)
-            if shut_down_date_time < datetime.now():
-                delay_seconds = 0.0
-            else:
-                delay_seconds = (shut_down_date_time -
-                                 datetime.now()).total_seconds()
-        else:
-            delay_seconds = self.to_float(rpi_output['shutdown_time'])
+        if shut_down_date_time < datetime.now():
+            shut_down_date_time = shut_down_date_time + timedelta(days=1)
+
+        delay_seconds = (shut_down_date_time - datetime.now()).total_seconds()
+
         return delay_seconds
 
-    def add_neopixel_output_to_queue(self, rpi_output, delay_seconds, red, green, blue):
+    def add_neopixel_output_to_queue(self, rpi_output, delay_seconds, red, green, blue, sufix):
         gpio_pin = rpi_output['gpio_pin']
         ledCount = rpi_output['neopixel_count']
         ledBrightness = rpi_output['neopixel_brightness']
         address = rpi_output['microcontroller_address']
         neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
-        self.event_queue.append(threading.Timer(delay_seconds,
-                                                self.send_neopixel_command,
-                                                args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct]))
 
-    def add_pwm_output_to_queue(self, delay_seconds, rpi_output, value):
-        self.event_queue.append(threading.Timer(delay_seconds,
-                                                self.write_pwm,
-                                                args=[self.to_int(rpi_output['gpio_pin']), value]))
+        queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
-    def add_regular_output_to_queue(self, delay_seconds, rpi_output, value):
-        self.event_queue.append(threading.Timer(delay_seconds,
-                                                self.write_gpio,
-                                                args=[self.to_int(rpi_output['gpio_pin']), value]))
+        thread = threading.Timer(delay_seconds,
+                                 self.send_neopixel_command,
+                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct, queue_id])
 
-    def get_delay_from_output(self, rpi_output):
+        self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def add_pwm_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
+        queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
+
+        thread = threading.Timer(delay_seconds,
+                                 self.write_pwm,
+                                 args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
+
+        self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
+        queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
+
+        self._logger.warn("Adding output %s to queue", queue_id)
+
+        thread = threading.Timer(delay_seconds,
+                                 self.write_gpio,
+                                 args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
+
+        self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def get_startup_delay_from_output(self, rpi_output):
         start_up_time = rpi_output['startup_time']
         if self.is_hour(start_up_time):
-            start_up_date_time = create_date(start_up_time)
-            if start_up_date_time < self.print_start_time_date:
+            start_up_date_time = self.create_date(start_up_time)
+            if start_up_date_time < datetime.now():
                 delay_seconds = 0.0
             else:
-                delay_seconds = (
-                    start_up_date_time - self.print_start_time_date).total_seconds()
+                delay_seconds = (start_up_date_time -
+                                 datetime.now()).total_seconds()
         else:
             delay_seconds = self.to_float(
                 rpi_output['startup_time'])
@@ -1224,8 +1276,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         for pin in (pin for pin in outputsBeforeSave if pin not in commonPins):
             self.clear_channel(pin)
-
-        self._logger.info("Pins not changed: %s", commonPins)
 
         self.rpi_outputs_not_changed = commonPins
         self.clear_gpio()
@@ -1261,7 +1311,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             notification_provider="disabled",
             notification_api_key="",
             notification_event_name="printer_event",
-            settingsVersion="",
             notifications=[{'printFinish': True, 'filamentChange': True,
                             'printer_action': True, 'temperatureAction': True, 'gpioAction': True}]
         )
@@ -1307,10 +1356,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if cmd.strip().startswith("ENC"):
             if self._settings.get(["debug"]) is True:
                 self._logger.info("Gcode queuing: %s", cmd)
-            index_id = self.to_int(self.getGcodeValue(cmd, 'O'))
+            index_id = self.to_int(self.get_gcode_value(cmd, 'O'))
             for output in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
                 if output['output_type'] == 'regular':
-                    set_value = self.to_int(self.getGcodeValue(cmd, 'S'))
+                    set_value = self.to_int(self.get_gcode_value(cmd, 'S'))
                     set_value = self.constrain(set_value, 0, 1)
                     value = True if set_value == 1 else False
                     value = (not value) if output['active_low'] else value
@@ -1319,7 +1368,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         "Setting REGULAR output %s to value %s" % (index_id, value))
                     return
                 if output['output_type'] == 'pwm':
-                    set_value = self.to_int(self.getGcodeValue(cmd, 'S'))
+                    set_value = self.to_int(self.get_gcode_value(cmd, 'S'))
                     set_value = self.constrain(set_value, 0, 100)
                     output['duty_cycle'] = set_value
                     self.write_pwm(self.to_int(output['gpio_pin']), set_value)
@@ -1327,9 +1376,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         "Setting PWM output %s to value %s" % (index_id, set_value))
                     return
                 if output['output_type'] == 'neopixel_indirect' or output['output_type'] == 'neopixel_direct':
-                    red = self.getGcodeValue(cmd, 'R')
-                    green = self.getGcodeValue(cmd, 'G')
-                    blue = self.getGcodeValue(cmd, 'B')
+                    red = self.get_gcode_value(cmd, 'R')
+                    green = self.get_gcode_value(cmd, 'G')
+                    blue = self.get_gcode_value(cmd, 'B')
 
                     led_count = output['neopixel_count']
                     led_brightness = output['neopixel_brightness']
@@ -1344,8 +1393,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         "Setting NEOPIXEL output %s to red: %s green: %s blue: %s" % (index_id, red, green, blue))
                     return
                 if output['output_type'] == 'temp_hum_control':
-                    set_value = self.to_float(self.getGcodeValue(cmd, 'S'))
-                    should_wait = self.to_int(self.getGcodeValue(cmd, 'W'))
+                    set_value = self.to_float(self.get_gcode_value(cmd, 'S'))
+                    should_wait = self.to_int(self.get_gcode_value(cmd, 'W'))
                     if should_wait == 1 and self._printer.is_printing():
                         self._printer.pause_print()
                         self.waiting_temperature.append(index_id)

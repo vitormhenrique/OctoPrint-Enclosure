@@ -94,8 +94,8 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
         </label>
-        <span class="help-inline">Toggle output every amount of secconds. It will start when the print starts and stop when print is complete. 
-          For PWM pins it will use the default PWM value when ON.
+        <span class="help-inline">Toggle output every amount of secconds. It will start when the print starts and stop when print is complete. For
+          PWM pins it will use the default PWM value when ON.
         </span>
       </div>
     </div>
@@ -133,11 +133,12 @@
     <!-- ko if: $data.auto_startup  -->
     <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
       <div class="control-group">
-        <label class="control-label">{{ _('Startup Delay') }}</label>
+        <label class="control-label">{{ _('Startup Delay / Hour') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: startup_time">
           <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
-            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format</span>
+            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+            forget to check timezone of your Raspberry Pi.</span>
         </div>
       </div>
     </div>
@@ -155,11 +156,12 @@
     <!-- ko if: $data.auto_shutdown  -->
     <div data-bind="attr: {id: 'auto_shutdownField_' + $index() }">
       <div class="control-group">
-        <label class="control-label">{{ _('Shutdown Delay') }}</label>
+        <label class="control-label">{{ _('Shutdown Delay / Hour') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: shutdown_time">
           <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
-            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format</span>
+            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+            forget to check timezone of your raspberry pi</span>
         </div>
       </div>
     </div>
