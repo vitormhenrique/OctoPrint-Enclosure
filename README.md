@@ -164,7 +164,7 @@ You can also add mechanical buttons to pause, resume and change filaments near o
 If you want to enable notifications check the following issue:
 https://github.com/vitormhenrique/OctoPrint-Enclosure/issues/36
 
-You can enable GCODE commands to control configured OUTPUTS.
+You can enable GCODE commands to control configured **outputs**.
 
 The list of supported gcodes:
 
