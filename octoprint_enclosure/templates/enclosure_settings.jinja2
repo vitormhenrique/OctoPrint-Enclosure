@@ -202,7 +202,7 @@
 
 
     <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control")  -->
-    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.output_type() == "cooler")  -->
+    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
     <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
@@ -243,22 +243,20 @@
       </div>
     </div>
 
-    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
     <div class="control-group">
-      <label class="control-label">{{ _('Default Temperature') }}</label>
+      <label class="control-label">{{ _('Default Value') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_temp">
-        <span class="help-inline">Default temperature that temperature control will be set when the print starts.</span>
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_value">
+        <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts.</span>
       </div>
     </div>
     <div class="control-group">
-      <label class="control-label">{{ _('Temperature Deadband') }}</label>
+      <label class="control-label">{{ _('Value Deadband') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_deadband">
-        <span class="help-inline">Allowabe drift on temperature control. Set it to zero to disable.</span>
+        <span class="help-inline">Allowable drift on temperature / humidity control. Set it to zero to disable.</span>
       </div>
     </div>
-    <!-- /ko -->
 
     <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
     <div class="control-group">
@@ -345,7 +343,7 @@
     <div class="control-group">
       <label class="control-label">{{ _('Default Color') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
+        <input type="text" class="input-block-level" data-bind="value: default_neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
         <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
       </div>
     </div>
@@ -647,6 +645,14 @@
   </a>
   <div id="advanced_enclosure" class="accordion-body collapse">
     <form class="form-horizontal">
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.use_sudo"> {{ _('Use SUDO') }}
+          </label>
+          <span class="help-inline">Use sudo to run python commands.</span>
+        </div>
+      </div>
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">

@@ -25,8 +25,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                       octoprint.plugin.AssetPlugin,
                       octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
-
-    last_filament_end_detected = 0
     rpi_outputs = []
     rpi_inputs = []
     waiting_temperature = []
@@ -240,8 +238,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         blue = flask.request.values["blue"]
         for rpi_output in self.rpi_outputs:
             if gpio_index == self.to_int(rpi_output['index_id']):
-                rpi_output['neopixel_color'] = 'rgb({0!s},{1!s},{2!s})'.format(
-                    red, green, blue)
                 led_count = rpi_output['neopixel_count']
                 led_brightness = rpi_output['neopixel_brightness']
                 address = rpi_output['microcontroller_address']
@@ -250,7 +246,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
                 self.send_neopixel_command(
                     self.to_int(rpi_output['gpio_pin']),
-                    led_count, led_brightness, red, green, blue, address, neopixel_dirrect)
+                    led_count, led_brightness, red, green, blue, address, neopixel_dirrect, gpio_index)
 
         return flask.jsonify(success=True)
 
@@ -268,7 +264,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.rpi_outputs = self._settings.get(["rpi_outputs"])
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
-    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect, queue_id=None):
+    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect, index_id, queue_id=None):
         """Send neopixel command
 
         Arguments:
@@ -283,6 +279,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         try:
 
+            for rpi_output in self.rpi_outputs:
+                if self.to_int(index_id) == self.to_int(rpi_output['index_id']):
+                    rpi_output['neopixel_color'] = 'rgb({0!s},{1!s},{2!s})'.format(
+                        red, green, blue)
+
             if address == '':
                 address = 0
 
@@ -292,7 +293,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             else:
                 script = os.path.dirname(
                     os.path.realpath(__file__)) + "/neopixel_indirect.py "
-            cmd = "sudo python " + script + str(led_pin) + " " + str(led_count) + " " + str(
+
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+
+            cmd = sudo_str + "python " + script + str(led_pin) + " " + str(led_count) + " " + str(
                 led_brightness) + " " + str(red) + " " + str(green) + " " + str(blue) + " " + str(address)
             if self._settings.get(["debug"]) is True:
                 self._logger.info("Sending neopixel cmd: %s", cmd)
@@ -541,7 +548,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             script = os.path.dirname(
                 os.path.realpath(__file__)) + "/getDHTTemp.py "
-            cmd = "sudo python " + script + str(sensor) + " " + str(pin)
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(sensor) + " " + str(pin)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.info("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
@@ -560,7 +571,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             script = os.path.dirname(
                 os.path.realpath(__file__)) + "/BME280.py "
-            cmd = "sudo python " + script + str(address)
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(address)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.info("Temperature BME280 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
@@ -579,7 +594,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             script = os.path.dirname(
                 os.path.realpath(__file__)) + "/SI7021.py "
-            cmd = "sudo python " + script + str(address)
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(address)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.info("Temperature SI7021 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
@@ -673,7 +692,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     else:
                         current_status = previous_status
 
-                    if str(temp_hum_control['temp_ctr_type']) == 'cooler':
+                    if str(temp_hum_control['temp_ctr_type']) == 'cooler' or str(temp_hum_control['temp_ctr_type']) == 'dehumidifier':
                         current_status = not current_status
 
                     if temp_hum_control['temp_ctr_type'] == 'heater' and max_temp > 0.0 and max_temp < current_value:
@@ -817,6 +836,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
                 self.clear_channel(pin)
 
+            
             for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs)):
                 pullResistor = GPIO.PUD_UP if rpi_input['input_pull_resistor'] == 'input_pull_up' else GPIO.PUD_DOWN
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
@@ -844,7 +864,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
                                                item['action_type'] == 'printer_control' and
                                                item['printer_action'] == 'filament' and
-                                               filament_sensor['gpio_pin'] == channel, self.rpi_inputs)):
+                                               self.to_int(item['gpio_pin']) == self.to_int(channel), self.rpi_inputs)):
                 if ((filament_sensor['edge'] == 'fall') ^ (GPIO.input(self.to_int(filament_sensor['gpio_pin']))) and
                         filament_sensor['filament_sensor_enabled']):
                     last_detected_time = list(filter(lambda item: item['index_id'] == filament_sensor['index_id'],
@@ -888,6 +908,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 else:
                     self.last_filament_end_detected.append(
                         dict(index_id=filament_sensor['index_id'], time=0))
+                    self._logger.info(
+                        "Adding GPIO event detect on pin %s with edge: %s", filament_sensor['gpio_pin'], edge)
                     GPIO.add_event_detect(self.to_int(
                         filament_sensor['gpio_pin']), edge, callback=self.handle_filamment_detection, bouncetime=200)
         except Exception as ex:
@@ -913,8 +935,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pass
 
     def cancel_all_events_on_queue(self):
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("Trying to stop tasks")
         for task in self.event_queue:
             try:
                 task['thread'].cancel()
@@ -1150,8 +1170,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     self.send_notification(msg)
 
     def run_tasks(self):
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("Trying to start tasks")
         for task in self.event_queue:
             if not task['thread'].is_alive():
                 task['thread'].start()
@@ -1181,20 +1199,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.add_pwm_output_to_queue(
                 delay_seconds, rpi_output, value, sufix)
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-            red, green, blue = self.get_color_from_rgb(rpi_output)
+            red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
             self.add_neopixel_output_to_queue(
                 rpi_output, delay_seconds, red, green, blue, sufix)
         if rpi_output['auto_startup'] and rpi_output['output_type'] == 'temp_hum_control':
-            rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_temp']
+            rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
 
-    def get_color_from_rgb(self, rpi_output):
-        stringColor = rpi_output['neopixel_color']
+    def get_color_from_rgb(self, stringColor):
         stringColor = stringColor.replace('rgb(', '')
-        red = stringColor[:stringColor.index_id(',')]
-        stringColor = stringColor[stringColor.index_id(',') + 1:]
-        green = stringColor[:stringColor.index_id(',')]
-        stringColor = stringColor[stringColor.index_id(',') + 1:]
-        blue = stringColor[:stringColor.index_id(')')]
+        red = stringColor[:stringColor.index(',')]
+        stringColor = stringColor[stringColor.index(',') + 1:]
+        green = stringColor[:stringColor.index(',')]
+        stringColor = stringColor[stringColor.index(',') + 1:]
+        blue = stringColor[:stringColor.index(')')]
         return red, green, blue
 
     def get_shutdown_delay_from_output(self, rpi_output):
@@ -1215,12 +1232,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         ledBrightness = rpi_output['neopixel_brightness']
         address = rpi_output['microcontroller_address']
         neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
+        index_id = self.to_int(rpi_output['index_id'])
 
-        queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
+        queue_id = '{0!s}_{1!s}'.format(index_id, sufix)
 
         thread = threading.Timer(delay_seconds,
                                  self.send_neopixel_command,
-                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct, queue_id])
+                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct, index_id, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
@@ -1297,6 +1315,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             "G28 X0 Y0         ;Home X Y\n" +
             "M82            ;Set extruder to Absolute Mode\n" +
             "G92 E0         ;Set Extruder to 0",
+            use_sudo=True,
             debug=False,
             gcode_control=False,
             debug_temperature_log=False,
@@ -1377,11 +1396,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     led_brightness = output['neopixel_brightness']
                     address = output['microcontroller_address']
 
+                    index_id = self.to_int(output['index_id'])
+
                     neopixel_dirrect = output['output_type'] == 'neopixel_direct'
 
                     self.send_neopixel_command(
                         self.to_int(output['gpio_pin']),
-                        led_count, led_brightness, red, green, blue, address, neopixel_dirrect)
+                        led_count, led_brightness, red, green, blue, address, neopixel_dirrect, index_id)
                     comm_instance._log(
                         "Setting NEOPIXEL output %s to red: %s green: %s blue: %s" % (index_id, red, green, blue))
                     return

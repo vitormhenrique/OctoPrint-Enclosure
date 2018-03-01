@@ -48,9 +48,9 @@
                 <th class="temp_hum_control" data-bind="html: label, attr: {title: label}"></th>
                 <td class="temperature_target">
                     <form class="form-inline" style="margin:0" data-bind="submit: function(element) { $root.setTemperature($data, element) }">
-                        <div class="input-prepend input-append">
+                        <div class="input-append">
                             <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="enable: $root.isUser(), value: temp_ctr_new_set_value, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temp_ctr_set_value()), id: 'temp_control_' + index_id()}">
-                            <!-- ko if: ($data.temp_ctr_type == "heater" || $data.temp_ctr_type == "cooler")  -->
+                            <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
                             <!-- ko if: ($parent.use_fahrenheit())  -->
                             <span class="add-on">&deg;F</span>
                             <!-- /ko -->
@@ -58,7 +58,7 @@
                             <span class="add-on">&deg;C</span>
                             <!-- /ko -->
                             <!-- /ko -->
-                            <!-- ko if: ($data.temp_ctr_type == "dehumidifier")  -->
+                            <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
                             <span class="add-on">%</span>
                             <!-- /ko -->
                         </div>
