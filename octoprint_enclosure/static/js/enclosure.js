@@ -11,6 +11,8 @@ $(function () {
     self.rpi_outputs = ko.observableArray();
     self.rpi_inputs = ko.observableArray();
 
+    self.settingsOpen = false;
+
     self.settings_outputs_regular = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
         return (item.output_type() === "regular" && !item.toggle_timer());
@@ -132,6 +134,10 @@ $(function () {
       }
 
       if (plugin != "enclosure") {
+        return;
+      }
+
+      if(self.settingsOpen){
         return;
       }
 
@@ -271,7 +277,11 @@ $(function () {
     };
 
     self.onStartupComplete = function () {
+      self.settingsOpen = false;
+    };
 
+    self.onSettingsShown = function () {
+      self.settingsOpen = true;
     };
 
     self.showColorPicker = function () {
@@ -282,6 +292,7 @@ $(function () {
 
     self.onSettingsHidden = function () {
       self.showColorPicker();
+      self.settingsOpen = false;
     };
 
     self.getRegularOutputs = function () {
