@@ -147,9 +147,16 @@
 </h4>
 <div class="input-append">
     <input type="text" class="input-mini" data-bind="value: new_duty_cycle, valueUpdate: 'input', attr: {placeholder:$root.getDutyCycle(duty_cycle())}">
+    <!-- ko ifnot: ($data.pwm_temperature_linked())  -->
     <button class="btn btn-input-inc" title="Set PWM" data-bind="enable: $root.isUser(), click: $root.handlePWM">
         <i class="fa fa-check"></i>
     </button>
+    <!-- /ko -->
+    <!-- ko if: ($data.pwm_temperature_linked())  -->
+    <button class="btn btn-input-inc" title="Temperature controlled PWM" disabled>
+        <i class="fa fa-check"></i>
+    </button>
+    <!-- /ko -->
 </div>
 <!-- /ko -->
 
@@ -182,7 +189,7 @@
 </h4>
 <!-- /ko -->
 
-
+<!-- ko if: ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) -->
 <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm") -->
 <div>
@@ -211,10 +218,11 @@
 
 <!-- ko if: ($data.output_type() == "temp_hum_control" && $data.temp_ctr_type() == "heater" && !$data.auto_shutdown())  -->
 <span>
-<span class="label label-important">Warning:</span><span> Consider making HEATER auto shutdown when print finish.</span>
+<span class="label label-important">Warning:</span><span> Consider making <b>heater</b> auto shutdown when print finish for safety reasons.</span>
 </span>
 <!-- /ko -->
 </div>
+<!-- /ko -->
 <!-- /ko -->
 <!-- /ko -->
 

@@ -88,7 +88,48 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "pwm" ) -->
+
+    <!-- ko if: ($data.output_type() == "pwm" ) -->
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
+          </label>
+          <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty B, temperature B. 
+            This output will automatomatically start when a print starts and will default to the default dutu cycle when print is complete.
+          </span>
+        </div>
+      </div>
+      <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_b">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_b">
+        </div>
+      </div>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -118,8 +159,8 @@
     <!-- /ko -->
 
 
+    <!-- ko if: ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) -->
     <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
-
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
       <div class="controls">
@@ -166,7 +207,7 @@
       </div>
     </div>
     <!-- /ko -->
-
+    <!-- /ko -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control")  -->
@@ -201,8 +242,8 @@
     <!-- /ko -->
 
 
-    <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control")  -->
-    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
+    <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
+    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
     <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">

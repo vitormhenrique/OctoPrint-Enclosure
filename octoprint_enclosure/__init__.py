@@ -254,13 +254,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def fix_data(self):
         """ Fix setting dada commin from old releases of the plugin"""
 
-        if not self._settings.get(["settingsVersion"]) == "3.6":
+        if not self._settings.get(["settingsVersion"]) == "3.7":
             self._logger.warn("######### settings not compatible #########")
             self._logger.warn("######### current settings version %s: #########",
                               self._settings.get(["settingsVersion"]))
             self._settings.set(["rpi_outputs"], [])
             self._settings.set(["rpi_inputs"], [])
-            self._settings.set(["settingsVersion"], "3.6")
+            self._settings.set(["settingsVersion"], "3.7")
             self.rpi_outputs = self._settings.get(["rpi_outputs"])
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
@@ -326,6 +326,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.temperature_sensor_data = sensor_data
             self.handle_temp_hum_control()
             self.handle_temperature_events()
+            self.handle_pwm_linked_temperature()
             self.update_ui()
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
@@ -655,6 +656,54 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._logger.warn(message)
             return 0
 
+    def handle_pwm_linked_temperature(self):
+        try:
+            for pwm_output in list(filter(lambda item: item['output_type'] == 'pwm' and item['pwm_temperature_linked'], self.rpi_outputs)):
+                gpio_pin = self.to_int(pwm_output['gpio_pin'])
+                if self._printer.is_printing():
+                    index_id = self.to_int(pwm_output['index_id'])
+                    linked_id = self.to_int(pwm_output['linked_temp_sensor'])
+                    linked_data = self.get_linked_temperature_sensor_data(linked_id)
+                    current_temp = self.to_float(
+                            linked_data['temperature'])
+
+                    duty_a = self.to_float(pwm_output['duty_a'])
+                    duty_b = self.to_float(pwm_output['duty_b'])
+                    temp_a = self.to_float(pwm_output['temperature_a'])
+                    temp_b = self.to_float(pwm_output['temperature_b'])
+
+                    try:
+                        calculated_duty = ((current_temp-temp_a) *
+                                           (duty_b-duty_a)/(temp_b-temp_a))+duty_a
+                    except:
+                        calculated_duty = 0
+
+                    if self._settings.get(["debug"]) is True:
+                        self._logger.info(
+                            "Calculated duty for PWM %s is %s", index_id, calculated_duty)
+                elif self.print_complete:
+                    calculated_duty = self.to_int(pwm_output['default_duty_cycle'])
+                else:
+                    calculated_duty = 0
+                
+                self.write_pwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
+
+        except Exception as ex:
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
+            message = template.format(
+                type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
+            self._logger.warn(message)
+
+    def get_linked_temperature_sensor_data(self, linked_id):
+        try:
+            linked_data = [
+                data for data in self.temperature_sensor_data if data['index_id'] == linked_id].pop()
+            return linked_data
+        except:
+            self._logger.warn(
+                "No linked temperature sensor found for %s", linked_id)
+            return None
+
     def handle_temp_hum_control(self):
         try:
             for temp_hum_control in list(filter(lambda item: item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
@@ -675,8 +724,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if set_temperature == 0:
                     current_status = False
                 else:
-                    linked_data = [
-                        data for data in self.temperature_sensor_data if data['index_id'] == linked_id].pop()
+                    linked_data = self.get_linked_temperature_sensor_data(linked_id)
 
                     if str(temp_hum_control['temp_ctr_type']) == 'dehumidifier':
                         current_value = self.to_float(linked_data['humidity'])
@@ -836,7 +884,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
                 self.clear_channel(pin)
 
-            
             for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs)):
                 pullResistor = GPIO.PUD_UP if rpi_input['input_pull_resistor'] == 'input_pull_up' else GPIO.PUD_DOWN
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
@@ -1045,12 +1092,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             for pwm in self.pwm_intances:
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
-                    pwm['duty_cycle'] = pwm_value
-                    pwm_object.stop()
-                    pwm_object.start(pwm_value)
-                    if self._settings.get(["debug"]) is True:
-                        self._logger.info(
-                            "Writing PWM on gpio: %s value %s", gpio, pwm_value)
+                    old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
+                    if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
+                        pwm['duty_cycle'] = pwm_value
+                        pwm_object.stop()
+                        pwm_object.start(pwm_value)
+                        if self._settings.get(["debug"]) is True:
+                            self._logger.info(
+                                "Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
                     if queue_id is not None:
                         self.stop_queue_item(queue_id)
@@ -1180,7 +1229,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             value = True if rpi_output['active_low'] else False
             self.add_regular_output_to_queue(
                 shutdown_delay_seconds, rpi_output, value, sufix)
-        if rpi_output['output_type'] == 'pwm':
+        if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = 0
             self.add_pwm_output_to_queue(
                 shutdown_delay_seconds, rpi_output, value, sufix)
@@ -1194,7 +1243,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             value = False if rpi_output['active_low'] else True
             self.add_regular_output_to_queue(
                 delay_seconds, rpi_output, value, sufix)
-        if rpi_output['output_type'] == 'pwm':
+        if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = self.to_int(rpi_output['default_duty_cycle'])
             self.add_pwm_output_to_queue(
                 delay_seconds, rpi_output, value, sufix)
