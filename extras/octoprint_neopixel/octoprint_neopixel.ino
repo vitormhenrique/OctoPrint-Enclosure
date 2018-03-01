@@ -75,7 +75,7 @@ void setup() {
 	Wire.begin(I2CADDRESS);
 	#ifdef DEBUG
     Serial.begin(115200);
-    while (!Serial) ;
+    while (!Serial);
     Serial.println("Debuging...");
 	#endif
   Wire.onReceive(receiveEvent);
