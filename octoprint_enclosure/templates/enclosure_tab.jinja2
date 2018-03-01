@@ -39,7 +39,7 @@
 
                 <!-- ko if: ($root.hasAnySensorWithHumidity())  -->
                 <!-- ko ifnot: ($root.humidityCapableSensor(temp_sensor_type()))  -->
-                <td>N/A</td>
+                <td class="humidity_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">N/A</td>
                 <!-- /ko -->
                 <!-- /ko -->
 
@@ -93,7 +93,37 @@
             <!-- ko ifnot: ($index() ==  0)  -->
             <tr>
                 <th class="temp_hum_control" data-bind="html: label, attr: {title: label}"></th>
-                <td class="temperature_target">Set Temp</td>
+                <td class="temperature_target">
+                    <form class="form-inline" style="margin:0" data-bind="submit: function(element) { $root.setTemperature($data, element) }">
+                        <div class="input-append">
+                            <input type="number" min="0" max="999" class="input-mini input-nospin" data-bind="enable: $root.isUser(), value: temp_ctr_new_set_value, valueUpdate: 'input', attr: {placeholder:$root.getCleanTemperature(temp_ctr_set_value()), id: 'temp_control_' + index_id()}">
+                            <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler")  -->
+                            <!-- ko if: ($parent.use_fahrenheit())  -->
+                            <span class="add-on">&deg;F</span>
+                            <!-- /ko -->
+                            <!-- ko ifnot: ($parent.use_fahrenheit())  -->
+                            <span class="add-on">&deg;C</span>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                            <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
+                            <span class="add-on">%</span>
+                            <!-- /ko -->
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" data-bind="enable: $root.isUser()" class="btn btn-primary" title="{{ _('Set') }}">
+                                <i class="fa fa-check"></i>
+                            </button>
+                            <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" data-bind="enable: $root.isUser()">
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="javascript:void(0)" data-bind="enable: $root.isUser(), click: $root.turnOffHeater">{{ _('Off') }}</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </form>
+                </td>
             </tr>
             <!-- /ko -->
             <!-- /ko -->
@@ -121,12 +151,12 @@
 </h4>
 
 <div>
-<!-- ko if: ($data.gpio_status())  -->
-<button data-bind="enable: $root.isUser(), click: $root.handleIO" class="btn">Turn off</button>
-<!-- /ko -->
-<!-- ko ifnot: ($data.gpio_status())  -->
-<button data-bind="enable: $root.isUser(), click: $root.handleIO" class="btn">Turn on</button>
-<!-- /ko -->
+    <!-- ko if: ($data.gpio_status())  -->
+    <button data-bind="enable: $root.isUser(), click: $root.handleIO" class="btn">Turn off</button>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.gpio_status())  -->
+    <button data-bind="enable: $root.isUser(), click: $root.handleIO" class="btn">Turn on</button>
+    <!-- /ko -->
 </div>
 <!-- /ko -->
 
@@ -193,34 +223,36 @@
 <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm") -->
 <div>
-<h5>
-    <!-- ko if: ($root.isUser())  -->
-    <span>Auto Startup</span>
-    <!-- ko if: ($data.auto_startup())  -->
-    <a href="#" data-bind="click: $root.switchAutoStartUp" class="fa fa-toggle-on enclosure-link" title="Disable Auto Startup"></a>
-    <!-- /ko -->
-    <!-- ko ifnot: ($data.auto_startup())  -->
-    <a href="#" data-bind="click: $root.switchAutoStartUp" class="fa fa-toggle-off enclosure-link" title="Enable Auto Startup"></a>
-    <!-- /ko -->
-    <!-- /ko -->
-</h5>
-<h5>
-    <!-- ko if: ($root.isUser())  -->
-    <span>Auto Shutdown</span>
-    <!-- ko if: ($data.auto_shutdown())  -->
-    <a href="#" data-bind="click: $root.switchAutoShutdown" class="fa fa-toggle-on enclosure-link" title="Disable Auto Shutdown"></a>
-    <!-- /ko -->
-    <!-- ko ifnot: ($data.auto_shutdown())  -->
-    <a href="#" data-bind="click: $root.switchAutoShutdown" class="fa fa-toggle-off enclosure-link" title="Enable Auto Shutdown"></a>
-    <!-- /ko -->
-    <!-- /ko -->
-</h5>
+    <h5>
+        <!-- ko if: ($root.isUser())  -->
+        <span>Auto Startup</span>
+        <!-- ko if: ($data.auto_startup())  -->
+        <a href="#" data-bind="click: $root.switchAutoStartUp" class="fa fa-toggle-on enclosure-link" title="Disable Auto Startup"></a>
+        <!-- /ko -->
+        <!-- ko ifnot: ($data.auto_startup())  -->
+        <a href="#" data-bind="click: $root.switchAutoStartUp" class="fa fa-toggle-off enclosure-link" title="Enable Auto Startup"></a>
+        <!-- /ko -->
+        <!-- /ko -->
+    </h5>
+    <h5>
+        <!-- ko if: ($root.isUser())  -->
+        <span>Auto Shutdown</span>
+        <!-- ko if: ($data.auto_shutdown())  -->
+        <a href="#" data-bind="click: $root.switchAutoShutdown" class="fa fa-toggle-on enclosure-link" title="Disable Auto Shutdown"></a>
+        <!-- /ko -->
+        <!-- ko ifnot: ($data.auto_shutdown())  -->
+        <a href="#" data-bind="click: $root.switchAutoShutdown" class="fa fa-toggle-off enclosure-link" title="Enable Auto Shutdown"></a>
+        <!-- /ko -->
+        <!-- /ko -->
+    </h5>
 
-<!-- ko if: ($data.output_type() == "temp_hum_control" && $data.temp_ctr_type() == "heater" && !$data.auto_shutdown())  -->
-<span>
-<span class="label label-important">Warning:</span><span> Consider making <b>heater</b> auto shutdown when print finish for safety reasons.</span>
-</span>
-<!-- /ko -->
+    <!-- ko if: ($data.output_type() == "temp_hum_control" && $data.temp_ctr_type() == "heater" && !$data.auto_shutdown())  -->
+    <span>
+        <span class="label label-important">Warning:</span>
+        <span> Consider making
+            <b>heater</b> auto shutdown when print finish for safety reasons.</span>
+    </span>
+    <!-- /ko -->
 </div>
 <!-- /ko -->
 <!-- /ko -->
