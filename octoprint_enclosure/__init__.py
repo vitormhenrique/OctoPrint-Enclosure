@@ -129,7 +129,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.rpi_outputs = self._settings.get(["rpi_outputs"])
         self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
-
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTempHum", methods=["GET"])
     def set_enclosure_temperature_humidity(self):
@@ -1248,12 +1247,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self.write_pwm(gpio, value)
                     if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
                         red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
-                        led_count = output['neopixel_count']
-                        led_brightness = output['neopixel_brightness']
-                        address = output['microcontroller_address']
-                        index_id = self.to_int(output['index_id'])
-                        neopixel_dirrect = output['output_type'] == 'neopixel_direct'
-                        self.send_neopixel_command(self.to_int(output['gpio_pin']), led_count, led_brightness, red, green, blue, 
+                        led_count = rpi_output['neopixel_count']
+                        led_brightness = rpi_output['neopixel_brightness']
+                        address = rpi_output['microcontroller_address']
+                        index_id = self.to_int(rpi_output['index_id'])
+                        neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
+                        self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green, blue, 
                                                    address, neopixel_dirrect, index_id)
                     if rpi_output['output_type'] == 'temp_hum_control':
                         rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
