@@ -19,7 +19,9 @@ Here is a list of possibilities:
 Find the plugin useful? Buy me a coffe.
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
-Check pictures and more information on thingiverse: http://www.thingiverse.com/thing:2245493
+Having problems with the plugin? check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide)
+
+Check pictures on thingiverse: http://www.thingiverse.com/thing:2245493
 
 **Software**
 
@@ -186,7 +188,9 @@ Id is generated on the setting plugin, value should be between 0 to 255. R, G, a
 <pre><code>ENC O[id] W[wait value] S[set value]</code></pre>
 Id is generated on the setting plugin, W specify if the plugin should wait or not for the enclosure to reach the temperature (1 is to wait), S will set the set temperature. Ex: ENC O1 W1 S45 will set temperature control with id 1 to 45 and wait until the temperature is reached to continue printing.
 
-Let me know about improvements that you might think.
+It is possible to send and request GPIO status with web requests, check this issue for more information:
+https://github.com/vitormhenrique/OctoPrint-Enclosure/issues/85
+
 
 **Tab Order**
 
