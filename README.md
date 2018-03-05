@@ -16,7 +16,7 @@ Here is a list of possibilities:
 * Alarm when enclosure temperature reaches some sort of value
 * Notifications using IFTTT when events happen (temperature trigger / print events / etc)
 
-Find the plugin useful? Buy me a coffe.
+Find the plugin useful? Buy me a coffee.
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
 Having problems with the plugin? check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide)
