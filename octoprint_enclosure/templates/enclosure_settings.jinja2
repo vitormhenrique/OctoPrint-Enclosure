@@ -159,9 +159,9 @@
     <!-- /ko -->
 
 
-    <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
     <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
+    <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -192,6 +192,7 @@
       </div>
     </div>
     <!-- /ko -->
+    <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
       <div class="controls">
@@ -210,11 +211,12 @@
           <input type="text" class="input-block-level" data-bind="value: shutdown_time">
           <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
             events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
-            forget to check timezone of your raspberry pi</span>
+            forget to check timezone of your raspberry pi.</span>
+            <span class="label label-important">Attention</span>
+            <span> Hour schedule does not work with <b>Link PWM to Temperature</b> option</span>
         </div>
       </div>
     </div>
-    <!-- /ko -->
     <!-- /ko -->
     <!-- /ko -->
 

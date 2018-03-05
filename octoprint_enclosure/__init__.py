@@ -623,7 +623,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         equals_pos = lines[1].find('t=')
         if equals_pos != -1:
             temp_string = lines[1][equals_pos + 2:]
-            temp_c = float(temp_string) / 1000.0
+            temp_c = float(temp_string) / 1000.
+            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.info("DS18B20 result: %s", temp_c)
             return '{0:0.1f}'.format(temp_c)
         return 0
 
@@ -680,7 +682,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         self._logger.info(
                             "Calculated duty for PWM %s is %s", index_id, calculated_duty)
                 elif self.print_complete:
-                    calculated_duty = self.to_int(pwm_output['default_duty_cycle'])
+                    calculated_duty = self.to_int(pwm_output['duty_cycle'])
                 else:
                     calculated_duty = 0
                 
@@ -1192,6 +1194,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.print_complete = True
             for rpi_output in self.rpi_outputs:
                 shutdown_time = rpi_output['shutdown_time']
+                if rpi_output['output_type'] == 'pwm' and rpi_output['pwm_temperature_linked'] :
+                    rpi_output['duty_cycle'] = rpi_output['default_duty_cycle']
                 if rpi_output['auto_shutdown'] and not self.is_hour(shutdown_time):
                     delay_seconds = self.to_float(shutdown_time)
                     self.schedule_auto_shutdown_outputs(
@@ -1231,6 +1235,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             value = 0
             self.add_pwm_output_to_queue(
                 shutdown_delay_seconds, rpi_output, value, sufix)
+        if rpi_output['output_type'] == 'pwm' and rpi_output['pwm_temperature_linked']:
+            self.schedule_pwm_duty_on_queue(shutdown_delay_seconds,rpi_output,0)
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
             self.add_neopixel_output_to_queue(
                 rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
@@ -1319,6 +1325,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                  args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def schedule_pwm_duty_on_queue(self, delay_seconds, rpi_output, value):
+        queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], "pwm_linked_temp")
+        thread = threading.Timer(delay_seconds,
+                                 self.set_pwm_duty_cycle,
+                                 args=[rpi_output, value, queue_id])
+        self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def set_pwm_duty_cycle(self, rpi_output, value, queue_id):
+        rpi_output['duty_cycle'] = value
+        if queue_id is not None:
+            self.stop_queue_item(queue_id)
 
     def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
