@@ -4,7 +4,7 @@
 
 Here is a list of possibilities:
 * Add temperature sensors on your enclosure or near your printer
-* Add Active heaters on your enclosure and keep the temperature nice and high for large ABS 
+* Add active heaters on your enclosure and keep the temperature nice and high for large ABS 
 * PWM controlled outputs
 * PWM controlled outputs based on temperature sensor
 * Active cooling for good PLA printing
@@ -12,11 +12,12 @@ Here is a list of possibilities:
 * Mechanical buttons to pause and resume printer jobs
 * Mechanical buttons to send GCODE to the printer
 * Mechanical buttons to control raspberry pi GPIO
-* Multiple filament sensors for dual or more extrusion
+* Multiple filament sensors for dual or more extruders
 * Alarm when enclosure temperature reaches some sort of value
 * Notifications using IFTTT when events happen (temperature trigger / print events / etc)
+* Add sub-menus on navbar to quick access outputs and temperature sensors
 
-Find the plugin useful? Buy me a coffe.
+Find the plugin useful? Buy me a coffee
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
 Having problems with the plugin? check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide)
@@ -154,43 +155,22 @@ Inputs can be of two different types:
 * Temperature Sensors
 * GPIO
 
-Temperature Sensors will be used to input temperature and humidity data, they can be linked to a especial outputs like temperature control and alarms.
+Temperature Sensors will be used to input temperature and humidity data, they can be linked to a especial output like temperature control and temperature alarm.
 
-GPIO inputs will trigger events for the plugin, this feature can be used to add buttons to the enclosure and cause pressing those buttons to act on the printer or the plugin itself.
+GPIO inputs will trigger events for the plugin, this feature can be used to add buttons to the enclosure and cause pressing those buttons to act on the printer or other pre-configured outputs.
 
-After selecting GPIO for the input type, and selecting Output control on the action type, the button will be able to turn on / off or toggle liked regular outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface.
+After selecting GPIO for the input type, and selecting output control on the action type, the button will be able to turn on / off or toggle linked regular outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface. You can also use buttons to send g-code commands.
 
-Selecting Print control on the action type will trigger Printer actions when the configured GPIO receives a signal. The actions can be Resume and Pause a print job or Change Filament. You can use the "change filament" action and set up the input GPIO according to your filament sensor, for example, if your filament sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the event on the falling edge.
-You can also add mechanical buttons to pause, resume and change filaments near or printer for convenience.
+Selecting print control on the action type will trigger printer actions when the configured GPIO receives a signal. The actions can be Resume and Pause a print job or Change Filament. You can use the "change filament" action and set up the input GPIO according to your filament sensor, for example, if your filament sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the event on the falling edge.
+You can also add mechanical buttons to pause, resume and change filaments near your printer for convenience.
 
 **Advanced Area**
 
-If you want to enable notifications check the following issue:
-https://github.com/vitormhenrique/OctoPrint-Enclosure/issues/36
+If you want to enable notifications check the following [issue](https://github.com/vitormhenrique/OctoPrint-Enclosure/issues/36)
 
-You can enable GCODE commands to control configured **outputs**.
+You can control outputs using a simple [API](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/API-Control)
 
-The list of supported gcodes:
-
-* Regular outputs
-<pre><code>ENC O[id] S[value]</code></pre>
-Id is generated on the setting plugin, value can be 0 to turn OFF the output or 1 to turn ON output. Ex: sending ENC O2 S1 would turn ON output 2.
-
-* PWM outputs
-<pre><code>ENC O[id] S[pwm value]</code></pre>
-Id is generated on the setting plugin, value is the duty cycle from 0 to 100. Ex: sending ENC O5 S75 would turn set duty cycle of 75% on output 5.
-
-* Neopixel
-<pre><code>ENC O[id] R[red value] G[green value] B[blue value]</code></pre>
-Id is generated on the setting plugin, value should be between 0 to 255. R, G, and B are the colors for that value. Ex: sending ENC O1 R255 G0 B0 would set neopixel with id 1 color to full red.
-
-* Temperature / Humidity Control
-<pre><code>ENC O[id] W[wait value] S[set value]</code></pre>
-Id is generated on the setting plugin, W specify if the plugin should wait or not for the enclosure to reach the temperature (1 is to wait), S will set the set temperature. Ex: ENC O1 W1 S45 will set temperature control with id 1 to 45 and wait until the temperature is reached to continue printing.
-
-It is possible to send and request GPIO status with web requests, check this issue for more information:
-https://github.com/vitormhenrique/OctoPrint-Enclosure/issues/85
-
+Or use [g-code](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/G-CODE-Control) commands
 
 **Tab Order**
 
