@@ -316,8 +316,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
                     self._logger.info(
                         "Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
-                sensor_data.append(
-                    dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
+                if temp is not None and hum is not None:
+                    sensor_data.append(
+                        dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
             self.temperature_sensor_data = sensor_data
             self.handle_temp_hum_control()
             self.handle_temperature_events()
@@ -493,14 +494,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 hum = 0
             else:
                 self._logger.info("temp_sensor_type no match")
-                temp = 0
-                hum = 0
+                temp = None
+                hum = None
             if temp != -1 and hum != -1:
                 temp = round(self.to_float(
                     temp), 1) if not sensor['use_fahrenheit'] else round(self.to_float(temp) * 1.8 + 32, 1)
                 hum = round(self.to_float(hum), 1)
                 return temp, hum
-            return 0, 0
+            return None, None
         except Exception as ex:
             self.log_error(ex)
 
