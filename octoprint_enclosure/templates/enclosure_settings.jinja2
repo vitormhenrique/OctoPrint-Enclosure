@@ -1,17 +1,477 @@
-<form class="form-horizontal" id="enclosure_settings_temperature">
-  <h4>{{ _('Temperature Sensor') }}</h4>
-  <div data-bind="foreach: global_settings.settings.plugins.enclosure.temperature_reading">
-    <div class="controls">
-      <label class="checkbox">
-        <input id="enableTemperatureReading" type="checkbox"
-        data-bind="checked: isEnabled, click: $parent.fixUI()">  {{ _('Enable Temperature Reading') }}
-      </label>
+<h4>{{ _('Raspberry Pi Outputs') }}</h4>
+<p>
+  Configure all
+  <strong>outputs</strong>. Outputs can be everything that do actions based on UI button presses or automatic events or alarms.
+</p>
+<p>
+  Example of possible outputs are gpio pins, neopixel LED's, temperature control or sending gcode to the printer.
+</p>
+<form class="form-horizontal">
+  <div data-bind="foreach: settingsViewModel.settings.plugins.enclosure.rpi_outputs">
+    <!-- <div class="controls">
+    <h5>IO <span data-bind="text: $index"> </span></h5>
+  </div> -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Output Type') }}</label>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="regular" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Regular IO') }}
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="pwm" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('PWM') }}
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="neopixel_indirect" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('NeoPixel Indirect') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="neopixel_direct" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('NeoPixel Direct') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="temp_hum_control" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Temperature / Humidity Control') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="temperature_alarm" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Temperature Alarm') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="gcode_output" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Gcode') }}
+          </span>
+        </label>
+      </div>
     </div>
-    <div  id="temperature_reading_content">
+    <!-- ko if: ($data.output_type() != "temperature_alarm")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Label') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: label">
+        <span class="help-inline">Name displayed on Enclosure Tab</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Id') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: index_id" disabled="true">
+        <span class="help-inline">Id used for API control</span>
+      </div>
+    </div>
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
+    <div class="control-group">
+      <label class="control-label">{{ _('IO Number') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_pin">
+        <!-- ko ifnot: ($data.output_type() == "neopixel_indirect")  -->
+        <span class="help-inline">GPIO number that will be controlled.</span>
+        <!-- /ko -->
+        <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
+        <span class="help-inline">
+          <span class="label label-danger">Attention</span> Neopixel requires a microcontroler (ex: arduino) connected to I2C bus. This is the pin on the
+          microcontroler that is connected to the Neopixel.
+        </span>
+        <!-- /ko -->
+      </div>
+    </div>
+    <!-- /ko -->
+
+
+    <!-- ko if: ($data.output_type() == "pwm" ) -->
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
+          </label>
+          <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty B, temperature B. 
+            This output will automatomatically start when a print starts and will default to the default duty cycle when print is complete.
+          </span>
+        </div>
+      </div>
+      <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_b">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_b">
+        </div>
+      </div>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
+        </label>
+        <span class="help-inline">Toggle output every amount of secconds. It will start when the print starts and stop when print is complete. For
+          PWM pins it will use the default PWM value when ON.
+        </span>
+      </div>
+    </div>
+    <!-- ko if: ($data.toggle_timer()) -->
+    <div class="control-group">
+      <label class="control-label">{{ _('On Time') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
+        <span class="help-inline">Time in secconds that the GPIO will remain ON</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Off Time') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
+        <span class="help-inline">Time in secconds that the GPIO will remain when OFF</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+
+
+    <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
+    <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
+        </label>
+        <span class="help-inline">Choose if output should turn on automatomatically when octoprint starts</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: auto_startup"> {{ _('Auto Startup') }}
+        </label>
+        <span class="help-inline">Choose if output should turn on automatomatically when print starts</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: $data.auto_startup  -->
+    <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
+      <div class="control-group">
+        <label class="control-label">{{ _('Startup Delay / Hour') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: startup_time">
+          <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
+            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+            forget to check timezone of your Raspberry Pi.</span>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
+        </label>
+        <span class="help-inline">Choose if output should turn off automatomatically when print finishes</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: $data.auto_shutdown  -->
+    <div data-bind="attr: {id: 'auto_shutdownField_' + $index() }">
+      <div class="control-group">
+        <label class="control-label">{{ _('Shutdown Delay / Hour') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: shutdown_time">
+          <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
+            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+            forget to check timezone of your raspberry pi.</span>
+            <span class="label label-important">Attention</span>
+            <span> Hour schedule does not work with <b>Link PWM to Temperature</b> option</span>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control")  -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: active_low"> {{ _('Active Low') }}
+        </label>
+        <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspbery PI</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
+        </label>
+        <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: show_on_navbar"> {{ _('Show Button on Navbar') }}
+        </label>
+        <span class="help-inline">Add shortcut on navbar to toggle output</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+
+    <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
+    <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
+    <div class="control-group">
+      <label class="control-label">Temperature Sensor</label>
+      <div class="controls">
+        <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
+                      optionsValue: 'index_id', value: $data.linked_temp_sensor">
+        </select>
+        <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
+    <div class="control-group">
+      <label class="control-label">Temperature Sensor</label>
+      <div class="controls">
+        <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                      optionsValue: 'index_id', value: $data.linked_temp_sensor">
+        </select>
+        <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "temp_hum_control")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Temp Control Type') }}</label>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="heater" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Heater') }}</label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="cooler" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
+      </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="dehumidifier" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label">{{ _('Default Value') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_value">
+        <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts.</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Value Deadband') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_deadband">
+        <span class="help-inline">Allowable drift on temperature / humidity control. Set it to zero to disable.</span>
+      </div>
+    </div>
+
+    <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Maximum Temperature') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
+        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
+          it's set temperature is set again.</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "temperature_alarm")  -->
+    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+      <div class="control-group">
+        <label class="control-label">{{ _('Set Temperature') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: alarm_set_temp">
+          <span class="help-inline">Set temperature that will trigger the event</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label"> Controlled IO</label>
+        <div class="controls">
+          <select data-bind="options: $root.settings_outputs_regular, optionsText: 'label',
+                    optionsValue: 'index_id', value: $data.controlled_io">
+          </select>
+          <span class="help-inline">When the event happen, you want control which IO?</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">Set Controlled IO Value</label>
+        <div class="controls">
+          <select data-bind="value: controlled_io_set_value">
+            <option value="low">Low</option>
+            <option value="high">High</option>
+          </select>
+          <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "pwm")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('PWM Frequency') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: pwm_frequency">
+        <span class="help-inline">Value is in Hz</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Default Duty Cycle') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: default_duty_cycle">
+        <span class="help-inline">Value is in percentage, between 0 and 100</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Microcontroller Address') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: microcontroller_address">
+        <span class="help-inline">Microcontroller address in HEX value, you can find it by runing
+          <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "neopixel_indirect" || $data.output_type() == "neopixel_direct")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Number of LEDS') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: neopixel_count">
+        <span class="help-inline">Number of led's on strip</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Brightness') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: neopixel_brightness">
+        <span class="help-inline">Value between 0 and 255</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Default Color') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: default_neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
+        <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "gcode_output")  -->
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Gcode') }}</label>
+      <div class="controls">
+        <textarea rows="4" class="block" data-bind="value: gcode"></textarea>
+        <span class="help-inline">GCODE that will be sent to the printer. You should add
+          <code>ENTER</code> on the end of every line sent to the printer</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+    <div class="control-group">
+      <a title="Delete IO" class="btn btn-danger pull-right" data-bind="click: function() { $parent.removeRpiOutput($data) }">
+        <i class="icon-trash"></i>
+      </a>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <hr/>
+      </div>
+    </div>
+  </div>
+  <div class="control-group">
+    <button class="btn pull-right" data-bind="click: function() { $root.addRpiOutput(); }">Add Outputs...</button>
+  </div>
+</form>
+<h4>{{ _('Raspberry Pi Inputs') }}</h4>
+<p>
+  Configure all
+  <strong>inputs</strong>. Inputs get data from gpio or connected sensors to provide additional functionality. Inputs can control
+  outputs or influence how they behave.
+</p>
+<p>
+  Example of possible inputs are buttons connected to GPIO pins that control outputs or printer events, temperature and humidity
+  sensors, and filament sensors.
+</p>
+<form class="form-horizontal">
+  <div data-bind="foreach: settingsViewModel.settings.plugins.enclosure.rpi_inputs">
+    <div class="control-group">
+      <label class="control-label">{{ _('Label') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: label">
+        <span class="help-inline">Name of Input</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Input Type') }}</label>
+      <div class="controls">
+        <input type="radio" value="gpio" data-bind="checked: input_type, attr: {name: 'inputType_' + $index() }"> {{ _('GPIO Input') }}
+      </div>
+      <div class="controls">
+        <input type="radio" value="temperature_sensor" data-bind="checked: input_type, attr: {name: 'inputType_' + $index() }"> {{ _('Temperature Sensor') }}
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <!-- ko if: ($data.input_type() == "gpio")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> GPIO will input status of the pin, HIGH / LOW </span>
+          <!-- /ko -->
+          <!-- ko if: ($data.input_type() == "temperature_sensor")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> Temperature Sensors will input temperature and humidity data.
+          </span>
+          <!-- /ko -->
+        </div>
+      </div>
+    </div>
+    <!-- ko if: ($data.input_type() == "temperature_sensor")  -->
+    <div id="temperature_reading_content">
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
-          <select data-bind="value: sensorType">
+          <select data-bind="value: temp_sensor_type">
             <option value="">Select Sensor</option>
             <option value="11">DHT11</option>
             <option value="22">DHT22</option>
@@ -21,400 +481,117 @@
             <option value="bme280">BME280</option>
             <option value="tmp102">TMP102</option>
           </select>
-          <span class="help-inline"> <span class="label label-important">Attention</span> You need to install and configure the necessary
-          libraries for the temperature sensor, check the documentation on <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
+          <span class="help-inline">
+            <span class="label label-important">Attention</span> You need to install and configure the necessary libraries for the temperature sensor, check
+            the documentation on
+            <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
         </div>
       </div>
-      <!-- ko if: ($data.sensorType() == "18b20")  -->
+      <!-- ko if: ($data.temp_sensor_type() == "18b20")  -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: gpioPin" value="4" disabled="true">
-          <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 only works on pin 4</span>
+          <input type="text" class="input-block-level" data-bind="value: gpio_pin" value="4">
+          <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 has default support to pin #4 (BCM)</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-dhtPin">{{ _('DS18B20 Serial') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: ds18b20_serial" value="">
+          <span class="help-inline">DS18B20 serial value, needs to be used to have support for multiple sensors, read documentation on github page
+            for more information</span>
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") || ($data.sensorType() == "tmp102") -->
+      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" value="SCL / SDA" disabled="true">
-          <span class="help-inline">GPIO pin for temperature sensor need to connect the sensor to I2C. SCL	Clock to GPIO 3 (SCL) and SDA	Data to	GPIO 2 (SDA)</span>
+          <span class="help-inline">GPIO pin for temperature sensor need to connect the sensor to I2C. SCL Clock to GPIO 3 (SCL) and SDA Data to GPIO
+            2 (SDA)
+          </span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Address') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: sensorAddress">
-          <span class="help-inline">Sensor address in HEX value, you can find it by runing <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
+          <input type="text" class="input-block-level" data-bind="value: temp_sensor_address">
+          <span class="help-inline">Sensor address in HEX value, you can find it by runing
+            <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko ifnot: ($data.sensorType() == "18b20") || ($data.sensorType() == "si7021") || ($data.sensorType() == "bme280") || ($data.sensorType() == "tmp102") -->
+      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: gpioPin">
+          <input type="text" class="input-block-level" data-bind="value: gpio_pin">
           <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 only works on pin 4</span>
         </div>
       </div>
       <!-- /ko -->
       <div class="controls">
         <label class="checkbox">
-          <input type="checkbox" data-bind="checked: useFahrenheit">  {{ _('Use Fahrenheit Unit') }}
+          <input type="checkbox" data-bind="checked: use_fahrenheit"> {{ _('Use Fahrenheit Unit') }}
         </label>
         <span class="help-inline">Choose if you want to work with Celsius or Fahrenheit</span>
       </div>
     </div>
-  </div>
-</form>
-<form class="form-horizontal">
-  <h4>{{ _('Temperature Control') }}</h4>
-  <div data-bind="foreach: global_settings.settings.plugins.enclosure.temperature_control">
+    <!-- /ko -->
+    <!-- ko if: ($data.input_type() == "gpio")  -->
     <div class="control-group">
+      <label class="control-label">{{ _('Action Type') }}</label>
       <div class="controls">
-        <label class="checkbox">
-          <input id="enableHeater" type="checkbox" data-bind="checked: isEnabled, click: $parent.fixUI()">  {{ _('Enable Temperature Control') }}
-        </label>
+        <input type="radio" value="output_control" data-bind="checked: action_type, attr: {name: 'actionType_' + $index() }"> {{ _('Output Control') }}
       </div>
-    </div>
-    <div  id="temperature_control_content">
-      <div class="control-group">
-        <label class="control-label" for="settings-enclosure-heaterpin">{{ _('Temp Control Pin') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: gpioPin">
-          <span class="help-inline">GPIO pin used to control Heater.</span>
-        </div>
+      <div class="controls">
+        <input type="radio" value="printer_control" data-bind="checked: action_type, attr: {name: 'actionType_' + $index() }"> {{ _('Printer') }}
       </div>
       <div class="control-group">
         <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: activeLow">  {{ _('Active Low') }}
-          </label>
-          <span class="help-inline">Active low means that the heater will turn on when receive a low signal (ground) from Raspbery PI</span>
+          <!-- ko if: ($data.action_type() == "printer_control")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> PRINTER actions when a condition is met, that can be a filament sensor, button, etc. Actions can
+            be Pause \ Resume \ Cancel a printer_control job, change the filament or disable Temperature Control. You can
+            use the "change filament" action and set up the input GPIO acording to your sensor, for example, if your filament
+            sensor conects to ground when detects the end of the filament, you should choose PULL UP resistors and detect
+            the event on the falling edge.</span>
+          <!-- /ko -->
+          <!-- ko if: ($data.action_type() == "output_control")  -->
+          <span class="help-inline">
+            <span class="label label-info">Info:</span> Action will control GPIO outputs when a condition is met, for example detect a press of a button.
+            You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
+            / pritner using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
+          </span>
+          <!-- /ko -->
         </div>
       </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.input_type() == "gpio")  -->
+    <div data-bind="attr: {id: 'input_io_' + $index() }">
       <div class="control-group">
-        <label class="control-label">{{ _('Temp Control Type') }}</label>
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Input IO Number') }}</label>
         <div class="controls">
-          <label class="radio"><input type="radio" value="heater" name="optradio" data-bind="checked: controlType"> {{ _('Heater') }}</label>
-        </div>
-        <div class="controls">
-          <label class="radio"><input type="radio" value="cooler" name="optradio" data-bind="checked: controlType"> {{ _('Cooler') }}</label>
-        </div>
-      </div>
-      <div class="control-group">
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: autoStartup">  {{ _('Auto Startup') }}
-          </label>
-          <span class="help-inline">Choose if you want to automatically startup temperature control when the print starts</span>
-        </div>
-      </div>
-      <!-- ko if: $data.autoStartup  -->
-      <div class="control-group">
-        <label class="control-label">{{ _('Default Temperature') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: defaultTemp">
-          <span class="help-inline">Default temperature that temperature control will be set</span>
-        </div>
-      </div>
-      <!-- /ko -->
-    </div>
-  </div>
-</form>
-<h4>{{ _('Raspberry Pi Outputs') }}</h4>
-<form class="form-horizontal">
-  <div data-bind="foreach: global_settings.settings.plugins.enclosure.rpi_outputs">
-    <!-- <div class="controls">
-    <h5>IO <span data-bind="text: $index"> </span></h5>
-  </div> -->
-  <div class="control-group">
-    <label class="control-label">{{ _('IO Label') }}</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: label">
-      <span class="help-inline">Name displayed on Enclosure Tab</span>
-    </div>
-  </div>
-  <div class="control-group">
-    <label class="control-label">{{ _('IO 1 Number') }}</label>
-    <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: gpioPin">
-      <!-- ko ifnot: ($data.outputType() == "neopixel")  -->
-      <span class="help-inline">GPIO number that will be controlled.</span>
-      <!-- /ko -->
-      <!-- ko if: ($data.outputType() == "neopixel")  -->
-      <span class="help-inline"><span class="label label-danger">Attention</span> Neopixel requires a microcontroler (ex: arduino) connected to I2C bus.
-      This is the pin on the microcontroler that is connected to the Neopixel.</span>
-      <!-- /ko -->
-    </div>
-  </div>
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: autoStartup">  {{ _('Auto Startup') }}
-      </label>
-      <span class="help-inline">Choose if GPIO should turn on automatomatically when print starts</span>
-    </div>
-  </div>
-  <!-- ko if: $data.autoStartup  -->
-  <div data-bind="attr: {id: 'autoStartupField_' + $index() }">
-    <div class="control-group">
-      <label class="control-label">{{ _('Startup Delay (Seconds)') }}</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: startupTimeDelay">
-        <span class="help-inline">Time delay to turn on GPIO when print starts</span>
-      </div>
-    </div>
-  </div>
-  <!-- /ko -->
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: autoShutdown">  {{ _('Auto Shutdown') }}
-      </label>
-      <span class="help-inline">Choose if GPIO should turn off automatomatically when print finishes</span>
-    </div>
-  </div>
-  <!-- ko if: $data.autoShutdown  -->
-  <div data-bind="attr: {id: 'autoShutdownField_' + $index() }">
-    <div class="control-group">
-      <label class="control-label">{{ _('Shutdown Delay (Seconds)') }}</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: shutdownTimeDelay">
-        <span class="help-inline">Time delay to turn off GPIO when print finishes</span>
-      </div>
-    </div>
-  </div>
-  <!-- /ko -->
-  <div class="control-group">
-    <label class="control-label">{{ _('Output Type') }}</label>
-    <div class="controls">
-      <label class="radio">
-        <input type="radio" value="regular"  data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('Regular') }}
-      </label>
-    </div>
-    <div class="controls">
-      <label class="radio">
-        <input type="radio" value="pwm"  data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('PWM') }}
-      </label>
-    </div>
-    <div class="controls">
-      <label class="radio">
-        <input type="radio" value="neopixel"  data-bind="checked: outputType, attr: {name: 'outputType_' + $index() }"> {{ _('NeoPixel') }}
-      </span>
-    </label>
-  </div>
-</div>
-<!-- ko if: ($data.outputType() == "regular")  -->
-<div class="control-group">
-  <div class="controls">
-    <label class="checkbox">
-      <input type="checkbox" data-bind="checked: activeLow">  {{ _('Active Low') }}
-    </label>
-    <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspbery PI</span>
-  </div>
-</div>
-<!-- /ko -->
-<!-- ko if: ($data.outputType() == "pwm")  -->
-<div class="control-group">
-  <label class="control-label">{{ _('Frequency') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: frequency">
-    <span class="help-inline">Value is in Hz</span>
-  </div>
-</div>
-<div class="control-group">
-  <label class="control-label">{{ _('Default Duty Cycle') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: dutycycle">
-    <span class="help-inline">Value is in percentage, between 0 and 100</span>
-  </div>
-</div>
-<!-- /ko -->
-<!-- ko if: ($data.outputType() == "neopixel")  -->
-<div class="control-group">
-  <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Microcontroller Address') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: microAddress">
-    <span class="help-inline">Microcontroller address in HEX value, you can find it by runing <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
-  </div>
-</div>
-<div class="control-group">
-  <label class="control-label">{{ _('Number of LEDS') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: neopixelCount">
-    <span class="help-inline">Number of led's on strip</span>
-  </div>
-</div>
-<div class="control-group">
-  <label class="control-label">{{ _('Brightness') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: neopixelBrightness">
-    <span class="help-inline">Value between 0 and 255</span>
-  </div>
-</div>
-<div class="control-group">
-  <label class="control-label">{{ _('Default Color') }}</label>
-  <div class="controls">
-    <input type="text" class="input-block-level" data-bind="value: color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
-    <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between
-      0 and 255</span>
-    </div>
-  </div>
-  <!-- /ko -->
-  <div class="control-group">
-    <a title="Delete IO" class="btn btn-danger pull-right"  data-bind="click: function() { $parent.removeRpiOutput($data) }"><i class="icon-trash"></i></a>
-  </div>
-  <div class="control-group">
-    <div class="controls">
-      <hr/>
-    </div>
-  </div>
-</div>
-<div class="control-group">
-  <button class="btn pull-right" data-bind="click: function() { $root.addRpiOutput(); }">Add Outputs...</button>
-</div>
-</form>
-<h4>{{ _('Raspberry Pi Inputs') }}</h4>
-<form class="form-horizontal">
-  <div data-bind="foreach: global_settings.settings.plugins.enclosure.rpi_inputs">
-    <div class="control-group">
-      <label class="control-label">{{ _('IO Label') }}</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: label">
-        <span class="help-inline">Name of Input</span>
-      </div>
-    </div>
-    <!-- ko if: $data.eventType-->
-    <div class="control-group">
-      <label class="control-label">{{ _('Event Type') }}</label>
-      <div class="controls">
-        <input type="radio" value="temperature"  data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('Temperature') }}
-      </div>
-      <div class="controls">
-        <label class="radio">
-          <input type="radio" value="printer"  data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('Printer') }}
-        </div>
-        <div class="controls">
-          <input type="radio" value="gpio"  data-bind="checked: eventType, attr: {name: 'eventType_' + $index() }"> {{ _('GPIO Control') }}
-        </label>
-      </div>
-    </div>
-    <div class="control-group">
-      <div class="controls">
-        <!-- ko if: ($data.eventType() == "temperature")  -->
-        <span class="help-inline"><span class="label label-info">Info:</span> Events will run actions when a certain temperature of the sensor is hit.
-        You can control a OUTPUT pin and set that to a LOW or HIGH value when that happens.
-        You can use this as a safety measure and trigger alarm lights for example. <span class="label label-important">Warning</span>
-        You should always have proper smoke detector on your house. DO NOT use this as your only safety device.</span>
-        <!-- /ko -->
-        <!-- ko if: ($data.eventType() == "printer")  -->
-        <span class="help-inline"><span class="label label-info">Info:</span> Events will run PRINTER actions when a condition is met, that can be a filament sensor, button, etc.
-        Actions can be Pause \ Resume \ Cancel a printer job, change the filament or disable Temperature Control. You can use the "change filament" action and set up the input
-        GPIO acording to your sensor, for example, if your filament sensor conects to ground when detects the end of the filament,
-        you should choose PULL UP resistors and detect the event on the falling edge.</span>
-        <!-- /ko -->
-        <!-- ko if: ($data.eventType() == "gpio")  -->
-        <span class="help-inline"><span class="label label-info">Info:</span> Events will control GPIO outputs when a condition is met, for example detect a press of a button.
-        You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan / pritner
-        using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
-      </span>
-      <!-- /ko -->
-
-    </div>
-  </div>
-  <!-- ko if: ($data.eventType() == "printer" || $data.eventType() == "gpio")  -->
-  <div data-bind="attr: {id: 'input_io_' + $index() }">
-    <div class="control-group">
-      <label class="control-label" for="settings-enclosure-io1">{{ _('Input IO Number') }}</label>
-      <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: gpioPin">
-        <span class="help-inline">Input GPIO that will detect the event that should trigger the action. For example if you have a filament
-          sensor you put the GPIO pin that the sensor is connected. This can also be a press of a button or any other signal that you want to detect.
-          You can not use GPIO 4 here if you are using temeprature sensor DS18B20</span>
+          <input type="text" class="input-block-level" data-bind="value: gpio_pin">
+          <span class="help-inline">Input GPIO that will detect the event that should trigger the action. For example if you have a filament sensor
+            you put the GPIO pin that the sensor is connected. This can also be a press of a button or any other signal that
+            you want to detect. You can not use GPIO 4 here if you are using temeprature sensor DS18B20</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">Input Pull Resistor</label>
         <div class="controls">
-          <select data-bind="value: inputPull">
-            <option value="inputPullUp">Input Pullup</option>
-            <option value="inputPullDown">Input Pulldown</option>
+          <select data-bind="value: input_pull_resistor">
+            <option value="input_pull_up">Input Pullup</option>
+            <option value="input_pull_down">Input Pulldown</option>
           </select>
-          <span class="help-inline">Choose what type of pull resistors that you want on the output. If you signal is active low,
-            that means it should run the action when receive a low signal (ground), you should choose PULL UP resistors.</span>
-          </div>
+          <span class="help-inline">Choose what type of pull resistors that you want on the output. If you signal is active low, that means it should
+            run the action when receive a low signal (ground), you should choose PULL UP resistors.</span>
         </div>
       </div>
-      <!-- /ko -->
-      <!-- ko if: ($data.eventType() == "gpio")  -->
-      <div data-bind="attr: {id: 'gpio_controlled_' + $index() }">
-        <div class="control-group">
-          <label class="control-label">Event Trigger</label>
-          <div class="controls">
-            <select data-bind="value: edge">
-              <option value="rise">Rise</option>
-              <option value="fall">Fall</option>
-            </select>
-            <span class="help-inline">Do you want thrigger the event on the rise or falling edge? If you signal is active low,
-              that means it should run the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
-            </div>
-          </div>
-          <div class="control-group">
-            <label class="control-label"> Controlled IO</label>
-            <div class="controls">
-              <select data-bind="options: $root.global_settings.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
-              optionsValue: 'gpioPin', value: $data.controlledIO">
-            </select>
-            <span class="help-inline">When the event happen, you want control which IO?</span>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label">Set Controlled IO Value</label>
-          <div class="controls">
-            <select data-bind="value: setControlledIO">
-              <option value="low">Low</option>
-              <option value="high">High</option>
-              <option value="toggle">Toggle</option>
-            </select>
-            <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
-          </div>
-        </div>
-      </div>
-      <!-- /ko -->
-      <!-- ko if: ($data.eventType() == "temperature")  -->
-      <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
-        <div class="control-group">
-          <label class="control-label">{{ _('Set Temperature') }}</label>
-          <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: setTemp">
-            <span class="help-inline">Set temperature that will trigger the event</span>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label"> Controlled IO</label>
-          <div class="controls">
-            <select data-bind="options: $root.global_settings.settings.plugins.enclosure.rpi_outputs, optionsText: 'label',
-            optionsValue: 'gpioPin', value: $data.controlledIO">
-          </select>
-          <span class="help-inline">When the event happen, you want control which IO?</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">Set Controlled IO Value</label>
-        <div class="controls">
-          <select data-bind="value: setControlledIO">
-            <option value="low">Low</option>
-            <option value="high">High</option>
-          </select>
-          <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
-        </div>
-      </div>
-    </div>
-    <!-- /ko -->
-    <!-- ko if: ($data.eventType() == "printer")  -->
-    <div class="control-group" data-bind="attr: {id: 'filament_controlled_' + $index() }">
       <div class="control-group">
         <label class="control-label">Event Trigger</label>
         <div class="controls">
@@ -422,39 +599,97 @@
             <option value="rise">Rise</option>
             <option value="fall">Fall</option>
           </select>
-          <span class="help-inline">Do you want thrigger the event on the rise or falling edge? If you signal is active low,
-            that means it should run the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
-          </div>
+          <span class="help-inline">Do you want thrigger the event on the rise or falling edge? If you signal is active low, that means it should run
+            the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
         </div>
       </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Printer Action') }}</label>
-        <div class="controls">
-          <select data-bind="value: printerAction">
-            <option value="filament">Filament Change</option>
-            <option value="resume">Printer Resume</option>
-            <option value="pause">Printer Pause</option>
-            <option value="cancel">Printer Cancel</option>
-            <option value="stopTemperatureControl">Stop Temperature Control</option>
-          </select>
-          <span class="help-inline"> You can use filament change on your filament detectors and add buttons to resume and pause the print job.</span>
-        </div>
+    </div>
+    <!-- ko if: ($data.action_type() == "output_control")  -->
+    <div class="control-group">
+      <label class="control-label"> Controlled IO</label>
+      <div class="controls">
+        <select data-bind="options: $root.settings_possible_outputs, optionsText: 'label',
+                optionsValue: 'index_id', value: $data.controlled_io">
+        </select>
+        <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
       </div>
-      <!-- /ko -->
-      <!-- /ko -->
-      <div class="control-group">
-        <a title="Delete IO" class="btn btn-danger pull-right"  data-bind="click: function() { $parent.removeRpiInput($data) }"><i class="icon-trash"></i></a>
+    </div>
+    <!-- ko if: ($root.isRegularOutput($data.controlled_io))  -->
+    <div class="control-group">
+      <label class="control-label">Set Controlled IO Value</label>
+      <div class="controls">
+        <select data-bind="value: controlled_io_set_value">
+          <option value="low">Low</option>
+          <option value="high">High</option>
+          <option value="toggle">Toggle</option>
+        </select>
+        <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
       </div>
-      <div class="control-group">
-        <div class="controls">
-          <hr/>
-        </div>
+    </div>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko if: ( $data.action_type() == "printer_control")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Printer Action') }}</label>
+      <div class="controls">
+        <select data-bind="value: printer_action">
+          <option value="filament">Filament Change</option>
+          <option value="resume">Printer Resume</option>
+          <option value="pause">Printer Pause</option>
+          <option value="cancel">Printer Cancel</option>
+          <option value="stop_temp_hum_control">Stop Temperature Control</option>
+        </select>
+        <span class="help-inline"> You can use filament change on your filament detectors and add buttons to resume and pause the print job.</span>
+      </div>
+    </div>
+    <!-- ko if: ($data.printer_action() == "filament") -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: filament_sensor_enabled"> {{ _('Enable') }}
+        </label>
+        <span class="help-inline">Enable and disable filament sensors</span>
       </div>
     </div>
     <div class="control-group">
-      <button class="btn pull-right" data-bind="click: function() { $root.addRpiInput(); }">Add Inputs...</button>
+      <label class="control-label">{{ _('Filament detection timeout') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: filament_sensor_timeout">
+        <span class="help-inline">Time in seconds that filament sensor will be inactive after sensing end of filament. This is to avoid sending multiple
+          commands to the printer.
+        </span>
+      </div>
     </div>
-  </form>
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- /ko -->
+    <!-- ko if: ($data.input_type() == "temperature_sensor")  -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: temp_sensor_navbar"> {{ _('Show temperature on navbar') }}
+        </label>
+        <span class="help-inline">Enable and disable temperature on navbar</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <div class="control-group">
+      <a title="Delete IO" class="btn btn-danger pull-right" data-bind="click: function() { $parent.removeRpiInput($data) }">
+        <i class="icon-trash"></i>
+      </a>
+    </div>
+    <div class="control-group">
+      <div class="controls">
+        <hr/>
+      </div>
+    </div>
+  </div>
+  <div class="control-group">
+    <button class="btn pull-right" data-bind="click: function() { $root.addRpiInput(); }">Add Inputs...</button>
+  </div>
+</form>
+
+<form class="form-horizontal">
   <a href="#" class="muted" data-toggle="collapse" data-target="#advanced_enclosure">
     <i class="icon-caret-right"></i>
     Advanced options
@@ -464,23 +699,42 @@
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
-            <input type="checkbox" data-bind="checked: global_settings.settings.plugins.enclosure.debug">  {{ _('Enable debug info') }}
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.use_sudo"> {{ _('Use SUDO') }}
+          </label>
+          <span class="help-inline">Use sudo to run python commands.</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.gcode_control"> {{ _('Enable gcode control') }}
+          </label>
+          <span class="help-inline">Use gcode to control outputs, check the documentation on
+            <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.debug"> {{ _('Enable debug info') }}
           </label>
           <span class="help-inline">Log additional information on octoprint log to help trouble shoot the plugin</span>
         </div>
       </div>
+      <!-- ko if: ($root.settingsViewModel.settings.plugins.enclosure.debug())  -->
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
-            <input type="checkbox" data-bind="checked: global_settings.settings.plugins.enclosure.showTempNavbar">  {{ _('Show temp navbar') }}
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.debug_temperature_log"> {{ _('Enable temperature debug info') }}
           </label>
-          <span class="help-inline">Display enclosure temperature and humidity on navbar</span>
+          <span class="help-inline">Log additional temperature readings on octoprint log to help trouble shoot the plugin</span>
         </div>
       </div>
+      <!-- /ko -->
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
-            <input type="checkbox" data-bind="checked: global_settings.settings.plugins.enclosure.useBoardPinNumber">  {{ _('Use Board Pin #') }}
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.useBoardPinNumber"> {{ _('Use Board Pin #') }}
           </label>
           <span class="help-inline">Use BOARD pin numbers instead of BCM pin numbers</span>
         </div>
@@ -488,74 +742,70 @@
       <div class="control-group">
         <div class="controls">
           <button class="btn" data-bind="click: function() { $root.clearGPIOMode(); }">Clear GPIO Mode</button>
-          <span class="help-inline">This will clear any GPIO configuration that might exist on your system, use with caution,
-            it might break other plugins that use GPIO</span>
-          </div>
+          <span class="help-inline">This will clear any GPIO configuration that might exist on your system, use with caution, it might break other
+            plugins that use GPIO</span>
         </div>
-        <label class="control-label" >{{ _('Filament Detection Timeout') }}</label>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Filament Change Gcode') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: global_settings.settings.plugins.enclosure.filamentSensorTimeout">
-          <span class="help-inline">Time that filament sensor will be inactive after sensing end of filament. This is to avoid sending multiple M600
-            commands to the printer.</span>
-          </div>
-          <div class="control-group">
-            <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Filament Change Gcode') }}</label>
-            <div class="controls">
-              <textarea rows="4" class="block" data-bind="value: global_settings.settings.plugins.enclosure.filamentSensorGcode"></textarea>
-              <span class="help-inline">GCODE that will be sent to the printer to pause and allow filament to be changed.
-                You should add <code>;</code> on the end of every line sent to the printer</span>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label" >{{ _('Notification Provider') }}</label>
-              <div class="controls">
-                <select data-bind="value: global_settings.settings.plugins.enclosure.notificationProvider">
-                  <option value="disabled">Disabled</option>
-                  <option value="ifttt">IFTTT</option>
-                </select>
-              </div>
-            </div>
-            <!-- ko if: ($root.global_settings.settings.plugins.enclosure.notificationProvider() == "ifttt")  -->
-            <div class="control-group">
-              <label class="control-label">{{ _('Event Name') }}</label>
-              <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value: global_settings.settings.plugins.enclosure.event_name">
-                <span class="help-inline">Event name that was configured on the maker chanel of IFTTT, don't use space between the words</span>
-              </div>
-            </div>
-            <div class="control-group">
-              <label class="control-label">{{ _('IFTTT API KEY') }}</label>
-              <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value:global_settings.settings.plugins.enclosure.apiKEY">
-              </div>
-            </div>
-            <div class="control-group" data-bind="foreach: global_settings.settings.plugins.enclosure.notifications">
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: temperatureAction">  {{ _('Notify temperature actions') }}
-                </label>
-              </div>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: printerAction">  {{ _('Notify printer actions') }}
-                </label>
-              </div>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: gpioAction">  {{ _('Notify gpio actions') }}
-                </label>
-              </div>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: filamentChange">  {{ _('Notify filament change') }}
-                </label>
-              </div>
-              <div class="controls">
-                <label class="checkbox">
-                  <input type="checkbox" data-bind="checked: printFinish">  {{ _('Notify finish prints') }}
-                </label>
-              </div>
-            </div>
-            <!-- /ko -->
-          </form>
+          <textarea rows="4" class="block" data-bind="value: settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode"></textarea>
+          <span class="help-inline">GCODE that will be sent to the printer to pause and allow filament to be changed. You should add
+            <code>ENTER</code> on the end of every line sent to the printer</span>
         </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">{{ _('Notification Provider') }}</label>
+        <div class="controls">
+          <select data-bind="value: settingsViewModel.settings.plugins.enclosure.notification_provider">
+            <option value="disabled">Disabled</option>
+            <option value="ifttt">IFTTT</option>
+          </select>
+        </div>
+      </div>
+      <!-- ko if: ($root.settingsViewModel.settings.plugins.enclosure.notification_provider() == "ifttt")  -->
+      <div class="control-group">
+        <label class="control-label">{{ _('Event Name') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: settingsViewModel.settings.plugins.enclosure.notification_event_name">
+          <span class="help-inline">Event name that was configured on the maker chanel of IFTTT, don't use space between the words</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('IFTTT API KEY') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value:settingsViewModel.settings.plugins.enclosure.notification_api_key">
+        </div>
+      </div>
+      <div class="control-group" data-bind="foreach: settingsViewModel.settings.plugins.enclosure.notifications">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: temperatureAction"> {{ _('Notify temperature actions') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: printer_action"> {{ _('Notify printer actions') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: gpioAction"> {{ _('Notify gpio actions') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: filamentChange"> {{ _('Notify filament change') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: printFinish"> {{ _('Notify finish prints') }}
+          </label>
+        </div>
+      </div>
+      <!-- /ko -->
+    </form>
+  </div>

@@ -1,8 +1,44 @@
-<!-- ko if: ($root.global_settings.settings.plugins.enclosure.showTempNavbar())  -->
-<div class="nav">
-    <p class="nav navbar-text" >
-      <span data-bind="html: $root.navbarTemp"></span>
-    </p>
-    <p class="nav navbar-text" ><span data-bind="html: $root.navbarHum"></span></p>
-</div>
+<!-- ko if: ($root.hasAnyNavbarOutput() && $root.isUser())  -->
+<a href="javascript:void(0)" title="Raspberry Pi Outputs" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-codepen"></i>
+    <b class="caret"></b>
+</a>
+<ul class="dropdown-menu" data-bind="foreach: $root.rpi_outputs()">
+    <!-- ko if: ($data.show_on_navbar())  -->
+    <!-- ko if: ($data.output_type() == "regular")  -->
+    <li>
+        <a href="javascript:void(0)" data-bind="click: $root.handleIO">
+            <span data-bind="html: label"> </span>
+            <!-- ko if: ($data.gpio_status())  -->
+            <span class="badge badge-success help-inline">on</span>
+            <!-- /ko -->
+            <!-- ko ifnot: ($data.gpio_status())  -->
+            <span class="badge badge-important help-inline">off</span>
+            <!-- /ko -->
+        </a>
+    </li>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "gcode_output")  -->
+    <!-- ko if: ($root.isOperational())  -->
+    <li>
+        <a href="javascript:void(0)" data-bind="click: $root.handleGcode">
+            <span data-bind="html: label"> </span>
+            <span class="badge badge-info">gcode</span>
+        </a>
+    </li>
+    <!-- /ko -->
+    <!-- ko ifnot: ($root.isOperational())  -->
+    <li>
+        <a href="javascript:void(0)">
+            <span data-bind="html: label"> </span>
+            <span class="badge">gcode</span>
+        </a>
+    </li>
+    <!-- /ko -->
+    <!-- /ko -->
+
+    <!-- /ko -->
+
+</ul>
 <!-- /ko -->

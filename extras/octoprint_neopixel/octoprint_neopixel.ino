@@ -30,7 +30,7 @@ bool gotData = false;
 int command = 0;
 int neopixelPin = 0;
 int neopixelLeds = 0;
-int neopixelBrightness = 0;
+int neopixel_brightness = 0;
 int redValue = 0;
 int greenValue = 0;
 int blueValue = 0;
@@ -51,8 +51,8 @@ void receiveEvent(int byteCount){
     DEBUG_PRINTLN(neopixelLeds);
 
     DEBUG_PRINT("BRIGHTNESS ");
-    neopixelBrightness = Wire.read();
-    DEBUG_PRINTLN(neopixelBrightness);
+    neopixel_brightness = Wire.read();
+    DEBUG_PRINTLN(neopixel_brightness);
 
     DEBUG_PRINT("RED ");
     redValue = Wire.read();
@@ -75,7 +75,7 @@ void setup() {
 	Wire.begin(I2CADDRESS);
 	#ifdef DEBUG
     Serial.begin(115200);
-    while (!Serial) ;
+    while (!Serial);
     Serial.println("Debuging...");
 	#endif
   Wire.onReceive(receiveEvent);
@@ -85,7 +85,7 @@ void loop() {
 
   if(gotData){
     strip.setPin(neopixelPin);
-    strip.setBrightness(neopixelBrightness);
+    strip.setBrightness(neopixel_brightness);
     strip.updateLength(neopixelLeds);
     strip.updateType(LED_TYPE);
     strip.begin();

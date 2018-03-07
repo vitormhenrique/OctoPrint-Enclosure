@@ -1,382 +1,629 @@
-$(function() {
-    function EnclosureViewModel(parameters) {
-        var self = this;
+$(function () {
+  function EnclosureViewModel(parameters) {
+    var self = this;
 
-        self.pluginName = "enclosure";
+    self.pluginName = "enclosure";
 
-        self.global_settings = parameters[0];
-        self.connection = parameters[1];
-        self.printerStateViewModel = parameters[2];
+    self.settingsViewModel = parameters[0];
+    self.connectionViewModel = parameters[1];
+    self.printerStateViewModel = parameters[2];
 
-        self.temperature_reading = ko.observableArray();
-        self.temperature_control = ko.observableArray();
-        self.rpi_outputs = ko.observableArray();
-        self.rpi_inputs = ko.observableArray();
-        self.filamentSensorGcode = ko.observable();
+    self.rpi_outputs = ko.observableArray();
+    self.rpi_inputs = ko.observableArray();
 
-        self.enclosureTemp = ko.observable();
-        self.enclosureSetTemperature = ko.observable();
-        self.enclosureHumidity = ko.observable();
+    self.settingsOpen = false;
 
+    self.settings_outputs_regular = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+        return (item.output_type() === "regular" && !item.toggle_timer());
+      });
+    });
+    
+    self.settings_possible_outputs = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
+        return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output");
+      });
+    });
 
-        self.previousGpioStatus;
-        self.previousGpioPWMStatus;
-        self.navbarTemp= ko.observable();
-        self.navbarHum= ko.observable();
+    self.rpi_inputs_temperature_sensors = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
+        return (item.input_type() === "temperature_sensor");
+      });
+    });
 
-        self.showTempNavbar= ko.observable();
+    self.settings_temperature_sensors = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs(), function (item) {
+        return (item.input_type() === "temperature_sensor");
+      });
+    });
 
-        self.notificationProvider = ko.observable();
-        self.event_name = ko.observable();
-        self.apiKEY = ko.observable();
-        self.notifications = ko.observable();
+    self.settings_hum_sensors = ko.pureComputed(function () {
+      return ko.utils.arrayFilter(self.settings_temperature_sensors(), function (sensor) {
+        return (self.humidityCapableSensor(sensor.temp_sensor_type()));
+      });
+    });
 
-        self.onDataUpdaterPluginMessage = function(plugin, data) {
-             if (plugin != "enclosure") {
-                return;
-            }
+    self.debug = ko.observable();
+    self.debug_temperature_log = ko.observable();
+    self.filament_sensor_gcode = ko.observable();
+    self.notification_provider = ko.observable();
+    self.notification_event_name = ko.observable();
+    self.notification_api_key = ko.observable();
+    self.notifications = ko.observable();
 
-            if (data.hasOwnProperty("enclosuretemp")) {
-                self.enclosureTemp(data.enclosuretemp);
+    self.humidityCapableSensor = function(sensor){
+      if (['11', '22', '2302', 'bme280', 'si7021'].indexOf(sensor) >= 0){
+        return true;
+      }
+      return false;
+    };
 
-
-                self.temperature_reading().forEach(function(element) {
-                  if("useFahrenheit" in element ){
-                    useFahrenheit = element['useFahrenheit']()
-
-                    if(useFahrenheit){
-                      self.navbarTemp(_.sprintf("Enc: %.1f&deg;F", data.enclosuretemp));
-                    }else{
-                      self.navbarTemp(_.sprintf("Enc: %.1f&deg;C", data.enclosuretemp));
-                    }
-                  }
-                });
-            }
-            if (data.hasOwnProperty("enclosureHumidity")) {
-                self.enclosureHumidity(data.enclosureHumidity);
-                self.navbarHum(_.sprintf("Hum: %.1f%%", data.enclosureHumidity));
-            }
-
-            if (data.hasOwnProperty("enclosureSetTemp")){
-                if (parseFloat(data.enclosureSetTemp)>0.0){
-                  $("#enclosureSetTemp").attr("placeholder", data.enclosureSetTemp);
-                }else{
-                  $("#enclosureSetTemp").attr("placeholder", "off");
-                }
-            }
-
-            if(!data.rpi_output){
-              data.rpi_output = self.previousGpioStatus;
-            }
-
-            if(!data.rpi_output_pwm){
-              data.rpi_output_pwm = self.previousGpioPWMStatus;
-            }
-
-            if(data.rpi_output){
-              data.rpi_output.forEach(function(gpio) {
-                  key = Object.keys(gpio)[0];
-                  if(gpio[key]){
-                    $("#btn_off_"+key).removeClass('active');
-                    $("#btn_on_"+key).addClass('active');
-                  }else{
-                    $("#btn_off_"+key).addClass('active');
-                    $("#btn_on_"+key).removeClass('active');
-                  }
-              });
-              self.previousGpioStatus = data.rpi_output;
-            }
-
-            if(data.rpi_output_pwm){
-              data.rpi_output_pwm.forEach(function(gpio) {
-                  key = Object.keys(gpio)[0];
-                  val = gpio[key];
-                  if (parseFloat(val)!=100){
-                    $("#dutycycle_"+key).attr("placeholder", val);
-                  }else{
-                    $("#dutycycle_"+key).attr("placeholder", "off");
-                  }
-              });
-              self.previousGpioPWMStatus = data.rpi_output_pwm;
-            }
-
-            if (data.isMsg) {
-                new PNotify({title:"Enclosure", text:data.msg, type: "error"});
-            }
-        };
-
-        self.enableBtn = ko.computed(function() {
-            // return self.connection.loginState.isUser() && self.printerStateViewModel.isOperational();
-            return self.connection.loginState.isUser();
+    self.isRegularOutput = function(index_id){
+      return_value = false;
+      if (typeof index_id != 'undefined'){
+        self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().forEach(function (output) {
+          if (output.index_id() == index_id && output.output_type() == "regular") {
+            return_value = true;
+            return false;
+          }
         });
+      }
+      return return_value;     
+    };
 
-        self.onBeforeBinding = function () {
-            self.settings = self.global_settings.settings.plugins.enclosure;
-            self.temperature_reading(self.settings.temperature_reading());
-            // self.temperature_control(self.settings.temperature_control.slice(0));
-            self.rpi_outputs(self.settings.rpi_outputs());
-            self.rpi_inputs(self.settings.rpi_inputs());
-            self.filamentSensorGcode(self.settings.filamentSensorGcode());
+    self.linkedTemperatureControl = function(sensor_index){
+      return ko.pureComputed(function () {
+        return ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+          if (item.linked_temp_sensor){
+            return (item.linked_temp_sensor() == sensor_index && item.output_type() == "temp_hum_control");
+          }else{
+            return false;
+          }
+        });
+      });
+    };
 
-            self.notificationProvider(self.settings.notificationProvider());
-            self.showTempNavbar(self.settings.showTempNavbar());
-            
-            self.event_name(self.settings.event_name());
-            self.apiKEY(self.settings.apiKEY());
-            self.notifications(self.settings.notifications());
-        };
-
-        self.onStartupComplete = function () {
-          self.getUpdateBtnStatus();
-        };
-
-        self.onDataUpdaterReconnect = function () {
-          self.getUpdateBtnStatus();
-        };
-
-        self.onSettingsShown = function(){
-          self.fixUI();
-        };
-
-        self.showColorPicker = function(){
-          $('[name=colorpicker]').colorpicker({format: 'rgb'});
+    self.hasAnySensorWithHumidity = function(){
+      return_value = false;
+      self.rpi_inputs_temperature_sensors().forEach(function (sensor) {
+        if (self.humidityCapableSensor(sensor.temp_sensor_type())) {
+          return_value = true;
+          return false;
         }
+      });      
+      return return_value;
+    };
 
-        self.onSettingsHidden = function(){
-          self.getUpdateBtnStatus();
-        };
+    self.hasAnyNavbarOutput = function(){
+      return_value = false;
+      self.rpi_outputs().forEach(function (output) {
+        if ((output.output_type()=="regular" || output.output_type()=="gcode_output") && output.show_on_navbar()) {
+          return_value = true;
+          return false;
+        }
+      });      
+      return return_value;
+    };
 
-        self.getRegularOutputs = function(){
-          return self.global_settings.settings.plugins.enclosure.rpi_outputs().filter(function(rpi_outputs) {
-           return rpi_outputs.outputType == 'regular';
-          });
-        };
-        self.setTemperature = function(){
-            if(self.isNumeric($("#enclosureSetTemp").val())){
-                $.ajax({
-                    url: self.buildPluginUrl("/setEnclosureTemperature"),
-                    type: "GET",
-                    dataType: "json",
-                    data: {"enclosureSetTemp": Number($("#enclosureSetTemp").val())},
-                     success: function(data) {
-                        $("#enclosureSetTemp").val('');
-                        $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature,data.enclosureCurrentTemperature));
-                    }
-                });
-            }else{
-                alert("Temperature is not a number");
-            }
-        };
+    self.hasAnyNavbarTemperature = function(){
+      return_value = false;
+      self.rpi_inputs_temperature_sensors().forEach(function (sensor) {
+        if (sensor.temp_sensor_navbar()) {
+          return_value = true;
+          return false;
+        }
+      });      
+      return return_value;
+    };
 
-        self.addRpiOutput = function(){
-          self.global_settings.settings.plugins.enclosure.rpi_outputs.push({label: ko.observable("Ouput "+
-            (self.global_settings.settings.plugins.enclosure.rpi_outputs().length+1)) ,
-            gpioPin:ko.observable(0),activeLow: true,
-            autoStartup:ko.observable(false), startupTimeDelay:0, autoShutdown:ko.observable(false),shutdownTimeDelay:0,
-            outputType:ko.observable('regular'),frequency:50,dutycycle:0,color:"rgb(255,0,0)",neopixelCount:0,neopixelBrightness:255,microAddress:0});
-        };
+    self.hasAnyTemperatureControl = function(){
+      return_value = false
+      self.rpi_outputs().forEach(function (output) {
+        if (output.output_type()=="temp_hum_control") {
+          return_value = true
+          return false;
+        } 
+      });
+      return return_value;
+    };
 
-        self.removeRpiOutput = function(definition) {
-          self.global_settings.settings.plugins.enclosure.rpi_outputs.remove(definition);
-        };
+    self.onDataUpdaterPluginMessage = function (plugin, data) {
 
-        self.addRpiInput = function(){
-          self.global_settings.settings.plugins.enclosure.rpi_inputs.push({label:ko.observable( "Input "+
-          (self.global_settings.settings.plugins.enclosure.rpi_inputs().length+1)), gpioPin: 0,inputPull: "inputPullUp",
-          eventType:ko.observable("temperature"),setTemp:100,controlledIO:ko.observable(""),setControlledIO:"low",
-          edge:"fall",printerAction:"filament"});
-        };
+      if (typeof plugin == 'undefined'){
+        return;
+      }
 
-        self.removeRpiInput = function(definition) {
-          self.global_settings.settings.plugins.enclosure.rpi_inputs.remove(definition);
-        };
+      if (plugin != "enclosure") {
+        return;
+      }
 
-        self.turnOffHeater = function(){
-            $.ajax({
-                url: self.buildPluginUrl("/setEnclosureTemperature"),
-                type: "GET",
-                dataType: "json",
-                data: {"enclosureSetTemp":0},
-                 success: function(data) {
-                    $("#enclosureSetTemp").val('');
-                    $("#enclosureSetTemp").attr("placeholder", self.getStatusHeater(data.enclosureSetTemperature,data.enclosureCurrentTemperature));
-                }
-            });
-        };
+      if(self.settingsOpen){
+        return;
+      }
 
-        self.clearGPIOMode = function(){
-            $.ajax({
-                url: self.buildPluginUrl("/clearGPIOMode"),
-                type: "GET",
-                dataType: "json",
-                 success: function(data) {
-                   new PNotify({title:"Enclosure", text:"GPIO Mode cleared successfully", type: "success"});
-                }
-            });
-        };
-
-        self.getUpdateBtnStatus = function(){
-
-            $.ajax({
-                url: self.buildPluginUrl("/getUpdateBtnStatus"),
-                type: "GET"
-            });
-        };
-
-        self.requestEnclosureTemperature = function(){
-            return $.ajax({
-                    type: "GET",
-                    url: self.buildPluginUrl("/getEnclosureTemperature"),
-                    async: false
-                }).responseText;
-        };
-
-        self.requestEnclosureSetTemperature = function(){
-            return $.ajax({
-                    type: "GET",
-                    url: self.buildPluginUrl("/getEnclosureSetTemperature"),
-                    async: false
-                }).responseText;
-        };
-
-        self.getStatusHeater = function(setTemp,currentTemp){
-            if (parseFloat(setTemp)>0.0){
-                return cleanTemperature(setTemp);
-            }
-            return "off";
-        };
-
-        self.handleIO = function(data, event){
-            $.ajax({
-                    type: "GET",
-                    dataType: "json",
-                    data: {"io": data[0], "status": data[1]},
-                    url: self.buildPluginUrl("/setIO"),
-                    async: false
-            });
-        };
-
-        self.handlePWM = function(data, event){
-            io = parseInt(data[0]);
-            pwmVal = parseInt($("#dutycycle_"+io).val());
-            if(pwmVal<0 || pwmVal>100 || isNaN(pwmVal)){
-              $("#dutycycle_"+io).val('')
-              new PNotify({title:"Enclosure", text:"Duty Cycle value needs to be between 0 and 100!", type: "error"});
-            }else{
-              // console.log(pwmVal);
-              $("#dutycycle_"+io).val('')
-              $("#dutycycle_"+io).attr("placeholder", pwmVal);
-              $.ajax({
-                      type: "GET",
-                      dataType: "json",
-                      data: {"io": io, "pwmVal": pwmVal},
-                      url: self.buildPluginUrl("/setPWM"),
-              });
-            }
-        };
-
-        self.handleNeopixel = function(data, event){
-            io = parseInt(data[0]);
-            tempStr = ($("#color_"+io).val()).replace("rgb(", "");
-
-            r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
-            tempStr = tempStr.slice(tempStr.indexOf(",")+1);
-            g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
-            tempStr = tempStr.slice(tempStr.indexOf(",")+1);
-            b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
-
-            if(r<0 || r>255 || g<0 || g>255 || b<0 || b >255 || isNaN(r) || isNaN(g) || isNaN(b)){
-              new PNotify({title:"Enclosure", text:"Color needs to follow the format rgb(value_red,value_green,value_blue)!", type: "error"});
-            }else {
-              $.ajax({
-                      type: "GET",
-                      dataType: "json",
-                      data: {"io": io, "red": r,"green": g,"blue": b},
-                      url: self.buildPluginUrl("/setNeopixel"),
-              });
-            }
-        };
-
-        self.fixUI = function(){
-          if($('#enableTemperatureReading').is(':checked')){
-            $('#enableHeater').prop('disabled', false);
-            $('#temperature_reading_content').show("blind");
-            // $('#temperature_control_content').show("blind");
-          }else{
-            $('#enableHeater').prop('disabled', true);
-            $('#enableHeater').prop('checked', false);
-            $('#temperature_reading_content').hide("blind");
-            // $('#temperature_control_content').hide("blind");
+      if (data.hasOwnProperty("sensor_data")) {
+        data.sensor_data.forEach(function (sensor_data) {
+          var linked_temp_sensor = ko.utils.arrayFilter(self.rpi_inputs_temperature_sensors(), function (temperature_sensor) {
+            return (sensor_data['index_id'] == temperature_sensor.index_id());
+          }).pop();
+          if (linked_temp_sensor){
+            linked_temp_sensor.temp_sensor_temp(sensor_data['temperature'])
+            linked_temp_sensor.temp_sensor_humidity(sensor_data['humidity'])
           }
+        })
+      }
 
-          if($('#enableHeater').is(':checked')){
-            $('#temperature_control_content').show("blind");
-          }else{
-            $('#temperature_control_content').hide("blind");
+      if (data.hasOwnProperty("set_temperature")) {
+        data.set_temperature.forEach(function (set_temperature) {
+          var linked_temp_control = ko.utils.arrayFilter(self.rpi_outputs(), function (temp_control) {
+            return (set_temperature['index_id'] == temp_control.index_id());
+          }).pop();
+          if (linked_temp_control) {
+            linked_temp_control.temp_ctr_set_value(set_temperature['set_temperature'])
           }
+        })
+      }
 
-        };
+      if (data.hasOwnProperty("rpi_output_regular")) {
+        data.rpi_output_regular.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.gpio_status(output['status'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-        // self.fixEventTypeUI = function(){
-        //   $('[name^="eventType_"]').each(function() {
-        //     if($( this ).is(':checked')){
-        //       selectedType = $( this ).val();
-        //       idNumber = $( this ).attr('name').replace("eventType_", "");
-        //       self.eventTypeUI(idNumber,selectedType);
-        //     }
-        //   });
-        // };
-        //
-        // self.eventTypeUI = function(idNumber,selectedType){
-        //
-        //   $('#input_io_'+idNumber).hide();
-        //   $('#temp_controlled_'+idNumber).hide();
-        //   $('#filament_controlled_'+idNumber).hide();
-        //   $('#gpio_controlled_'+idNumber).hide();
-        //
-        //   if(selectedType=='temperature'){
-        //     $('#temp_controlled_'+idNumber).show();
-        //     console.log("temperature");
-        //   }else if(selectedType=='filament'){
-        //     $('#filament_controlled_'+idNumber).show();
-        //     $('#input_io_'+idNumber).show();
-        //     console.log("filament");
-        //   }else if(selectedType=='gpio'){
-        //     $('#gpio_controlled_'+idNumber).show();
-        //     $('#input_io_'+idNumber).show();
-        //     console.log("gpio");
-        //   }
-        // };
+      if (data.hasOwnProperty("rpi_output_temp_hum_ctrl")) {
+        data.rpi_output_temp_hum_ctrl.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-        //
-        // self.fixAutoStartupUI = function(idNumber){
-        //   if($('#autoStartup_'+idNumber).is(':checked')){
-        //     $('#autoStartupField_'+idNumber).show("blind");
-        //   }else{
-        //     $('#autoStartupField_'+idNumber).hide("blind");
-        //   }
-        // };
-        //
-        // self.fixAutoShutdownUI = function(idNumber){
-        //   if($('#autoShutdown_'+idNumber).is(':checked')){
-        //     $('#autoShutdownField_'+idNumber).show("blind");
-        //   }else{
-        //     $('#autoShutdownField_'+idNumber).hide("blind");
-        //   }
-        // };
+      if (data.hasOwnProperty("rpi_output_pwm")) {
+        data.rpi_output_pwm.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.duty_cycle(output['pwm_value'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-        self.isNumeric = function(n){
-          return !isNaN(parseFloat(n)) && isFinite(n);
-        };
+      if (data.hasOwnProperty("rpi_output_neopixel")) {
+        data.rpi_output_neopixel.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.neopixel_color(output['color'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
 
-        self.buildPluginUrl = function(path) {
-            return window.PLUGIN_BASEURL + self.pluginName + path;
-        };
+      if (data.hasOwnProperty("filament_sensor_status")) {
+        data.filament_sensor_status.forEach(function (filament_sensor) {
+          var linked_filament_sensor = ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
+            return (filament_sensor['index_id'] == item.index_id());
+          }).pop();
+          if (linked_filament_sensor) {
+            linked_filament_sensor.filament_sensor_enabled(filament_sensor['filament_sensor_enabled'])
+          }
+        })
+      }
+
+      if (data.isMsg) {
+        new PNotify({
+          title: "Enclosure",
+          text: data.msg,
+          type: "error"
+        });
+      }
+    };
+
+    self.isUser = ko.computed(function () {
+      return self.connectionViewModel.loginState.isUser();
+    });
+
+    self.isOperational = ko.computed(function () {
+      return self.connectionViewModel.loginState.isUser() && self.printerStateViewModel.isOperational();
+    });
+
+
+    self.getCleanTemperature = function (temp) {
+      if (temp === undefined || isNaN(parseFloat(temp))) return "-";
+      if (temp < 10) return String("off");
+      return temp;
     }
 
-    OCTOPRINT_VIEWMODELS.push([
-        EnclosureViewModel,
-        ["settingsViewModel","connectionViewModel","printerStateViewModel"],
-        ["#tab_plugin_enclosure","#settings_plugin_enclosure","#navbar_plugin_enclosure"]
-    ]);
+    self.getDutyCycle = function (duty_cycle) {    
+      if (duty_cycle === undefined || isNaN(parseFloat(duty_cycle))) return "-";
+      if (parseInt(duty_cycle) == 0) return String("off");
+      return duty_cycle;
+    }
+
+    self.bindSettings = function(){
+      self.rpi_outputs(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs());
+      self.rpi_inputs(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs());
+      self.debug(self.settingsViewModel.settings.plugins.enclosure.debug())
+      self.debug_temperature_log(self.settingsViewModel.settings.plugins.enclosure.debug_temperature_log())
+      self.filament_sensor_gcode(self.settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode())
+      self.notification_provider(self.settingsViewModel.settings.plugins.enclosure.notification_provider())
+      self.notification_event_name(self.settingsViewModel.settings.plugins.enclosure.notification_event_name())
+      self.notification_api_key(self.settingsViewModel.settings.plugins.enclosure.notification_api_key())
+      self.notifications(self.settingsViewModel.settings.plugins.enclosure.notifications())
+    };
+
+    self.onBeforeBinding = function () {
+      self.bindSettings();
+    };
+
+    self.onSettingsBeforeSave = function() {
+      self.bindSettings();
+    };
+
+    self.onStartupComplete = function () {
+      self.settingsOpen = false;
+    };
+
+    self.onSettingsShown = function () {
+      self.settingsOpen = true;
+    };
+
+    self.showColorPicker = function () {
+      $('[name=colorpicker]').colorpicker({
+        format: 'rgb'
+      });
+    }
+
+    self.onSettingsHidden = function () {
+      self.showColorPicker();
+      self.settingsOpen = false;
+    };
+
+    self.getRegularOutputs = function () {
+      return self.rpi_outputs().filter(function (rpi_outputs) {
+        return rpi_outputs.output_type == 'regular';
+      });
+    };
+
+    self.setTemperature = function (item, form) {
+
+      var newSetTemperature = item.temp_ctr_new_set_value();
+      if (form !== undefined) {
+        $(form).find("input").blur();
+      }
+
+      if(self.isNumeric(newSetTemperature)){
+        var request = {set_temperature:newSetTemperature, index_id:item.index_id()};
+
+        $.ajax({
+          url: self.buildPluginUrl("/setEnclosureTempHum"),
+          type: "GET",
+          dataType: "json",
+          data: request,
+          success: function (data) {         
+            item.temp_ctr_new_set_value("");
+            item.temp_ctr_set_value(newSetTemperature);
+            self.getUpdateUI();  
+          },
+          error: function (textStatus, errorThrown) {
+            new PNotify({
+              title: "Enclosure",
+              text: "Error setting temperature",
+              type: "error"
+            });
+        }
+        });
+      }else{
+        new PNotify({
+          title: "Enclosure",
+          text: "Invalid set temperature",
+          type: "error"
+        });
+      } 
+    };
+
+    self.addRpiOutput = function () {
+
+      var arrRelaysLength = self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().length;
+
+      var nextIndex = arrRelaysLength == 0 ? 1 : self.settingsViewModel.settings.plugins.enclosure.rpi_outputs()[arrRelaysLength - 1].index_id() + 1;
+
+      self.settingsViewModel.settings.plugins.enclosure.rpi_outputs.push({
+        index_id: ko.observable(nextIndex),
+        label: ko.observable("Ouput " + nextIndex),
+        output_type: ko.observable("regular"),
+        gpio_pin: ko.observable(0),
+        gpio_status: ko.observable(false),
+        hide_btn_ui: ko.observable(false),
+        active_low: ko.observable(true),
+        pwm_temperature_linked: ko.observable(false),
+        toggle_timer: ko.observable(false),
+        toggle_timer_on: ko.observable(0),
+        toggle_timer_off: ko.observable(0),
+        startup_with_server: ko.observable(false),
+        auto_startup: ko.observable(false),
+        controlled_io: ko.observable(0),
+        controlled_io_set_value: ko.observable("Low"),
+        startup_time: ko.observable(0),
+        auto_shutdown: ko.observable(false),
+        shutdown_time: ko.observable(0),
+        linked_temp_sensor: ko.observable(""),
+        alarm_set_temp: ko.observable(0),
+        temp_ctr_type: ko.observable("heater"),
+        temp_ctr_deadband: ko.observable(0),
+        temp_ctr_set_value: ko.observable(0),
+        temp_ctr_new_set_value: ko.observable(""),
+        temp_ctr_default_value: ko.observable(0),
+        temp_ctr_max_temp: ko.observable(0),
+        pwm_frequency: ko.observable(50),
+        pwm_status: ko.observable(50),
+        duty_cycle: ko.observable(0),
+        duty_a: ko.observable(0),
+        duty_b: ko.observable(0),
+        temperature_a: ko.observable(0),
+        temperature_b: ko.observable(0),
+        default_duty_cycle: ko.observable(0),
+        new_duty_cycle: ko.observable(""),
+        neopixel_color: ko.observable("rgb(0,0,0)"),
+        default_neopixel_color: ko.observable(""),
+        new_neopixel_color: ko.observable(""),
+        neopixel_count: ko.observable(0),
+        neopixel_brightness: ko.observable(255),
+        microcontroller_address: ko.observable(0),
+        gcode: ko.observable(""),
+        show_on_navbar: ko.observable(false)
+      });
+
+    };
+
+    self.removeRpiOutput = function (data) {
+      self.settingsViewModel.settings.plugins.enclosure.rpi_outputs.remove(data);
+    };
+
+    self.addRpiInput = function () {
+
+      var arrRelaysLength = self.settingsViewModel.settings.plugins.enclosure.rpi_inputs().length;
+
+      var nextIndex = arrRelaysLength == 0 ? 1 : self.settingsViewModel.settings.plugins.enclosure.rpi_inputs()[arrRelaysLength - 1].index_id() + 1;
+
+      self.settingsViewModel.settings.plugins.enclosure.rpi_inputs.push({
+        index_id: ko.observable(nextIndex),
+        label: ko.observable("Input " + nextIndex),
+        input_type: ko.observable("gpio"),
+        gpio_pin: ko.observable(0),
+        input_pull_resistor: ko.observable("input_pull_up"),
+        temp_sensor_type: ko.observable("DS18B20"),
+        temp_sensor_address: ko.observable(""),
+        temp_sensor_temp: ko.observable(""),
+        temp_sensor_humidity: ko.observable(""),
+        ds18b20_serial: ko.observable(""),
+        use_fahrenheit: ko.observable(false),
+        action_type: ko.observable("output_control"),
+        controlled_io: ko.observable(""),
+        controlled_io_set_value: ko.observable("low"),
+        edge: ko.observable("fall"),
+        printer_action: ko.observable("filament"),
+        temp_sensor_navbar: ko.observable(true),
+        filament_sensor_timeout: ko.observable(120),
+        filament_sensor_enabled: ko.observable(true)
+      });
+    };
+
+    self.removeRpiInput = function (definition) {
+      self.settingsViewModel.settings.plugins.enclosure.rpi_inputs.remove(definition);
+    };
+
+    self.turnOffHeater = function (item) {
+      var request = { set_temperature: 0, index_id: item.index_id() };
+      $.ajax({
+        url: self.buildPluginUrl("/setEnclosureTempHum"),
+        type: "GET",
+        dataType: "json",
+        data: request,
+        success: function (data) {
+          self.getUpdateUI();  
+        }
+      });
+    };
+
+    self.clearGPIOMode = function () {
+      $.ajax({
+        url: self.buildPluginUrl("/clearGPIOMode"),
+        type: "GET",
+        dataType: "json",
+        success: function (data) {
+          new PNotify({
+            title: "Enclosure",
+            text: "GPIO Mode cleared successfully",
+            type: "success"
+          });
+        }
+      });
+    };
+
+    self.getUpdateUI = function () {
+      $.ajax({
+        url: self.buildPluginUrl("/updateUI"),
+        type: "GET"
+      });
+    };
+
+    self.handleIO = function (item, form) {
+
+      var request = {
+        "status": !item.gpio_status(),
+        "index_id": item.index_id()
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setIO"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.handleGcode = function (item, form) {
+      var request = {
+        "index_id": item.index_id()
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/sendGcodeCommand")
+      });
+    };
+
+    self.switchAutoStartUp = function (item) {
+
+      var request = {
+        "status": !item.auto_startup(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setAutoStartUp"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.switchAutoShutdown = function (item) {
+      var request = {
+        "status": !item.auto_shutdown(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setAutoShutdown"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.switchFilamentSensor = function (item) {
+      var request = {
+        "status": !item.filament_sensor_enabled(),
+        "index_id": item.index_id()
+      };
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setFilamentSensor"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
+    self.handlePWM = function (item) {
+      var pwm_value = item.new_duty_cycle();
+
+      pwm_value = parseInt(pwm_value);
+
+      if (pwm_value < 0 || pwm_value > 100 || isNaN(pwm_value)) {
+        item.new_duty_cycle("")
+        new PNotify({
+          title: "Enclosure",
+          text: "Duty Cycle value needs to be between 0 and 100!",
+          type: "error"
+        });
+      } else {
+        var request = { new_duty_cycle: pwm_value, index_id: item.index_id() };
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          data: request,
+          url: self.buildPluginUrl("/setPWM"),
+          success: function (data) {
+            item.new_duty_cycle("");
+            item.duty_cycle(pwm_value);
+            self.getUpdateUI();
+          }
+        });
+      }
+    };
+
+    self.handleNeopixel = function (item) {
+
+      var index = item.index_id() ;
+      var or_tempStr = item.new_neopixel_color();
+      var tempStr = or_tempStr.replace("rgb(", "");
+
+      var r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
+
+      if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || isNaN(r) || isNaN(g) || isNaN(b)) {
+        new PNotify({
+          title: "Enclosure",
+          text: "Color needs to follow the format rgb(value_red,value_green,value_blue)!",
+          type: "error"
+        });
+      } else {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          data: {
+            "index_id": index,
+            "red": r,
+            "green": g,
+            "blue": b
+          },
+          url: self.buildPluginUrl("/setNeopixel"),
+          success: function (data) {
+            item.new_neopixel_color("");
+            self.getUpdateUI();
+          }
+        });
+      }
+    };
+
+    self.isNumeric = function (n) {
+      return !isNaN(parseFloat(n)) && isFinite(n);
+    };
+
+    self.buildPluginUrl = function (path) {
+      return window.PLUGIN_BASEURL + self.pluginName + path;
+    };
+  }
+
+  OCTOPRINT_VIEWMODELS.push({
+    construct: EnclosureViewModel,
+    // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
+    dependencies: ["settingsViewModel", "connectionViewModel", "printerStateViewModel"],
+    // Elements to bind to, e.g. #settings_plugin_tasmota-mqtt, #tab_plugin_tasmota-mqtt, ...
+    elements: ["#tab_plugin_enclosure", "#settings_plugin_enclosure", "#navbar_plugin_enclosure_1", "#navbar_plugin_enclosure_2"]
+  });
+
 });

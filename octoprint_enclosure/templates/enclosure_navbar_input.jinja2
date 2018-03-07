@@ -1,0 +1,35 @@
+<!-- ko if: ($root.hasAnyNavbarTemperature()  && $root.isUser())  -->
+<a href="javascript:void(0)" title="Enclosure Temperatures" class="dropdown-toggle" data-toggle="dropdown">
+    <i class="fa fa-fire"></i>
+    <b class="caret"></b>
+</a>
+
+<ul class="dropdown-menu" data-bind="foreach: $root.rpi_inputs_temperature_sensors()">
+    <!-- ko if: ($data.temp_sensor_navbar())  -->
+    <li>
+        <a href="javascript:void(0)">
+            <span data-bind="html: label"> </span>
+        </a>
+    </li>
+    <li>
+        <a href="javascript:void(0)">
+            <span data-bind="text: temp_sensor_temp, attr: {title: temp_sensor_temp}"> </span>
+            <!-- ko if: (use_fahrenheit())  -->
+            <span class="add-on">&deg;F</span>
+            <!-- /ko -->
+            <!-- ko ifnot: (use_fahrenheit())  -->
+            <span class="add-on">&deg;C</span>
+            <!-- /ko -->
+        </a>
+    </li>
+    <!-- ko if: ($root.humidityCapableSensor(temp_sensor_type()))  -->
+    <li>
+        <a href="javascript:void(0)">
+            <span data-bind="text: temp_sensor_humidity, attr: {title: temp_sensor_humidity}"> </span>
+            <span class="add-on">%</span>
+        </a>
+    </li>
+    <!-- /ko -->
+    <!-- /ko -->
+</ul>
+<!-- /ko -->
