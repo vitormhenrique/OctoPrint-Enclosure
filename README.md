@@ -1,4 +1,4 @@
-# BEFORE OPENING AN ISSUE
+# Before opening an issue...
 
 Check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide). Issues with no log, no print screen will be closed until the necessary documentation is available.
 
