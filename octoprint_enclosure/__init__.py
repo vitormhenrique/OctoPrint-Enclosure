@@ -994,6 +994,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     elif rpi_input['printer_action'] == 'cancel':
                         self._logger.info("Printer action cancel.")
                         self._printer.cancel_print()
+                    elif rpi_input['printer_action'] == 'toggle':
+                        self._logger.info("Printer action toggle.")
+                        if self._printer.is_operational():
+                            if self.printer.is_printing():
+                                self._printer.pause_print()
+                            else:
+                                self._printer.resume_print()
+                        else:
+                            self._printer.connect()
                     elif rpi_input['printer_action'] == 'stop_temp_hum_control':
                         self._logger.info(
                             "Printer action stoping temperature control.")
