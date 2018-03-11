@@ -999,7 +999,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         if self._printer.is_operational():
                             if self.printer.is_printing():
                                 self._printer.pause_print()
-                            else:
+                            elif self.printer.is_paused():
                                 self._printer.resume_print()
                         else:
                             self._printer.connect()
