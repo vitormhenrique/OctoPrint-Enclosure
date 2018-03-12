@@ -997,9 +997,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     elif rpi_input['printer_action'] == 'toggle':
                         self._logger.info("Printer action toggle.")
                         if self._printer.is_operational():
-                            if self.printer.is_printing():
+                            if self._printer.is_printing():
                                 self._printer.pause_print()
-                            else:
+                            elif self._printer.is_paused():
                                 self._printer.resume_print()
                         else:
                             self._printer.connect()
