@@ -66,6 +66,11 @@ Start by adding the following line to /boot/config.txt
 
 <pre><code>dtoverlay=w1-gpio</code></pre>
 
+After rebooting, you can check if the OneWire device was found properly with
+<pre><code>dmesg | grep w1-gpip</code></pre>
+You should see something like
+<pre><code>[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0</code></pre>
+
 You should be able to test your sensor by rebooting your system with sudo reboot. When the Pi is back up and you're logged in again, type the commands you see below into a terminal window. When you are in the 'devices' directory, the directory starting '28-' may have a different name, so cd to the name of whatever directory is there.
 
 <pre><code>sudo modprobe w1-gpio
@@ -77,7 +82,7 @@ cat w1_slave</code></pre>
 
 The response will either have YES or NO at the end of the first line. If it is yes, then the temperature will be at the end of the second line, in 1/000 degrees C.
 
-Copy the serial number, you will need to configure the plugin
+Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the 28-, for example 28-0000069834ff.
 
 * For the SI7021, BME280 and TMP102 sensors
 
