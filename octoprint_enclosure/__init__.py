@@ -301,6 +301,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             cmd = sudo_str + "python " + script + str(led_pin) + " " + str(led_count) + " " + str(
                 led_brightness) + " " + str(red) + " " + str(green) + " " + str(blue) + " " + str(address)
             if self._settings.get(["debug"]) is True:
+                if queue_id is not None:
+                    self._logger.info("Runing scheduled queue id %s", queue_id)
                 self._logger.info("Sending neopixel cmd: %s", cmd)
             Popen(cmd, shell=True)
             if queue_id is not None:
@@ -413,10 +415,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self._identifier, dict(set_temperature=result))
 
     def stop_queue_item(self, queue_id):
+        old_list = self.event_queue
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Stoping queue id %s...", queue_id)
         for task in self.event_queue:
+            if self._settings.get(["debug"]) is True:
+                self._logger.info("Queue id found...")
             if task['queue_id'] == queue_id:
                 task['thread'].cancel()
                 self.event_queue.remove(task)
+                if self._settings.get(["debug"]) is True:
+                    self._logger.info("Queue id stoped and removed from list...")
+                    self._logger.info("Old queue list: %s", old_list)
+                    self._logger.info("New queue list: %s", self.event_queue)
 
     def update_ui_outputs(self):
         try:
@@ -1024,6 +1035,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             GPIO.output(gpio, value)
             if self._settings.get(["debug"]) is True:
+                if queue_id is not None:
+                    self._logger.info("Runing scheduled queue id %s", queue_id)
                 self._logger.info("Writing on gpio: %s value %s", gpio, value)
             self.update_ui()
             if queue_id is not None:
@@ -1037,6 +1050,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def write_pwm(self, gpio, pwm_value, queue_id=None):
         try:
+            if queue_id is not None and self._settings.get(["debug"]) is True:
+                    self._logger.info("Runing scheduled queue id %s", queue_id)
             for pwm in self.pwm_intances:
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
@@ -1183,6 +1198,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
             self.add_neopixel_output_to_queue(
                 rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Events scheduled to run %s", self.event_queue)
 
     def start_outpus_with_server(self):
         for rpi_output in self.rpi_outputs:
@@ -1224,6 +1241,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 rpi_output, delay_seconds, red, green, blue, sufix)
         if rpi_output['output_type'] == 'temp_hum_control':
             rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Events scheduled to run %s", self.event_queue)
 
     def get_color_from_rgb(self, stringColor):
         stringColor = stringColor.replace('rgb(', '')
@@ -1256,6 +1275,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         queue_id = '{0!s}_{1!s}'.format(index_id, sufix)
 
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
+
         thread = threading.Timer(delay_seconds,
                                  self.send_neopixel_command,
                                  args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct, index_id, queue_id])
@@ -1264,6 +1286,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def add_pwm_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
+
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Scheduling pwm output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds,
                                  self.write_pwm,
@@ -1277,6 +1302,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         thread = threading.Timer(delay_seconds,
                                  self.set_pwm_duty_cycle,
                                  args=[rpi_output, value, queue_id])
+
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Scheduling pwm linked temp output id %s on %s delay_seconds", queue_id, delay_seconds)
+
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def set_pwm_duty_cycle(self, rpi_output, value, queue_id):
@@ -1286,6 +1315,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
+
+        if self._settings.get(["debug"]) is True:
+            self._logger.info("Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds,
                                  self.write_gpio,
