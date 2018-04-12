@@ -115,11 +115,11 @@ You can use relays / mosfets to control you lights, heater, lockers etc... If yo
 
 * Relay
 
-The relays module that I used can be found [here](https://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
+The relays module that I used couple [SainSmart 2-Channel Relay Module](https://www.amazon.com/gp/product/B0057OC6D8?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B0057OC6D8). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
 
 * Heater
 
-For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
+For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
 
 **CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK**
 
@@ -127,7 +127,7 @@ For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and 
 
 * Cooler
 
-You can get a [5V small fan](https://www.amazon.com/gp/product/B003FO0LG6/ref=oh_aui_search_detailpage?ie=UTF8&psc=1) and control it over a relay.
+You can get a [USB Mini Desktop Fan](https://www.amazon.com/gp/product/B00WM7TRTY?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B00WM7TRTY) and control it over a relay.
 
 * Filament sensor
 
@@ -189,8 +189,8 @@ You can do this by changing the config.yaml file as instructed on [octoprint doc
 
 You just need to add the following section:
 
-```
-appearance:
+
+<pre><code>appearance:
   components:
     order:
       tab:
@@ -198,9 +198,7 @@ appearance:
       - control
       - gcodeviewer
       - terminal
-      - plugin_enclosure
-      - timelapse
-```
+      - plugin_enclosure<code><pre>
 
 
      
