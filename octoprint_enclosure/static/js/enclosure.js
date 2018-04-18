@@ -83,6 +83,11 @@ $(function () {
       });
     };
 
+    self.calculateRowSpan = function(index_id){
+      span = self.linkedTemperatureControl(index_id())().length
+      return span == 0 ? 1 : span;
+    };
+
     self.hasAnySensorWithHumidity = function(){
       return_value = false;
       self.rpi_inputs_temperature_sensors().forEach(function (sensor) {
