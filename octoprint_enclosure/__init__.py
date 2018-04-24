@@ -708,7 +708,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     linked_data = self.get_linked_temp_sensor_data(
                         linked_id)
 
-                    if str(temp_hum_control['temp_ctr_type']) == 'dehumidifier':
+                    control_type = str(temp_hum_control['temp_ctr_type'])
+
+                    if control_type == 'dehumidifier':
                         current_value = self.to_float(linked_data['humidity'])
                         temp_deadband = 0
                     else:
@@ -717,15 +719,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
                     if set_temperature - temp_deadband > current_value:
                         current_status = True
-                    elif set_temperature + temp_deadband < current_value:
+                    elif set_temperature < current_value:
                         current_status = False
                     else:
                         current_status = previous_status
 
-                    if str(temp_hum_control['temp_ctr_type']) == 'cooler' or str(temp_hum_control['temp_ctr_type']) == 'dehumidifier':
+                    if control_type == 'cooler' or control_type == 'dehumidifier':
                         current_status = not current_status
 
-                    if temp_hum_control['temp_ctr_type'] == 'heater' and max_temp > 0.0 and max_temp < current_value:
+                    if control_type == 'heater' and max_temp > 0.0 and max_temp < current_value:
                         if self._settings.get(["debug"]) is True:
                             self._logger.info(
                                 "Maximun temperature reached for temperature control %s", temp_hum_control['index_id'])
