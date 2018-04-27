@@ -188,6 +188,7 @@ $(function () {
             return (output['index_id'] == item.index_id());
           }).pop();
           if (linked_output) {
+            linked_output.gpio_status(output['status'])
             linked_output.auto_shutdown(output['auto_shutdown'])
             linked_output.auto_startup(output['auto_startup'])
           }

@@ -216,6 +216,12 @@
     <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
     <span class="badge badge-warning">Dehumidifier</span>
     <!-- /ko -->
+    <!-- ko if: ($data.gpio_status())  -->
+    <span class="badge badge-success help-inline">on</span>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.gpio_status())  -->
+    <span class="badge badge-important help-inline">off</span>
+    <!-- /ko -->
 </h4>
 <!-- /ko -->
 

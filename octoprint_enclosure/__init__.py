@@ -36,6 +36,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     temperature_sensor_data = []
     last_filament_end_detected = []
     print_complete = False
+    development_mode = False
+    dummy_value = 30.0
+    dummy_delta = 0.5
 
     def start_timer(self):
         """
@@ -321,11 +324,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if temp is not None and hum is not None:
                     sensor_data.append(
                         dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
-            self.temperature_sensor_data = sensor_data
-            self.handle_temp_hum_control()
-            self.handle_temperature_events()
-            self.handle_pwm_linked_temperature()
-            self.update_ui()
+                    self.temperature_sensor_data = sensor_data
+                    self.handle_temp_hum_control()
+                    self.handle_temperature_events()
+                    self.handle_pwm_linked_temperature()
+                    self.update_ui()
         except Exception as ex:
             self.log_error(ex)
 
@@ -447,8 +450,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     regular_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'temp_hum_control':
+                    val = GPIO.input(pin) if not output['active_low'] else (
+                        not GPIO.input(pin))
                     temp_control_status.append(
-                        dict(index_id=index, auto_startup=startup, auto_shutdown=shutdown))
+                        dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'neopixel_indirect' or output['output_type'] == 'neopixel_direct':
                     val = output['neopixel_color']
                     neopixel_status.append(
@@ -486,27 +491,30 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def get_sensor_data(self, sensor):
         try:
-            if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
-                self._logger.info("temp_sensor_type dht")
-                temp, hum = self.read_dht_temp(
-                    sensor['temp_sensor_type'], sensor['gpio_pin'])
-            elif sensor['temp_sensor_type'] == "18b20":
-                temp = self.read_18b20_temp(sensor['ds18b20_serial'])
-                hum = 0
-            elif sensor['temp_sensor_type'] == "bme280":
-                temp, hum = self.read_bme280_temp(
-                    sensor['temp_sensor_address'])
-            elif sensor['temp_sensor_type'] == "si7021":
-                temp, hum = self.read_si7021_temp(
-                    sensor['temp_sensor_address'])
-            elif sensor['temp_sensor_type'] == "tmp102":
-                temp = self.read_tmp102_temp(
-                    sensor['temp_sensor_address'])
-                hum = 0
+            if self.development_mode:
+                temp, hum = self.read_dummy_temp()
             else:
-                self._logger.info("temp_sensor_type no match")
-                temp = None
-                hum = None
+                if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
+                    self._logger.info("temp_sensor_type dht")
+                    temp, hum = self.read_dht_temp(
+                        sensor['temp_sensor_type'], sensor['gpio_pin'])
+                elif sensor['temp_sensor_type'] == "18b20":
+                    temp = self.read_18b20_temp(sensor['ds18b20_serial'])
+                    hum = 0
+                elif sensor['temp_sensor_type'] == "bme280":
+                    temp, hum = self.read_bme280_temp(
+                        sensor['temp_sensor_address'])
+                elif sensor['temp_sensor_type'] == "si7021":
+                    temp, hum = self.read_si7021_temp(
+                        sensor['temp_sensor_address'])
+                elif sensor['temp_sensor_type'] == "tmp102":
+                    temp = self.read_tmp102_temp(
+                        sensor['temp_sensor_address'])
+                    hum = 0
+                else:
+                    self._logger.info("temp_sensor_type no match")
+                    temp = None
+                    hum = None
             if temp != -1 and hum != -1:
                 temp = round(self.to_float(
                     temp), 1) if not sensor['use_fahrenheit'] else round(self.to_float(temp) * 1.8 + 32, 1)
@@ -536,6 +544,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                 msg = ("Temperature action: enclosure temperature exceed " +
                                        temperature_alarm['alarm_set_temp'])
                                 self.send_notification(msg)
+
+    def read_dummy_temp(self):
+        current_value = self.dummy_value
+        if current_value > 40 or current_value < 30:
+            self.dummy_delta = - self.dummy_delta
+
+        return_value = current_value + self.dummy_delta
+
+        self.dummy_value = return_value
+
+        return return_value, return_value
 
     def read_dht_temp(self, sensor, pin):
         try:
@@ -717,15 +736,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         current_value = self.to_float(
                             linked_data['temperature'])
 
-                    if set_temperature - temp_deadband > current_value:
-                        current_status = True
-                    elif set_temperature < current_value:
-                        current_status = False
-                    else:
-                        current_status = previous_status
-
                     if control_type == 'cooler' or control_type == 'dehumidifier':
-                        current_status = not current_status
+                        if current_value <= set_temperature and current_value >= (set_temperature - temp_deadband):
+                            current_status = previous_status
+                        elif current_value < set_temperature:
+                            current_status = False
+                        else:
+                            current_status = True
+                    else:
+                        if current_value <= set_temperature and current_value >= (set_temperature - temp_deadband):
+                            current_status = previous_status
+                        elif current_value > set_temperature:
+                            current_status = False
+                        else:
+                            current_status = True
 
                     if control_type == 'heater' and max_temp > 0.0 and max_temp < current_value:
                         if self._settings.get(["debug"]) is True:
