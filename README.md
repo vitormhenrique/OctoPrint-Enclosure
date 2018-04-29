@@ -51,6 +51,8 @@ sudo apt-get update
 sudo apt-get install build-essential python-dev python-openssl
 sudo python setup.py install</code></pre>
 
+Note: All libraries need to be installed on raspberry pi system python not octoprint virtual environment.
+
 You can test the library by using:
 
 <pre><code>cd examples
@@ -97,9 +99,9 @@ Use the right arrow to select the button
 Select yes when it asks to reboot
 </code></pre>
 
-Install some packages:
+Install some packages (on raspberry pi system python not octoprint virtual environment):
 
-<pre><code>sudo apt-get install i2c-tools python-pip</code></pre>
+<pre><code>sudo apt-get install i2c-tools python-pip python-smbus</code></pre>
 
 Find the address of the sensor:
 
