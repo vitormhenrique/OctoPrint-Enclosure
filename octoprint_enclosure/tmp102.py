@@ -42,7 +42,7 @@ def main():
     # Divide by 16 to get value in celsius
     temp /= 16.0
 
-    print temp
+    print('{0:0.1f}'.format(temp))
 
 if __name__ == "__main__":
     main()
