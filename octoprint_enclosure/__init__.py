@@ -428,7 +428,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 task['thread'].cancel()
                 self.event_queue.remove(task)
                 if self._settings.get(["debug"]) is True:
-                    self._logger.info("Queue id stoped and removed from list...")
+                    self._logger.info(
+                        "Queue id stoped and removed from list...")
                     self._logger.info("Old queue list: %s", old_list)
                     self._logger.info("New queue list: %s", self.event_queue)
 
@@ -910,11 +911,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         filament_sensor['filament_sensor_enabled']):
                     last_detected_time = list(filter(lambda item: item['index_id'] == filament_sensor['index_id'],
                                                      self.last_filament_end_detected)).pop()['time']
-                    if time.time() - last_detected_time > self._settings.get_int(["filament_sensor_timeout"]):
+                    time_now = time.time()
+                    time_difference = self.to_int(time_now - last_detected_time)
+                    time_out_value = self.to_int(filament_sensor['filament_sensor_timeout'])
+                    if time_difference > time_out_value:
                         self._logger.info("Detected end of filament.")
                         for item in self.last_filament_end_detected:
                             if item['index_id'] == filament_sensor['index_id']:
-                                item['time'] = time.time()
+                                item['time'] = time_now
                         for line in self._settings.get(["filament_sensor_gcode"]).split('\n'):
                             if line:
                                 self._printer.commands(line.strip().upper())
