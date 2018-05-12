@@ -882,6 +882,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 GPIO.setup(pin, GPIO.OUT)
                 pwm_instance = GPIO.PWM(pin, self.to_int(
                     gpio_out_pwm['pwm_frequency']))
+                pwm_instance.start(0)
                 self.pwm_intances.append({pin: pwm_instance})
             for gpio_out_neopixel in list(filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
@@ -1092,8 +1093,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
                     if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
                         pwm['duty_cycle'] = pwm_value
-                        pwm_object.stop()
-                        pwm_object.start(pwm_value)
+                        pwm_object.ChangeDutyCycle(pwm_value)
                         if self._settings.get(["debug"]) is True:
                             self._logger.info(
                                 "Writing PWM on gpio: %s value %s", gpio, pwm_value)
