@@ -204,6 +204,15 @@
     </div>
     <!-- /ko -->
     <!-- ko if: $data.auto_shutdown  -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
+        </label>
+        <span class="help-inline">Choose if output should turn off automatomatically when print is canceled or fails</span>
+      </div>
+    </div>
+
     <div data-bind="attr: {id: 'auto_shutdownField_' + $index() }">
       <div class="control-group">
         <label class="control-label">{{ _('Shutdown Delay / Hour') }}</label>
@@ -294,13 +303,16 @@
       </div>
     </div>
 
+    <!-- ko if: $data.auto_startup || $data.startup_with_server -->
     <div class="control-group">
       <label class="control-label">{{ _('Default Value') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_value">
-        <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts.</span>
+        <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts or the server starts.</span>
       </div>
     </div>
+    <!-- /ko -->
+
     <div class="control-group">
       <label class="control-label">{{ _('Value Deadband') }}</label>
       <div class="controls">
@@ -715,6 +727,13 @@
         </div>
       </div>
       <div class="control-group">
+        <label class="control-label">{{ _('Neopixel DMA Channel') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: settingsViewModel.settings.plugins.enclosure.neopixel_dma">
+          <span class="help-inline">DMA channel used on direct control of neopixel.</span>
+        </div>
+      </div>
+      <div class="control-group">
         <div class="controls">
           <label class="checkbox">
             <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.debug"> {{ _('Enable debug info') }}
@@ -722,7 +741,7 @@
           <span class="help-inline">Log additional information on octoprint log to help trouble shoot the plugin</span>
         </div>
       </div>
-      <!-- ko if: ($root.settingsViewModel.settings.plugins.enclosure.debug())  -->
+      <!-- ko if: ($root.debug())  -->
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
@@ -735,7 +754,7 @@
       <div class="control-group">
         <div class="controls">
           <label class="checkbox">
-            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.useBoardPinNumber"> {{ _('Use Board Pin #') }}
+            <input type="checkbox" data-bind="checked: settingsViewModel.settings.plugins.enclosure.use_board_pin_number"> {{ _('Use Board Pin #') }}
           </label>
           <span class="help-inline">Use BOARD pin numbers instead of BCM pin numbers</span>
         </div>
@@ -749,7 +768,7 @@
       </div>
 
       <div class="control-group">
-        <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Filament Change Gcode') }}</label>
+        <label class="control-label">{{ _('Filament Change Gcode') }}</label>
         <div class="controls">
           <textarea rows="4" class="block" data-bind="value: settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode"></textarea>
           <span class="help-inline">GCODE that will be sent to the printer to pause and allow filament to be changed. You should add
@@ -770,17 +789,17 @@
       <div class="control-group">
         <label class="control-label">{{ _('Event Name') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: settingsViewModel.settings.plugins.enclosure.notification_event_name">
+          <input type="text" class="input-block-level" data-bind="value: notification_event_name">
           <span class="help-inline">Event name that was configured on the maker chanel of IFTTT, don't use space between the words</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">{{ _('IFTTT API KEY') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value:settingsViewModel.settings.plugins.enclosure.notification_api_key">
+          <input type="text" class="input-block-level" data-bind="value: notification_api_key">
         </div>
       </div>
-      <div class="control-group" data-bind="foreach: settingsViewModel.settings.plugins.enclosure.notifications">
+      <div class="control-group" data-bind="foreach: notifications">
         <div class="controls">
           <label class="checkbox">
             <input type="checkbox" data-bind="checked: temperatureAction"> {{ _('Notify temperature actions') }}
