@@ -18,4 +18,4 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Additional context**
-Add screenshots of you setting screen, so I know how to re create the data. Also enable the debug information under the advanced section of the plugin, reproduce the issue and attach the [octoprint log](https://discourse.octoprint.org/t/where-can-i-find-octoprints-and-octopis-log-files/299) here.
+Add screenshots of your settings screen, so I know how to recreate the data. Also enable the debug information under the advanced section of the plugin, reproduce the issue and attach the [octoprint log](https://discourse.octoprint.org/t/where-can-i-find-octoprints-and-octopis-log-files/299) here.
