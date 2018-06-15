@@ -122,10 +122,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.print_complete = False
 
     def get_settings_version(self):
-        return 5
+        return 6
 
-    def on_settings_migrate(self, target, current):
+    def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
+
+        if current >= 4 and target == 6:
+            self._logger.warn(
+                "######### migrating settings to v6 #########")
+            old_outputs = self._settings.get(["rpi_outputs"])
+            for rpi_output in old_outputs:
+                if 'shutdown_on_failed' not in rpi_output:
+                    rpi_output['shutdown_on_failed'] = False
+                if 'shell_script' not in rpi_output:
+                    rpi_output['shell_script'] = ""
         if current == 4 and target == 5:
             self._logger.warn("######### migrating settings from v4 to v5 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
@@ -170,7 +180,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 val = GPIO.input(pin) if not rpi_output['active_low'] else (
                     not GPIO.input(pin))
                 index = self.to_int(rpi_output['index_id'])
-                # result.append(dict(index_id=rpi_output['index_id'], value=val))
                 gpio_status.append(dict(index_id=index, status=val))
         return flask.Response(json.dumps(gpio_status), mimetype='application/json')
 
@@ -187,13 +196,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/sendShellCommand", methods=["GET"])
     def send_shell_command(self):
         output_index = self.to_int(flask.request.values["index_id"])
-
         rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
             r_out['index_id']) == output_index].pop()
-
-        if rpi_output:
-                command = rpi_output['shell_script']
-                self.shell_command(command)
+        self.send_gcode_command(rpi_output['shell_script'])
         return flask.jsonify(success=True)
 
 

@@ -511,6 +511,19 @@ $(function () {
       });
     };
 
+    self.handleShellOutput = function (item, form) {
+      var request = {
+        "index_id": item.index_id()
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/sendShellCommand")
+      });
+    };
+
     self.switchAutoStartUp = function (item) {
 
       var request = {
