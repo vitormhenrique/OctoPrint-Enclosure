@@ -1,3 +1,12 @@
+Find the plugin useful? Buy me a coffee
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
+
+# Before opening an issue...
+
+Check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide). Issues with no log, no print screen *will be closed* until the necessary documentation is available.
+
+Also, be aware that upgrading from versions lower than 4.00 will **DELETE** all settings. More information on [release notes](https://github.com/vitormhenrique/OctoPrint-Enclosure/releases/tag/4.00)
+
 # OctoPrint-Enclosure
 
 **Control pretty much everything that you might want to do on your raspberry pi / octoprint / enclosure**
@@ -16,11 +25,6 @@ Here is a list of possibilities:
 * Alarm when enclosure temperature reaches some sort of value
 * Notifications using IFTTT when events happen (temperature trigger / print events / etc)
 * Add sub-menus on navbar to quick access outputs and temperature sensors
-
-Find the plugin useful? Buy me a coffee
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
-
-Having problems with the plugin? check the [troubleshooting guide](https://github.com/vitormhenrique/OctoPrint-Enclosure/wiki/Troubleshooting-Guide)
 
 Check pictures on thingiverse: http://www.thingiverse.com/thing:2245493
 
@@ -47,6 +51,8 @@ sudo apt-get update
 sudo apt-get install build-essential python-dev python-openssl
 sudo python setup.py install</code></pre>
 
+Note: All libraries need to be installed on raspberry pi system python not octoprint virtual environment.
+
 You can test the library by using:
 
 <pre><code>cd examples
@@ -62,6 +68,11 @@ Start by adding the following line to /boot/config.txt
 
 <pre><code>dtoverlay=w1-gpio</code></pre>
 
+After rebooting, you can check if the OneWire device was found properly with
+<pre><code>dmesg | grep w1-gpip</code></pre>
+You should see something like
+<pre><code>[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0</code></pre>
+
 You should be able to test your sensor by rebooting your system with sudo reboot. When the Pi is back up and you're logged in again, type the commands you see below into a terminal window. When you are in the 'devices' directory, the directory starting '28-' may have a different name, so cd to the name of whatever directory is there.
 
 <pre><code>sudo modprobe w1-gpio
@@ -73,7 +84,7 @@ cat w1_slave</code></pre>
 
 The response will either have YES or NO at the end of the first line. If it is yes, then the temperature will be at the end of the second line, in 1/000 degrees C.
 
-Copy the serial number, you will need to configure the plugin
+Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the 28-, for example 28-0000069834ff.
 
 * For the SI7021, BME280 and TMP102 sensors
 
@@ -88,9 +99,9 @@ Use the right arrow to select the button
 Select yes when it asks to reboot
 </code></pre>
 
-Install some packages:
+Install some packages (on raspberry pi system python not octoprint virtual environment):
 
-<pre><code>sudo apt-get install i2c-tools python-pip</code></pre>
+<pre><code>sudo apt-get install i2c-tools python-pip python-smbus</code></pre>
 
 Find the address of the sensor:
 
@@ -106,11 +117,11 @@ You can use relays / mosfets to control you lights, heater, lockers etc... If yo
 
 * Relay
 
-The relays module that I used can be found [here](https://www.amazon.com/gp/product/B0057OC6D8?psc=1&redirect=true&ref_=oh_aui_search_detailpage). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
+The relays module that I used couple [SainSmart 2-Channel Relay Module](https://www.amazon.com/gp/product/B0057OC6D8?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B0057OC6D8). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
 
 * Heater
 
-For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/Pages/default.aspx) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
+For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
 
 **CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK**
 
@@ -118,7 +129,7 @@ For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and 
 
 * Cooler
 
-You can get a [5V small fan](https://www.amazon.com/gp/product/B003FO0LG6/ref=oh_aui_search_detailpage?ie=UTF8&psc=1) and control it over a relay.
+You can get a [USB Mini Desktop Fan](https://www.amazon.com/gp/product/B00WM7TRTY?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B00WM7TRTY) and control it over a relay.
 
 * Filament sensor
 
@@ -180,8 +191,8 @@ You can do this by changing the config.yaml file as instructed on [octoprint doc
 
 You just need to add the following section:
 
-```
-appearance:
+
+<pre><code>appearance:
   components:
     order:
       tab:
@@ -189,9 +200,7 @@ appearance:
       - control
       - gcodeviewer
       - terminal
-      - plugin_enclosure
-      - timelapse
-```
+      - plugin_enclosure<code><pre>
 
 
      

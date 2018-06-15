@@ -3,7 +3,6 @@ import sys
 import time
 
 LED_INVERT = False
-LED_DMA = 5
 LED_FREQ_HZ = 800000
 
 if len(sys.argv) == 8:
@@ -13,7 +12,7 @@ if len(sys.argv) == 8:
     red = int(sys.argv[4])
     green = int(sys.argv[5])
     blue = int(sys.argv[6])
-    address = int(sys.argv[7], 16)
+    LED_DMA = int(sys.argv[7], 16)
 else:
     print("fail")
     sys.exit(1)
