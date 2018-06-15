@@ -200,4 +200,5 @@ You just need to add the following section:
       - control
       - gcodeviewer
       - terminal
-      - plugin_enclosure<code><pre>
+      - plugin_enclosure
+</code></pre>
