@@ -194,7 +194,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/sendShellCommand", methods=["GET"])
-    def send_shell_command(self):
+    def send_send_shell_command(self):
         output_index = self.to_int(flask.request.values["index_id"])
         rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
             r_out['index_id']) == output_index].pop()
@@ -289,11 +289,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         return flask.jsonify(success=True)
 
-    def shell_command(self, command):
+    def send_shell_command(self, command):
         try:
             stdout = (Popen(command, shell=True, stdout=PIPE).stdout).read()
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(is_msg=True, msg=stdout, msg_type="success"))
+
+            response = stdout or "Command executed with no return value."
+
+            self._plugin_manager.send_plugin_message(self._identifier, dict(is_msg=True, msg=response, msg_type="success"))
         except Exception as ex:
             self.log_error(ex)
             self._plugin_manager.send_plugin_message(
@@ -1056,7 +1058,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                             self.send_notification(msg)
                 if rpi_output['output_type'] == 'shell_output':
                     command = rpi_output['shell_script']
-                    self.shell_command(command)
+                    self.send_shell_command(command)
             self.log_error(ex)
             pass
 
