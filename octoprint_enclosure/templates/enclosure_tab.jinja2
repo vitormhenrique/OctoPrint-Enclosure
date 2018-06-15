@@ -20,8 +20,8 @@
 
             <!-- ko foreach: $root.rpi_inputs_temperature_sensors() -->
             <tr>
-                <th class="temperature_sensor" data-bind="text: label, attr: {title: label, rowspan: $root.linkedTemperatureControl(index_id())().length}"></th>
-                <td class="temperature_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                <th class="temperature_sensor" data-bind="text: label, attr: {title: label, rowspan: $root.calculateRowSpan(index_id)}"></th>
+                <td class="temperature_actual" data-bind="attr: {rowspan: $root.calculateRowSpan(index_id)}">
                     <span data-bind="text: temp_sensor_temp, attr: {title: temp_sensor_temp}"> </span>
                     <!-- ko if: (use_fahrenheit())  -->
                     <span class="add-on">&deg;F</span>
@@ -31,7 +31,7 @@
                     <!-- /ko -->
                 </td>
                 <!-- ko if: ($root.humidityCapableSensor(temp_sensor_type()))  -->
-                <td class="humidity_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">
+                <td class="humidity_actual" data-bind="attr: {rowspan: $root.calculateRowSpan(index_id)}">
                     <span data-bind="text: temp_sensor_humidity, attr: {title: temp_sensor_humidity}"> </span>
                     <span class="add-on">%</span>
                 </td>
@@ -39,7 +39,7 @@
 
                 <!-- ko if: ($root.hasAnySensorWithHumidity())  -->
                 <!-- ko ifnot: ($root.humidityCapableSensor(temp_sensor_type()))  -->
-                <td class="humidity_actual" data-bind="attr: {rowspan: $root.linkedTemperatureControl(index_id())().length}">N/A</td>
+                <td class="humidity_actual" data-bind="attr: {rowspan: $root.calculateRowSpan(index_id)}">N/A</td>
                 <!-- /ko -->
                 <!-- /ko -->
 
@@ -215,6 +215,12 @@
     <!-- /ko -->
     <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
     <span class="badge badge-warning">Dehumidifier</span>
+    <!-- /ko -->
+    <!-- ko if: ($data.gpio_status())  -->
+    <span class="badge badge-success help-inline">on</span>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.gpio_status())  -->
+    <span class="badge badge-important help-inline">off</span>
     <!-- /ko -->
 </h4>
 <!-- /ko -->

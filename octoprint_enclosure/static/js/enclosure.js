@@ -43,13 +43,17 @@ $(function () {
       });
     });
 
+    self.use_sudo = ko.observable();
+    self.gcode_control = ko.observable();
+    self.neopixel_dma = ko.observable();
     self.debug = ko.observable();
     self.debug_temperature_log = ko.observable();
+    self.use_board_pin_number = ko.observable();
     self.filament_sensor_gcode = ko.observable();
     self.notification_provider = ko.observable();
     self.notification_event_name = ko.observable();
     self.notification_api_key = ko.observable();
-    self.notifications = ko.observable();
+    self.notifications = ko.observableArray([]);
 
     self.humidityCapableSensor = function(sensor){
       if (['11', '22', '2302', 'bme280', 'si7021'].indexOf(sensor) >= 0){
@@ -81,6 +85,11 @@ $(function () {
           }
         });
       });
+    };
+
+    self.calculateRowSpan = function(index_id){
+      span = self.linkedTemperatureControl(index_id())().length
+      return span == 0 ? 1 : span;
     };
 
     self.hasAnySensorWithHumidity = function(){
@@ -183,6 +192,7 @@ $(function () {
             return (output['index_id'] == item.index_id());
           }).pop();
           if (linked_output) {
+            linked_output.gpio_status(output['status'])
             linked_output.auto_shutdown(output['auto_shutdown'])
             linked_output.auto_startup(output['auto_startup'])
           }
@@ -256,24 +266,28 @@ $(function () {
       return duty_cycle;
     }
 
-    self.bindSettings = function(){
+    self.bindFromSettings = function(){
       self.rpi_outputs(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs());
       self.rpi_inputs(self.settingsViewModel.settings.plugins.enclosure.rpi_inputs());
-      self.debug(self.settingsViewModel.settings.plugins.enclosure.debug())
-      self.debug_temperature_log(self.settingsViewModel.settings.plugins.enclosure.debug_temperature_log())
-      self.filament_sensor_gcode(self.settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode())
-      self.notification_provider(self.settingsViewModel.settings.plugins.enclosure.notification_provider())
-      self.notification_event_name(self.settingsViewModel.settings.plugins.enclosure.notification_event_name())
-      self.notification_api_key(self.settingsViewModel.settings.plugins.enclosure.notification_api_key())
-      self.notifications(self.settingsViewModel.settings.plugins.enclosure.notifications())
+      self.use_sudo(self.settingsViewModel.settings.plugins.enclosure.use_sudo());
+      self.gcode_control(self.settingsViewModel.settings.plugins.enclosure.gcode_control());
+      self.neopixel_dma(self.settingsViewModel.settings.plugins.enclosure.neopixel_dma());
+      self.debug(self.settingsViewModel.settings.plugins.enclosure.debug());
+      self.debug_temperature_log(self.settingsViewModel.settings.plugins.enclosure.debug_temperature_log());
+      self.use_board_pin_number(self.settingsViewModel.settings.plugins.enclosure.use_board_pin_number());
+      self.filament_sensor_gcode(self.settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode());
+      self.notification_provider(self.settingsViewModel.settings.plugins.enclosure.notification_provider());
+      self.notification_event_name(self.settingsViewModel.settings.plugins.enclosure.notification_event_name());
+      self.notification_api_key(self.settingsViewModel.settings.plugins.enclosure.notification_api_key());
+      self.notifications(self.settingsViewModel.settings.plugins.enclosure.notifications());
     };
 
     self.onBeforeBinding = function () {
-      self.bindSettings();
+      self.bindFromSettings();
     };
 
     self.onSettingsBeforeSave = function() {
-      self.bindSettings();
+      self.bindFromSettings();
     };
 
     self.onStartupComplete = function () {
@@ -362,6 +376,7 @@ $(function () {
         controlled_io_set_value: ko.observable("Low"),
         startup_time: ko.observable(0),
         auto_shutdown: ko.observable(false),
+        shutdown_on_failed: ko.observable(false),
         shutdown_time: ko.observable(0),
         linked_temp_sensor: ko.observable(""),
         alarm_set_temp: ko.observable(0),
