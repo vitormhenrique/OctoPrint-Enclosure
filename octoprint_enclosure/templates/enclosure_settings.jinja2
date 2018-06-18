@@ -53,6 +53,12 @@
           </span>
         </label>
       </div>
+      <div class="controls">
+        <label class="radio">
+          <input type="radio" value="shell_output" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Shell Script') }}
+          </span>
+        </label>
+      </div>
     </div>
     <!-- ko if: ($data.output_type() != "temperature_alarm")  -->
     <div class="control-group">
@@ -70,6 +76,15 @@
         <span class="help-inline">Id used for API control</span>
       </div>
     </div>
+    <!-- ko if: ($data.output_type() == "shell_output")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('Script') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: shell_script">
+        <span class="help-inline">Shell script to be executed</span>
+      </div>
+    </div>
+    <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" ) -->
     <div class="control-group">
       <label class="control-label">{{ _('IO Number') }}</label>
@@ -88,45 +103,45 @@
     </div>
     <!-- /ko -->
 
-
     <!-- ko if: ($data.output_type() == "pwm" ) -->
-      <div class="control-group">
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
-          </label>
-          <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty B, temperature B. 
-            This output will automatomatically start when a print starts and will default to the default duty cycle when print is complete.
-          </span>
-        </div>
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
+        </label>
+        <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
+          B, temperature B. This output will automatomatically start when a print starts and will default to the default
+          duty cycle when print is complete.
+        </span>
       </div>
-      <!-- /ko -->
+    </div>
+    <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-      <div class="control-group">
-        <label class="control-label">{{ _('Duty A') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: duty_a">
-        </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Duty A') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: duty_a">
       </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Temperature A') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: temperature_a">
-        </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Temperature A') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: temperature_a">
       </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Duty B') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: duty_b">
-        </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Duty B') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: duty_b">
       </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Temperature B') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: temperature_b">
-        </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Temperature B') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: temperature_b">
       </div>
+    </div>
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
@@ -221,15 +236,16 @@
           <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
             events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
             forget to check timezone of your raspberry pi.</span>
-            <span class="label label-important">Attention</span>
-            <span> Hour schedule does not work with <b>Link PWM to Temperature</b> option</span>
+          <span class="label label-important">Attention</span>
+          <span> Hour schedule does not work with
+            <b>Link PWM to Temperature</b> option</span>
         </div>
       </div>
     </div>
     <!-- /ko -->
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control")  -->
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control" )  -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -240,7 +256,7 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ) -->
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output") -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -649,7 +665,9 @@
           <option value="resume">Printer Resume</option>
           <option value="pause">Printer Pause</option>
           <option value="cancel">Printer Cancel</option>
+          <option value="start">Start Print</option>
           <option value="toggle">Printer Toggle (Connect / Pause / Resume)</option>
+          <option value="toggle_job">Job Toggle (Connect / Start / Cancel)</option>
           <option value="stop_temp_hum_control">Stop Temperature Control</option>
         </select>
         <span class="help-inline"> You can use filament change on your filament detectors and add buttons to resume and pause the print job.</span>

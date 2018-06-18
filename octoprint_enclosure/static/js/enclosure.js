@@ -21,7 +21,7 @@ $(function () {
     
     self.settings_possible_outputs = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
-        return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output");
+        return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output" || item.output_type() === "shell_output");
       });
     });
 
@@ -236,11 +236,11 @@ $(function () {
         })
       }
 
-      if (data.isMsg) {
+      if (data.is_msg) {
         new PNotify({
           title: "Enclosure",
           text: data.msg,
-          type: "error"
+          type: data.msg_type
         });
       }
     };
@@ -362,6 +362,7 @@ $(function () {
         index_id: ko.observable(nextIndex),
         label: ko.observable("Ouput " + nextIndex),
         output_type: ko.observable("regular"),
+        shell_script: ko.observable(""),
         gpio_pin: ko.observable(0),
         gpio_status: ko.observable(false),
         hide_btn_ui: ko.observable(false),
@@ -507,6 +508,19 @@ $(function () {
         dataType: "json",
         data: request,
         url: self.buildPluginUrl("/sendGcodeCommand")
+      });
+    };
+
+    self.handleShellOutput = function (item, form) {
+      var request = {
+        "index_id": item.index_id()
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/sendShellCommand")
       });
     };
 

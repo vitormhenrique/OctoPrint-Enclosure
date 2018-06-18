@@ -5,6 +5,7 @@
 </a>
 <ul class="dropdown-menu" data-bind="foreach: $root.rpi_outputs()">
     <!-- ko if: ($data.show_on_navbar())  -->
+
     <!-- ko if: ($data.output_type() == "regular")  -->
     <li>
         <a href="javascript:void(0)" data-bind="click: $root.handleIO">
@@ -36,6 +37,15 @@
         </a>
     </li>
     <!-- /ko -->
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "shell_output")  -->
+    <li>
+        <a href="javascript:void(0)" data-bind="click: $root.handleShellOutput">
+            <span data-bind="html: label"> </span>
+            <span class="badge badge-info">shell</span>
+        </a>
+    </li>
     <!-- /ko -->
 
     <!-- /ko -->

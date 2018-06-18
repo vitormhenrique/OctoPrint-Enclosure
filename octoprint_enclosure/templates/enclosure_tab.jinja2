@@ -170,6 +170,16 @@
 </div>
 <!-- /ko -->
 
+<!-- ko if: ($data.output_type() == "shell_output")  -->
+<h4>
+    <span data-bind="html: label"> </span>
+    <span class="badge">Shell Script</span>
+</h4>
+<div>
+    <button data-bind="enable: $root.isUser(), click: $root.handleShellOutput" class="btn">Execute Script</button>
+</div>
+<!-- /ko -->
+
 <!-- ko if: ($data.output_type() == "pwm")  -->
 <h4>
     <span data-bind="html: label"> </span>
