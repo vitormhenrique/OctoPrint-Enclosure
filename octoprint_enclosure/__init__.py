@@ -1057,6 +1057,42 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.log_error(ex)
             pass
 
+    def handle_gpio_control(self, channel):
+        try:
+            if self._settings.get(["debug"]) is True:
+                self._logger.info(
+                    "GPIO event triggered on channel %s", channel)
+            for rpi_input in [r_inp for r_inp in self.rpi_inputs if self.to_int(r_inp['gpio_pin']) == self.to_int(channel)]:
+                gpio_pin = self.to_int(rpi_input['gpio_pin'])
+                controlled_io = self.to_int(rpi_input['controlled_io'])
+                if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
+                    rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
+                        r_out['index_id']) == controlled_io].pop()
+                    if rpi_output['output_type'] == 'regular':
+                        if rpi_input['controlled_io_set_value'] == 'toggle':
+                            val = GPIO.LOW if GPIO.input(self.to_int(
+                                rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
+                        else:
+                            val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
+                        self.write_gpio(self.to_int(
+                            rpi_output['gpio_pin']), val)
+                        for notification in self.notifications:
+                            if notification['gpioAction']:
+                                msg = "GPIO control action caused by input " + str(rpi_input['label']) + ". Setting GPIO" + str(
+                                    rpi_input['controlled_io']) + " to: " + str(rpi_input['controlled_io_set_value'])
+                                self.send_notification(msg)
+                    if rpi_output['output_type'] == 'gcode_output':
+                        self.send_gcode_command(rpi_output['gcode'])
+                        for notification in self.notifications:
+                            if notification['gpioAction']:
+                                msg = "GPIO control action caused by input " + \
+                                    str(rpi_input['label']) + \
+                                    ". Sending GCODE command"
+                                self.send_notification(msg)
+        except Exception as ex:
+            self.log_error(ex)
+            pass
+
     def send_gcode_command(self, command):
         for line in command.split('\n'):
             if line:
