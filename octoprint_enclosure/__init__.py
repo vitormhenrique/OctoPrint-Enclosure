@@ -1042,8 +1042,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handle_initial_gpio_control(self):
         try:
-            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
-                                               item['action_type'] == 'output_control', self.rpi_inputs)):
+            for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio' and
+                                         item['action_type'] == 'output_control', self.rpi_inputs)):
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
                 controlled_io = self.to_int(rpi_input['controlled_io'])
                 if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
