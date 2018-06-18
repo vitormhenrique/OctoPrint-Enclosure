@@ -125,14 +125,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         return 5
 
     def on_settings_migrate(self, target, current):
-        self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
+        self._logger.warn(
+            "######### current settings version %s target settings version %s #########", current, target)
         if current == 4 and target == 5:
-            self._logger.warn("######### migrating settings from v4 to v5 #########")
+            self._logger.warn(
+                "######### migrating settings from v4 to v5 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             for rpi_output in old_outputs:
                 rpi_output['shutdown_on_failed'] = False
             self._settings.set(["rpi_outputs"], old_outputs)
-        else: 
+        else:
             self._logger.warn("######### settings not compatible #########")
             self._settings.set(["rpi_outputs"], [])
             self._settings.set(["rpi_inputs"], [])
@@ -586,7 +588,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            self._logger.info("Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self._logger.info(
+                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
@@ -607,7 +610,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            self._logger.info("Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self._logger.info(
+                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
@@ -628,7 +632,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
-            self._logger.info("Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self._logger.info(
+                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
@@ -670,7 +675,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("TMP102 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
-            self._logger.info("Failed to excecute python scripts, try disabling use SUDO on advanced section.")
+            self._logger.info(
+                "Failed to excecute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
 
@@ -939,8 +945,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     last_detected_time = list(filter(lambda item: item['index_id'] == filament_sensor['index_id'],
                                                      self.last_filament_end_detected)).pop()['time']
                     time_now = time.time()
-                    time_difference = self.to_int(time_now - last_detected_time)
-                    time_out_value = self.to_int(filament_sensor['filament_sensor_timeout'])
+                    time_difference = self.to_int(
+                        time_now - last_detected_time)
+                    time_out_value = self.to_int(
+                        filament_sensor['filament_sensor_timeout'])
                     if time_difference > time_out_value:
                         self._logger.info("Detected end of filament.")
                         for item in self.last_filament_end_detected:
@@ -1003,16 +1011,21 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 pass
 
     def handle_initial_gpio_control(self):
-        for rpi_input in [r_inp for r_inp in self.rpi_inputs if r_inp['action_type'] == 'output_control']:
-            gpio_pin = self.to_int(rpi_input['gpio_pin'])
-            controlled_io = self.to_int(rpi_input['controlled_io'])
-            if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
-                rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-                    r_out['index_id']) == controlled_io].pop()
-                if rpi_output['output_type'] == 'regular':
-                    val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                    self.write_gpio(self.to_int(
-                        rpi_output['gpio_pin']), val)
+        try:
+            for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio' and
+                                         item['action_type'] == 'output_control', self.rpi_inputs)):
+                gpio_pin = self.to_int(rpi_input['gpio_pin'])
+                controlled_io = self.to_int(rpi_input['controlled_io'])
+                if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
+                    rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
+                        r_out['index_id']) == controlled_io].pop()
+                    if rpi_output['output_type'] == 'regular':
+                        val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
+                        self.write_gpio(self.to_int(
+                            rpi_output['gpio_pin']), val)
+        except Exception as ex:
+            self.log_error(ex)
+            pass
 
     def handle_gpio_control(self, channel):
         try:
@@ -1119,7 +1132,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def write_pwm(self, gpio, pwm_value, queue_id=None):
         try:
             if queue_id is not None and self._settings.get(["debug"]) is True:
-                    self._logger.info("Runing scheduled queue id %s", queue_id)
+                self._logger.info("Runing scheduled queue id %s", queue_id)
             for pwm in self.pwm_intances:
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
@@ -1357,7 +1370,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         queue_id = '{0!s}_{1!s}'.format(index_id, sufix)
 
         if self._settings.get(["debug"]) is True:
-            self._logger.info("Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
+            self._logger.info(
+                "Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds,
                                  self.send_neopixel_command,
@@ -1369,7 +1383,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
         if self._settings.get(["debug"]) is True:
-            self._logger.info("Scheduling pwm output id %s for on %s delay_seconds", queue_id, delay_seconds)
+            self._logger.info(
+                "Scheduling pwm output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds,
                                  self.write_pwm,
@@ -1385,7 +1400,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                  args=[rpi_output, value, queue_id])
 
         if self._settings.get(["debug"]) is True:
-            self._logger.info("Scheduling pwm linked temp output id %s on %s delay_seconds", queue_id, delay_seconds)
+            self._logger.info(
+                "Scheduling pwm linked temp output id %s on %s delay_seconds", queue_id, delay_seconds)
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
@@ -1398,7 +1414,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
         if self._settings.get(["debug"]) is True:
-            self._logger.info("Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
+            self._logger.info(
+                "Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds,
                                  self.write_gpio,
