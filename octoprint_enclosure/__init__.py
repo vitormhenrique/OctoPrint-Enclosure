@@ -137,7 +137,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
-
         if current == 4 and target == 5:
             self._logger.warn(
                 "######### migrating settings from v4 to v5 #########")
@@ -197,11 +196,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/sendShellCommand", methods=["GET"])
-    def send_send_shell_command(self):
+    def send_shell_command(self):
         output_index = self.to_int(flask.request.values["index_id"])
+
         rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
             r_out['index_id']) == output_index].pop()
-        self.send_gcode_command(rpi_output['shell_script'])
+
+        command = rpi_output['shell_script']
+        self.shell_command(command)
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setAutoStartUp", methods=["GET"])
@@ -290,19 +292,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     led_count, led_brightness, red, green, blue, address, neopixel_dirrect, gpio_index)
 
         return flask.jsonify(success=True)
-
-    def send_shell_command(self, command):
-        try:
-            stdout = (Popen(command, shell=True, stdout=PIPE).stdout).read()
-
-            response = stdout or "Command executed with no return value."
-
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(is_msg=True, msg=response, msg_type="success"))
-        except Exception as ex:
-            self.log_error(ex)
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(is_msg=True, msg="Could not execute shell script", msg_type="error"))
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address,
                               neopixel_dirrect, index_id, queue_id=None):
@@ -1058,6 +1047,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.log_error(ex)
             pass
 
+    def shell_command(self, command):
+        try:
+            stdout = (Popen(command, shell=True, stdout=PIPE).stdout).read()
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(is_msg=True, msg=stdout, msg_type="success"))
+        except Exception as ex:
+            self.log_error(ex)
+            self._plugin_manager.send_plugin_message(
+                self._identifier, dict(is_msg=True, msg="Could not execute shell script", msg_type="error"))
+
     def handle_gpio_control(self, channel):
         try:
             if self._settings.get(["debug"]) is True:
@@ -1337,7 +1336,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if rpi_output['output_type'] == 'temp_hum_control':
             value = 0
             self.add_temperature_output_temperature_queue(
-                delay_seconds, rpi_output, value, sufix)
+                shutdown_delay_seconds, rpi_output, value, sufix)
         if self._settings.get(["debug"]) is True:
             self._logger.info("Events scheduled to run %s", self.event_queue)
 
@@ -1502,9 +1501,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self.stop_queue_item(queue_id)
 
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1} when writing on pin {2}. Arguments:\n{3!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{3!r}"
             message = template.format(
-                type(ex).__name__, inspect.currentframe().f_code.co_name, gpio, ex.args)
+                type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             pass
 
@@ -1681,3 +1680,4 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.hook_gcode_queuing,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
     }
+
