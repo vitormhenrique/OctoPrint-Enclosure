@@ -137,12 +137,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
-        if current == 4 and target == 5:
-            self._logger.warn(
-                "######### migrating settings from v4 to v5 #########")
-            old_outputs = self._settings.get(["rpi_outputs"])
-            for rpi_output in old_outputs:
-                rpi_output['shutdown_on_failed'] = False
             self._settings.set(["rpi_outputs"], old_outputs)
         else:
             self._logger.warn("######### settings not compatible #########")
