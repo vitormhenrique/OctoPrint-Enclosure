@@ -127,7 +127,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def on_settings_migrate(self, target, current=None):
         self._logger.warn(
             "######### current settings version %s target settings version %s #########", current, target)
-
+        self._logger.info("#########        Current settings        #########")
+        self._logger.info("rpi_outputs: %s", self.rpi_outputs)
+        self._logger.info("rpi_inputs: %s", self.rpi_inputs)
+        self._logger.info("#########        End Current Settings        #########")
         if current >= 4 and target == 6:
             self._logger.warn(
                 "######### migrating settings to v6 #########")
