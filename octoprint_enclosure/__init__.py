@@ -1336,7 +1336,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if rpi_output['output_type'] == 'temp_hum_control':
             value = 0
             self.add_temperature_output_temperature_queue(
-                delay_seconds, rpi_output, value, sufix)
+                shutdown_delay_seconds, rpi_output, value, sufix)
         if self._settings.get(["debug"]) is True:
             self._logger.info("Events scheduled to run %s", self.event_queue)
 
@@ -1501,9 +1501,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self.stop_queue_item(queue_id)
 
         except Exception as ex:
-            template = "An exception of type {0} occurred on {1} when writing on pin {2}. Arguments:\n{3!r}"
+            template = "An exception of type {0} occurred on {1}. Arguments:\n{3!r}"
             message = template.format(
-                type(ex).__name__, inspect.currentframe().f_code.co_name, gpio, ex.args)
+                type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             pass
 

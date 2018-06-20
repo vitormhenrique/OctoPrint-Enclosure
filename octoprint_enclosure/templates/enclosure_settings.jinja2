@@ -807,17 +807,17 @@
       <div class="control-group">
         <label class="control-label">{{ _('Event Name') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: notification_event_name">
+          <input type="text" class="input-block-level" data-bind="value: settingsViewModel.settings.plugins.enclosure.notification_event_name">
           <span class="help-inline">Event name that was configured on the maker chanel of IFTTT, don't use space between the words</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">{{ _('IFTTT API KEY') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: notification_api_key">
+          <input type="text" class="input-block-level" data-bind="value: settingsViewModel.settings.plugins.enclosure.notification_api_key">
         </div>
       </div>
-      <div class="control-group" data-bind="foreach: notifications">
+      <div class="control-group" data-bind="foreach: settingsViewModel.settings.plugins.enclosure.notifications">
         <div class="controls">
           <label class="checkbox">
             <input type="checkbox" data-bind="checked: temperatureAction"> {{ _('Notify temperature actions') }}
