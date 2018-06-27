@@ -319,7 +319,7 @@
       </div>
     </div>
 
-    <!-- ko if: ($data.auto_startup || $data.startup_with_server)-->
+    <!-- ko if: ($data.auto_startup() || $data.startup_with_server())-->
     <div class="control-group">
       <label class="control-label">{{ _('Default Value') }}</label>
       <div class="controls">
