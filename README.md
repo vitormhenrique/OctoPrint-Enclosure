@@ -69,7 +69,7 @@ Start by adding the following line to /boot/config.txt
 <pre><code>dtoverlay=w1-gpio</code></pre>
 
 After rebooting, you can check if the OneWire device was found properly with
-<pre><code>dmesg | grep w1-gpip</code></pre>
+<pre><code>dmesg | grep w1-gpio</code></pre>
 You should see something like
 <pre><code>[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0</code></pre>
 
