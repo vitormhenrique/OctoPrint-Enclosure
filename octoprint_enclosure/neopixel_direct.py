@@ -12,7 +12,7 @@ if len(sys.argv) == 8:
     red = int(sys.argv[4])
     green = int(sys.argv[5])
     blue = int(sys.argv[6])
-    LED_DMA = int(sys.argv[7], 16)
+    LED_DMA = int(sys.argv[7])
 else:
     print("fail")
     sys.exit(1)
