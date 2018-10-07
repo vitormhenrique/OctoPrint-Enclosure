@@ -225,6 +225,19 @@ $(function () {
         })
       }
 
+      if (data.hasOwnProperty("rpi_output_ledstrip")) {
+        data.rpi_output_ledstrip.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.ledstrip_color(output['color'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
+
       if (data.hasOwnProperty("filament_sensor_status")) {
         data.filament_sensor_status.forEach(function (filament_sensor) {
           var linked_filament_sensor = ko.utils.arrayFilter(self.rpi_inputs(), function (item) {
@@ -401,6 +414,11 @@ $(function () {
         new_neopixel_color: ko.observable(""),
         neopixel_count: ko.observable(0),
         neopixel_brightness: ko.observable(255),
+        ledstrip_color: ko.observable("rgb(0,0,0)"),
+        default_ledstrip_color: ko.observable(""),
+        new_ledstrip_color: ko.observable(""),
+        ledstrip_gpio_clk: ko.observable(""),
+        ledstrip_gpio_dat: ko.observable(""),
         microcontroller_address: ko.observable(0),
         gcode: ko.observable(""),
         show_on_navbar: ko.observable(false)
@@ -632,6 +650,39 @@ $(function () {
           url: self.buildPluginUrl("/setNeopixel"),
           success: function (data) {
             item.new_neopixel_color("");
+            self.getUpdateUI();
+          }
+        });
+      }
+    };
+
+    self.handleLedstripColor = function (item) {
+      var index = item.index_id() ;
+      var or_tempStr = item.new_ledstrip_color();
+      var tempStr = or_tempStr.replace("rgb(", "");
+
+      var r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
+      if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || isNaN(r) || isNaN(g) || isNaN(b)) {
+        new PNotify({
+          title: "Enclosure",
+          text: "Color needs to follow the format rgb(value_red,value_green,value_blue)!",
+          type: "error"
+        });
+      } else {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          data: {
+            "index_id": index,
+            "rgb": or_tempStr
+          },
+          url: self.buildPluginUrl("/setLedstripColor"),
+          success: function (data) {
+            item.new_ledstrip_color("");
             self.getUpdateUI();
           }
         });
