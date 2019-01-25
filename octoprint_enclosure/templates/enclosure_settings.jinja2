@@ -37,6 +37,12 @@
       </div>
       <div class="controls">
         <label class="radio">
+          <input type="radio" value="ledstrip" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('RGB LED Strip') }}
+          </span>
+        </label>
+      </div>
+      <div class="controls">
+        <label class="radio">
           <input type="radio" value="temp_hum_control" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Temperature / Humidity Control') }}
           </span>
         </label>
@@ -85,7 +91,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip") -->
     <div class="control-group">
       <label class="control-label">{{ _('IO Number') }}</label>
       <div class="controls">
@@ -256,7 +262,7 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output") -->
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output" ||  $data.output_type() == "ledstrip") -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -265,7 +271,7 @@
         <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
       </div>
     </div>
-
+    <!-- ko ifnot: ($data.output_type() == "ledstrip") -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -274,6 +280,7 @@
         <span class="help-inline">Add shortcut on navbar to toggle output</span>
       </div>
     </div>
+    <!-- /ko -->
     <!-- /ko -->
 
 
@@ -401,6 +408,27 @@
         <input type="text" class="input-block-level" data-bind="value: microcontroller_address">
         <span class="help-inline">Microcontroller address in HEX value, you can find it by runing
           <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: ($data.output_type() == "ledstrip")  -->
+    <div class="control-group">
+      <label class="control-label">{{ _('CLK') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: ledstrip_gpio_clk">
+        <span class="help-inline">Choose any GPIO pin to provide the Clock signal</span>
+      </div>
+      <label class="control-label">{{ _('DAT') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: ledstrip_gpio_dat">
+        <span class="help-inline">Choose any GPIO pin to provide the Data</span>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label">{{ _('Color') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: default_ledstrip_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
+        <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
       </div>
     </div>
     <!-- /ko -->

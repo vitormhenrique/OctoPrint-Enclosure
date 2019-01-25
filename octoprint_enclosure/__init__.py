@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from octoprint.events import eventManager, Events
 from octoprint.util import RepeatedTimer
 from subprocess import Popen, PIPE
+from .ledstrip import LEDStrip
 import octoprint.plugin
 import RPi.GPIO as GPIO
 import flask
@@ -287,6 +288,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self.send_neopixel_command(
                     self.to_int(rpi_output['gpio_pin']),
                     led_count, led_brightness, red, green, blue, address, neopixel_dirrect, gpio_index)
+
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/setLedstripColor", methods=["GET"])
+    def set_ledstrip_color(self):
+        """ set_ledstrip_color method get request from octoprint and send the comand to Open-Smart RGB LED Strip"""
+        gpio_index = self.to_int(flask.request.values["index_id"])
+        rgb = flask.request.values["rgb"]
+        for rpi_output in self.rpi_outputs:
+            if gpio_index == self.to_int(rpi_output['index_id']):
+                self.ledstrip_set_rgb(rpi_output, rgb)
 
         return flask.jsonify(success=True)
 
@@ -1320,6 +1332,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             value = True if rpi_output['active_low'] else False
             self.add_regular_output_to_queue(
                 shutdown_delay_seconds, rpi_output, value, sufix)
+        if rpi_output['output_type'] == 'ledstrip':
+            self.ledstrip_set_rgb(rpi_output)
         if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = 0
             self.add_pwm_output_to_queue(
@@ -1337,6 +1351,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if self._settings.get(["debug"]) is True:
             self._logger.info("Events scheduled to run %s", self.event_queue)
 
+    def ledstrip_set_rgb(self, rpi_output, rgb=None):
+        clk = rpi_output["ledstrip_gpio_clk"]
+        data = rpi_output["ledstrip_gpio_dat"]
+        if clk is not None and data is not None:
+            ledstrip = LEDStrip(self.to_int(clk), self.to_int(data))
+            if rgb is None:
+                red, green, blue = self.get_color_from_rgb(rpi_output['default_ledstrip_color'])
+            else:
+                red, green, blue = self.get_color_from_rgb(rgb)
+
+            self._logger.info("LEDSTRIP set rgb color: %s, %s, %s", red, green, blue)
+            ledstrip.setcolourrgb(self.to_int(red), self.to_int(green), self.to_int(blue))
+
     def start_outpus_with_server(self):
         for rpi_output in self.rpi_outputs:
             if rpi_output['startup_with_server']:
@@ -1344,6 +1371,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if rpi_output['output_type'] == 'regular':
                     value = False if rpi_output['active_low'] else True
                     self.write_gpio(gpio, value)
+                if rpi_output['output_type'] == 'ledstrip':
+                    self.ledstrip_set_rgb(rpi_output)
                 if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
                     value = self.to_int(rpi_output['default_duty_cycle'])
                     self.write_pwm(gpio, value)
@@ -1366,6 +1395,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             value = False if rpi_output['active_low'] else True
             self.add_regular_output_to_queue(
                 delay_seconds, rpi_output, value, sufix)
+        if rpi_output['output_type'] == 'ledstrip':
+            self.ledstrip_set_rgb(rpi_output)
         if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = self.to_int(rpi_output['default_duty_cycle'])
             self.add_pwm_output_to_queue(

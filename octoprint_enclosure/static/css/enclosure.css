@@ -67,7 +67,7 @@
     text-decoration: none;
 }
 
-.neopixel-div{
+.ledstrip-div, .neopixel-div{
     width: 25%;
 }
 
