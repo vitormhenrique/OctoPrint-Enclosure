@@ -1,4 +1,4 @@
-from neopixel import *
+from rpi_ws281x import *
 import sys
 import time
 
@@ -20,7 +20,7 @@ else:
 strip = Adafruit_NeoPixel(LED_COUNT, LED_PIN, LED_FREQ_HZ, LED_DMA, LED_INVERT)
 strip.begin()
 
-color = Color(green, red, blue)
+color = Color(red, green, blue)
 
 for i in range(LED_COUNT):
     strip.setPixelColor(i, color)
