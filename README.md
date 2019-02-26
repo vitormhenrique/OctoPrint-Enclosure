@@ -107,6 +107,27 @@ Find the address of the sensor:
 
 <pre><code>i2cdetect -y 1</code></pre>
 
+* For Neopixel
+
+If your setup does not have pip install pip:
+`sudo apt-get install python-pip`
+
+Install the required library:
+`sudo pip install rpi_ws281x`
+
+rpi_ws281x really needs sudo, and you need to setup up so your rpi does not ask for a password when runing a python script, so run:
+
+`sudo visudo`
+
+and add `pi ALL=(ALL) NOPASSWD: ALL` to the end of the file.
+
+Also backlist the audio kernel:
+
+`sudo nano /etc/modprobe.d/snd-blacklist.conf`
+
+add the `blacklist snd_bcm2835` to the end of the file:
+
+
 * GPIO
 
 This release uses RPi.GPIO to control IO of raspberry pi, it should install and work automatically. If it doesn't please update your octoprint with the latest release of octopi.
