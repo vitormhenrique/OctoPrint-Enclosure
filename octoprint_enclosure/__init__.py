@@ -1253,6 +1253,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         if event == Events.CONNECTED:
             self.update_ui()
 
+        if event == Events.CLIENT_OPENED:
+            self.update_ui()
+            
         if event == Events.PRINT_RESUMED:
             self.start_filament_detection()
 
@@ -1707,4 +1710,3 @@ def __plugin_load__():
         "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.hook_gcode_queuing,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
     }
-
