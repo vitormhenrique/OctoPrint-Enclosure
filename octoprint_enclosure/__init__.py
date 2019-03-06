@@ -555,6 +555,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     temp = self.read_tmp102_temp(
                         sensor['temp_sensor_address'])
                     hum = 0
+                elif sensor['temp_sensor_type'] == "max31855":
+                    temp = self.read_max31855_temp(
+                        sensor['temp_sensor_address'])
+                    hum = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
@@ -708,7 +712,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 "Failed to excecute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
-
+    
+    def read_max31855_temp(self, address):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/max31855.py"
+            args = ["python", script, str(address)]
+            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.info("Temperature MAX31855 cmd: %s", " ".join(args))
+            proc = Popen(args, stdout=PIPE)
+            stdout, _ = proc.communicate()
+            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.info("MAX31855 result: %s", stdout)
+            return self.to_float(stdout.strip())
+        except Exception as ex:
+            self._logger.info(
+                "Failed to excecute python scripts, try disabling use SUDO on advanced section.")
+            self.log_error(ex)
+            return 0
+    
     def handle_pwm_linked_temperature(self):
         try:
             for pwm_output in list(filter(lambda item: item['output_type'] == 'pwm' and item['pwm_temperature_linked'], self.rpi_outputs)):
