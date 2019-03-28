@@ -1202,18 +1202,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pass
 
     def write_pwm(self, gpio, pwm_value, queue_id=None):
+        self.logger.debug("Calling write_pwm: %s, %s ,%s", gpio, pwm_value, queue_id)
         try:
             if queue_id is not None and self._settings.get(["debug"]) is True:
-                self._logger.info("Runing scheduled queue id %s", queue_id)
+                self._logger.info("Running scheduled queue id %s", queue_id)
             for pwm in self.pwm_intances:
+                self.logger.debug("pwm: %s", pwm)
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
                     if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
                         pwm['duty_cycle'] = pwm_value
                         pwm_object.ChangeDutyCycle(pwm_value)
-                        if self._settings.get(["debug"]) is True:
-                            self._logger.info(
+                        self._logger.debug(
                                 "Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
                     if queue_id is not None:
