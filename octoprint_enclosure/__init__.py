@@ -200,8 +200,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         value = True if flask.request.values["status"] == 'true' else False
 
         if not value:
-            sufix = 'auto_startup'
-            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            suffix = 'auto_startup'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
             self.stop_queue_item(queue_id)
         for output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(output['index_id']):
@@ -216,8 +216,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         value = True if flask.request.values["status"] == 'true' else False
 
         if not value:
-            sufix = 'auto_shutdown'
-            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            suffix = 'auto_shutdown'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
             self.stop_queue_item(queue_id)
 
         for output in self.rpi_outputs:
@@ -870,6 +870,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 self.clear_channel(pin)
                 GPIO.setup(pin, GPIO.OUT)
                 pwm_instance = GPIO.PWM(pin, self.to_int(gpio_out_pwm['pwm_frequency']))
+                self._logger.info("starting PWM on pin %s", pin)
                 pwm_instance.start(0)
                 self.pwm_instances.append({pin: pwm_instance})
             for gpio_out_neopixel in list(
@@ -1107,7 +1108,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     def write_pwm(self, gpio, pwm_value, queue_id=None):
         try:
-            if queue_id is not None and self._settings.get(["debug"]) is True:
+            if queue_id is not None:
                 self._logger.debug("running scheduled queue id %s", queue_id)
             for pwm in self.pwm_instances:
                 if gpio in pwm:
@@ -1115,7 +1116,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
                     if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
                         pwm['duty_cycle'] = pwm_value
-                        pwm_object.ChangeDutyCycle(pwm_value)
+                        pwm_object.start(pwm_value)
                         self._logger.debug("Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
                     if queue_id is not None:
