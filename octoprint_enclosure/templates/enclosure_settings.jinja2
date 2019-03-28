@@ -101,8 +101,9 @@
         <!-- /ko -->
         <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
         <span class="help-inline">
-          <span class="label label-danger">Attention</span> Neopixel requires a microcontroler (ex: arduino) connected to I2C bus. This is the pin on the
-          microcontroler that is connected to the Neopixel.
+          <span class="label label-danger">Attention</span> Neopixel requires a microcontroller (ex: arduino) 
+            connected to I2C bus. This is the pin on the
+          microcontroller that is connected to the Neopixel.
         </span>
         <!-- /ko -->
       </div>
@@ -116,7 +117,7 @@
           <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
         </label>
         <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
-          B, temperature B. This output will automatomatically start when a print starts and will default to the default
+          B, temperature B. This output will automatically start when a print starts and will default to the default
           duty cycle when print is complete.
         </span>
       </div>
@@ -156,7 +157,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
         </label>
-        <span class="help-inline">Toggle output every amount of secconds. It will start when the print starts and stop when print is complete. For
+        <span class="help-inline">Toggle output every amount of seconds. It will start when the print starts and stop when print is complete. For
           PWM pins it will use the default PWM value when ON.
         </span>
       </div>
@@ -166,7 +167,7 @@
       <label class="control-label">{{ _('On Time') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
-        <span class="help-inline">Time in secconds that the GPIO will remain ON</span>
+        <span class="help-inline">Time in seconds that the GPIO will remain ON</span>
       </div>
     </div>
     <div class="control-group">
@@ -188,7 +189,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
         </label>
-        <span class="help-inline">Choose if output should turn on automatomatically when octoprint starts</span>
+        <span class="help-inline">Choose if output should turn on automatically when octoprint starts</span>
       </div>
     </div>
     <div class="control-group">
@@ -196,7 +197,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_startup"> {{ _('Auto Startup') }}
         </label>
-        <span class="help-inline">Choose if output should turn on automatomatically when print starts</span>
+        <span class="help-inline">Choose if output should turn on automatically when print starts</span>
       </div>
     </div>
     <!-- /ko -->
@@ -206,7 +207,7 @@
         <label class="control-label">{{ _('Startup Delay / Hour') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: startup_time">
-          <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
+          <span class="help-inline">Time delay in seconds to turn on GPIO when print starts OR exact time that the event should happen, note that
             events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
             forget to check timezone of your Raspberry Pi.</span>
         </div>
@@ -257,7 +258,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: active_low"> {{ _('Active Low') }}
         </label>
-        <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspbery PI</span>
+        <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
       </div>
     </div>
     <!-- /ko -->
@@ -406,7 +407,7 @@
       <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Microcontroller Address') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: microcontroller_address">
-        <span class="help-inline">Microcontroller address in HEX value, you can find it by runing
+        <span class="help-inline">Microcontroller address in HEX value, you can find it by running
           <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
       </div>
     </div>
@@ -575,7 +576,7 @@
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Address') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: temp_sensor_address">
-          <span class="help-inline">Sensor address in HEX value, you can find it by runing
+          <span class="help-inline">Sensor address in HEX value, you can find it by running
             <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
         </div>
       </div>
@@ -636,14 +637,14 @@
             <span class="label label-info">Info:</span> PRINTER actions when a condition is met, that can be a filament sensor, button, etc. Actions can
             be Pause \ Resume \ Cancel a printer_control job, change the filament or disable Temperature Control. You can
             use the "change filament" action and set up the input GPIO acording to your sensor, for example, if your filament
-            sensor conects to ground when detects the end of the filament, you should choose PULL UP resistors and detect
+            sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect
             the event on the falling edge.</span>
           <!-- /ko -->
           <!-- ko if: ($data.action_type() == "output_control")  -->
           <span class="help-inline">
             <span class="label label-info">Info:</span> Action will control GPIO outputs when a condition is met, for example detect a press of a button.
             You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
-            / pritner using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
+            / printer using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
           </span>
           <!-- /ko -->
         </div>
@@ -658,7 +659,7 @@
           <input type="text" class="input-block-level" data-bind="value: gpio_pin">
           <span class="help-inline">Input GPIO that will detect the event that should trigger the action. For example if you have a filament sensor
             you put the GPIO pin that the sensor is connected. This can also be a press of a button or any other signal that
-            you want to detect. You can not use GPIO 4 here if you are using temeprature sensor DS18B20</span>
+            you want to detect. You can not use GPIO 4 here if you are using temperature sensor DS18B20</span>
         </div>
       </div>
       <div class="control-group">
