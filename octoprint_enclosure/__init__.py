@@ -343,7 +343,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             sensor_data = []
             for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
                 temp, hum = self.get_sensor_data(sensor)
-                if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+                if  self._settings.get(["debug_temperature_log"]) is True:
                     self._logger.debug("Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
                 if temp is not None and hum is not None:
                     sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
@@ -564,10 +564,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(sensor) + " " + str(pin)
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Dht result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
@@ -585,10 +585,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(address)
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature BME280 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("BME280 result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
@@ -606,10 +606,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(address)
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature SI7021 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("SI7021 result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
@@ -631,7 +631,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         if equals_pos != -1:
             temp_string = lines[1][equals_pos + 2:]
             temp_c = float(temp_string) / 1000.
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("DS18B20 result: %s", temp_c)
             return '{0:0.1f}'.format(temp_c)
         return 0
@@ -649,11 +649,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/tmp102.py"
             args = ["python", script, str(address)]
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature TMP102 cmd: %s", " ".join(args))
             proc = Popen(args, stdout=PIPE)
             stdout, _ = proc.communicate()
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("TMP102 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
@@ -665,11 +665,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/max31855.py"
             args = ["python", script, str(address)]
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature MAX31855 cmd: %s", " ".join(args))
             proc = Popen(args, stdout=PIPE)
             stdout, _ = proc.communicate()
-            if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
+            if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("MAX31855 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
