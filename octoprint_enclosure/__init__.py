@@ -946,7 +946,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Setting GPIO pin %s as PWM", pin)
 
                 for pwm in (pwm_dict for pwm_dict in self.pwm_intances if pin in pwm_dict):
-                    pwm.stop()
+                    pwm[pin].stop()
                     self.pwm_intances.remove(pwm)
                 self.clear_channel(pin)
                 try:
