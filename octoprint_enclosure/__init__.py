@@ -753,8 +753,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     except:
                         calculated_duty = 0
 
-                    if self._settings.get(["debug"]) is True:
-                        self._logger.info(
+
+                    self._logger.info(
                             "Calculated duty for PWM %s is %s", index_id, calculated_duty)
                 elif self.print_complete:
                     calculated_duty = self.to_int(pwm_output['duty_cycle'])
