@@ -20,18 +20,15 @@ import threading
 import json
 
 
-class EnclosurePlugin(octoprint.plugin.StartupPlugin,
-                      octoprint.plugin.TemplatePlugin,
-                      octoprint.plugin.SettingsPlugin,
-                      octoprint.plugin.AssetPlugin,
-                      octoprint.plugin.BlueprintPlugin,
+class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
+                      octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
     rpi_outputs = []
     rpi_inputs = []
     waiting_temperature = []
     rpi_outputs_not_changed = []
     notifications = []
-    pwm_intances = []
+    pwm_instances = []
     event_queue = []
     temp_hum_control_status = []
     temperature_sensor_data = []
@@ -46,8 +43,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         Function to start timer that checks enclosure temperature
         """
 
-        self._check_temp_timer = RepeatedTimer(
-            10, self.check_enclosure_temp, None, None, True)
+        self._check_temp_timer = RepeatedTimer(10, self.check_enclosure_temp, None, None, True)
         self._check_temp_timer.start()
 
     @staticmethod
@@ -85,8 +81,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     @staticmethod
     def create_date(value):
-        temp_string = datetime.now().strftime(
-            '%m/%d/%Y') + " " + value
+        temp_string = datetime.now().strftime('%m/%d/%Y') + " " + value
         return datetime.strptime(temp_string, '%m/%d/%Y %H:%M')
 
     @staticmethod
@@ -107,7 +102,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     # ~~ StartupPlugin mixin
     def on_after_startup(self):
-        self.pwm_intances = []
+        self.pwm_instances = []
         self.event_queue = []
         self.rpi_outputs_not_changed = []
         self.rpi_outputs = self._settings.get(["rpi_outputs"])
@@ -126,15 +121,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         return 6
 
     def on_settings_migrate(self, target, current=None):
-        self._logger.warn(
-            "######### current settings version %s target settings version %s #########", current, target)
+        self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
         self._logger.info("#########        Current settings        #########")
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
         if current >= 4 and target == 6:
-            self._logger.warn(
-                "######### migrating settings to v6 #########")
+            self._logger.warn("######### migrating settings to v6 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             for rpi_output in old_outputs:
                 if 'shutdown_on_failed' not in rpi_output:
@@ -151,8 +144,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTempHum", methods=["GET"])
     def set_enclosure_temp_humidity(self):
-        set_value = self.to_float(
-            flask.request.values["set_temperature"])
+        set_value = self.to_float(flask.request.values["set_temperature"])
         index_id = self.to_int(flask.request.values["index_id"])
 
         for temp_hum_control in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
@@ -177,8 +169,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         for rpi_output in self.rpi_outputs:
             if rpi_output['output_type'] == 'regular':
                 pin = self.to_int(rpi_output['gpio_pin'])
-                val = GPIO.input(pin) if not rpi_output['active_low'] else (
-                    not GPIO.input(pin))
+                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
                 index = self.to_int(rpi_output['index_id'])
                 gpio_status.append(dict(index_id=index, status=val))
         return flask.Response(json.dumps(gpio_status), mimetype='application/json')
@@ -197,8 +188,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def send_shell_command(self):
         output_index = self.to_int(flask.request.values["index_id"])
 
-        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-            r_out['index_id']) == output_index].pop()
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == output_index].pop()
 
         command = rpi_output['shell_script']
         self.shell_command(command)
@@ -210,14 +200,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         value = True if flask.request.values["status"] == 'true' else False
 
         if not value:
-            sufix = 'auto_startup'
-            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            suffix = 'auto_startup'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
             self.stop_queue_item(queue_id)
         for output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(output['index_id']):
                 output['auto_startup'] = value
-                self._logger.info(
-                    "Setting auto startup for output %s to : %s", index, value)
+                self._logger.info("Setting auto startup for output %s to : %s", index, value)
         self._settings.set(["rpi_outputs"], self.rpi_outputs)
         return flask.jsonify(success=True)
 
@@ -227,15 +216,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         value = True if flask.request.values["status"] == 'true' else False
 
         if not value:
-            sufix = 'auto_shutdown'
-            queue_id = '{0!s}_{1!s}'.format(index, sufix)
+            suffix = 'auto_shutdown'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
             self.stop_queue_item(queue_id)
 
         for output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(output['index_id']):
                 output['auto_shutdown'] = value
-                self._logger.info(
-                    "Setting auto shutdown for output %s to : %s", index, value)
+                self._logger.info("Setting auto shutdown for output %s to : %s", index, value)
         self._settings.set(["rpi_outputs"], self.rpi_outputs)
         return flask.jsonify(success=True)
 
@@ -246,8 +234,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         for sensor in self.rpi_inputs:
             if self.to_int(index) == self.to_int(sensor['index_id']):
                 sensor['filament_sensor_enabled'] = value
-                self._logger.info(
-                    "Setting filament sensor for input %s to : %s", index, value)
+                self._logger.info("Setting filament sensor for input %s to : %s", index, value)
         self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return flask.jsonify(success=True)
 
@@ -265,14 +252,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     @octoprint.plugin.BlueprintPlugin.route("/sendGcodeCommand", methods=["GET"])
     def requested_gcode_command(self):
         gpio_index = self.to_int(flask.request.values["index_id"])
-        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-            r_out['index_id']) == gpio_index].pop()
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == gpio_index].pop()
         self.send_gcode_command(rpi_output['gcode'])
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setNeopixel", methods=["GET"])
     def set_neopixel(self):
-        """ set_neopixel method get request from octoprint and send the comand to arduino or neopixel"""
+        """ set_neopixel method get request from octoprint and send the command to arduino or neopixel"""
         gpio_index = self.to_int(flask.request.values["index_id"])
         red = flask.request.values["red"]
         green = flask.request.values["green"]
@@ -285,15 +271,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
                 neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
 
-                self.send_neopixel_command(
-                    self.to_int(rpi_output['gpio_pin']),
-                    led_count, led_brightness, red, green, blue, address, neopixel_dirrect, gpio_index)
+                self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green,
+                    blue, address, neopixel_dirrect, gpio_index)
 
         return flask.jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/setLedstripColor", methods=["GET"])
     def set_ledstrip_color(self):
-        """ set_ledstrip_color method get request from octoprint and send the comand to Open-Smart RGB LED Strip"""
+        """ set_ledstrip_color method get request from octoprint and send the command to Open-Smart RGB LED Strip"""
         gpio_index = self.to_int(flask.request.values["index_id"])
         rgb = flask.request.values["rgb"]
         for rpi_output in self.rpi_outputs:
@@ -302,8 +287,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         return flask.jsonify(success=True)
 
-    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address,
-                              neopixel_dirrect, index_id, queue_id=None):
+    def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
+                              index_id, queue_id=None):
         """Send neopixel command
 
         Arguments:
@@ -311,27 +296,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             ledCount {int} -- number of LEDS
             ledBrightness {int} -- brightness from 0 to 255
             red {int} -- red value from 0 to 255
-            green {int} -- gren value from 0 to 255
+            green {int} -- green value from 0 to 255
             blue {int} -- blue value from 0 to 255
-            address {int} -- i2c address from microcontroler
+            address {int} -- i2c address from microcontroller
         """
 
         try:
 
             for rpi_output in self.rpi_outputs:
                 if self.to_int(index_id) == self.to_int(rpi_output['index_id']):
-                    rpi_output['neopixel_color'] = 'rgb({0!s},{1!s},{2!s})'.format(
-                        red, green, blue)
+                    rpi_output['neopixel_color'] = 'rgb({0!s},{1!s},{2!s})'.format(red, green, blue)
 
             if address == '':
                 address = 0
 
             if neopixel_dirrect:
-                script = os.path.dirname(
-                    os.path.realpath(__file__)) + "/neopixel_direct.py "
+                script = os.path.dirname(os.path.realpath(__file__)) + "/neopixel_direct.py "
             else:
-                script = os.path.dirname(
-                    os.path.realpath(__file__)) + "/neopixel_indirect.py "
+                script = os.path.dirname(os.path.realpath(__file__)) + "/neopixel_indirect.py "
 
             if self._settings.get(["use_sudo"]):
                 sudo_str = "sudo "
@@ -347,10 +329,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             else:
                 cmd = cmd + str(address)
 
-            if self._settings.get(["debug"]) is True:
                 if queue_id is not None:
-                    self._logger.info("Runing scheduled queue id %s", queue_id)
-                self._logger.info("Sending neopixel cmd: %s", cmd)
+                    self._logger.debug("running scheduled queue id %s", queue_id)
+                self._logger.debug("Sending neopixel cmd: %s", cmd)
             Popen(cmd, shell=True)
             if queue_id is not None:
                 self.stop_queue_item(queue_id)
@@ -363,11 +344,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
                 temp, hum = self.get_sensor_data(sensor)
                 if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                    self._logger.info(
-                        "Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
+                    self._logger.debug("Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
                 if temp is not None and hum is not None:
-                    sensor_data.append(
-                        dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
+                    sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
                     self.temperature_sensor_data = sensor_data
                     self.handle_temp_hum_control()
                     self.handle_temperature_events()
@@ -385,8 +364,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if first_run:
                     current_value = False
                 else:
-                    current_value = (not GPIO.input(
-                        gpio_pin)) if output['active_low'] else GPIO.input(gpio_pin)
+                    current_value = (not GPIO.input(gpio_pin)) if output['active_low'] else GPIO.input(gpio_pin)
 
                 if current_value:
                     time_delay = self.to_int(output['toggle_timer_off'])
@@ -395,9 +373,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
                 if not self.print_complete:
                     self.write_gpio(gpio_pin, not current_value)
-                    thread = threading.Timer(time_delay,
-                                             self.toggle_output,
-                                             args=[index_id])
+                    thread = threading.Timer(time_delay, self.toggle_output, args=[index_id])
                     thread.start()
                 else:
                     off_value = True if output['active_low'] else False
@@ -406,32 +382,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 return
 
             if output['output_type'] == 'pwm':
-                for pwm in self.pwm_intances:
+                for pwm in self.pwm_instances:
                     if gpio_pin in pwm:
                         if first_run:
                             current_pwm_value = 0
                         else:
                             if 'duty_cycle' in pwm:
                                 current_pwm_value = pwm['duty_cycle']
-                                current_pwm_value = self.to_int(
-                                    current_pwm_value)
+                                current_pwm_value = self.to_int(current_pwm_value)
                             else:
                                 current_pwm_value = 0
 
                         if not current_pwm_value == 0:
-                            time_delay = self.to_int(
-                                output['toggle_timer_off'])
+                            time_delay = self.to_int(output['toggle_timer_off'])
                             write_value = 0
                         else:
                             time_delay = self.to_int(output['toggle_timer_on'])
-                            write_value = self.to_int(
-                                output['default_duty_cycle'])
+                            write_value = self.to_int(output['default_duty_cycle'])
 
                         if not self.print_complete:
                             self.write_pwm(gpio_pin, write_value)
-                            thread = threading.Timer(time_delay,
-                                                     self.toggle_output,
-                                                     args=[index_id])
+                            thread = threading.Timer(time_delay, self.toggle_output, args=[index_id])
                             thread.start()
                         else:
                             self.write_pwm(self.to_int(output['gpio_pin']), 0)
@@ -445,37 +416,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.update_ui_inputs()
 
     def update_ui_current_temperature(self):
-        self._plugin_manager.send_plugin_message(
-            self._identifier, dict(sensor_data=self.temperature_sensor_data))
+        self._plugin_manager.send_plugin_message(self._identifier, dict(sensor_data=self.temperature_sensor_data))
 
     def update_ui_set_temperature(self):
         result = []
-        for temp_crt_output in list(filter(lambda item:
-                                           item['output_type'] == 'temp_hum_control',
-                                           self.rpi_outputs)):
-            set_temperature = self.to_float(
-                temp_crt_output['temp_ctr_set_value'])
-            result.append(
-                dict(index_id=temp_crt_output['index_id'], set_temperature=set_temperature))
+        for temp_crt_output in list(filter(lambda item: item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
+            set_temperature = self.to_float(temp_crt_output['temp_ctr_set_value'])
+            result.append(dict(index_id=temp_crt_output['index_id'], set_temperature=set_temperature))
             result.append(set_temperature)
-        self._plugin_manager.send_plugin_message(
-            self._identifier, dict(set_temperature=result))
+        self._plugin_manager.send_plugin_message(self._identifier, dict(set_temperature=result))
 
     def stop_queue_item(self, queue_id):
         old_list = self.event_queue
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("Stoping queue id %s...", queue_id)
+        self._logger.debug("Stopping queue id %s...", queue_id)
         for task in self.event_queue:
-            if self._settings.get(["debug"]) is True:
-                self._logger.info("Queue id found...")
+            self._logger.debug("Queue id found...")
             if task['queue_id'] == queue_id:
                 task['thread'].cancel()
                 self.event_queue.remove(task)
-                if self._settings.get(["debug"]) is True:
-                    self._logger.info(
-                        "Queue id stoped and removed from list...")
-                    self._logger.info("Old queue list: %s", old_list)
-                    self._logger.info("New queue list: %s", self.event_queue)
+                self._logger.debug("Queue id stopped and removed from list...")
+                self._logger.debug("Old queue list: %s", old_list)
+                self._logger.debug("New queue list: %s", self.event_queue)
 
     def update_ui_outputs(self):
         try:
@@ -490,13 +451,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 shutdown = output['auto_shutdown']
 
                 if output['output_type'] == 'regular':
-                    val = GPIO.input(pin) if not output['active_low'] else (
-                        not GPIO.input(pin))
+                    val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
                     regular_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'temp_hum_control':
-                    val = GPIO.input(pin) if not output['active_low'] else (
-                        not GPIO.input(pin))
+                    val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
                     temp_control_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'neopixel_indirect' or output['output_type'] == 'neopixel_direct':
@@ -504,7 +463,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     neopixel_status.append(
                         dict(index_id=index, color=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'pwm':
-                    for pwm in self.pwm_intances:
+                    for pwm in self.pwm_instances:
                         if pin in pwm:
                             if 'duty_cycle' in pwm:
                                 pwm_val = pwm['duty_cycle']
@@ -513,10 +472,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                                 val = 0
                             pwm_status.append(
                                 dict(index_id=index, pwm_value=val, auto_startup=startup, auto_shutdown=shutdown))
-            self._plugin_manager.send_plugin_message(self._identifier, dict(rpi_output_regular=regular_status,
-                                                                            rpi_output_pwm=pwm_status,
-                                                                            rpi_output_neopixel=neopixel_status,
-                                                                            rpi_output_temp_hum_ctrl=temp_control_status))
+            self._plugin_manager.send_plugin_message(self._identifier,
+                                                     dict(rpi_output_regular=regular_status, rpi_output_pwm=pwm_status,
+                                                          rpi_output_neopixel=neopixel_status,
+                                                          rpi_output_temp_hum_ctrl=temp_control_status))
         except Exception as ex:
             self.log_error(ex)
 
@@ -524,13 +483,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             sensor_status = []
             for sensor in self.rpi_inputs:
-                if sensor['input_type'] == 'gpio' and sensor['action_type'] == 'printer_control' and sensor['printer_action'] == 'filament':
+                if sensor['input_type'] == 'gpio' and sensor['action_type'] == 'printer_control' and sensor[
+                    'printer_action'] == 'filament':
                     index = self.to_int(sensor['index_id'])
                     value = sensor['filament_sensor_enabled']
-                    sensor_status.append(
-                        dict(index_id=index, filament_sensor_enabled=value))
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(filament_sensor_status=sensor_status))
+                    sensor_status.append(dict(index_id=index, filament_sensor_enabled=value))
+            self._plugin_manager.send_plugin_message(self._identifier, dict(filament_sensor_status=sensor_status))
         except Exception as ex:
             self.log_error(ex)
 
@@ -540,32 +498,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 temp, hum = self.read_dummy_temp()
             else:
                 if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
-                    temp, hum = self.read_dht_temp(
-                        sensor['temp_sensor_type'], sensor['gpio_pin'])
+                    temp, hum = self.read_dht_temp(sensor['temp_sensor_type'], sensor['gpio_pin'])
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
                 elif sensor['temp_sensor_type'] == "bme280":
-                    temp, hum = self.read_bme280_temp(
-                        sensor['temp_sensor_address'])
+                    temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "si7021":
-                    temp, hum = self.read_si7021_temp(
-                        sensor['temp_sensor_address'])
+                    temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "tmp102":
-                    temp = self.read_tmp102_temp(
-                        sensor['temp_sensor_address'])
+                    temp = self.read_tmp102_temp(sensor['temp_sensor_address'])
                     hum = 0
                 elif sensor['temp_sensor_type'] == "max31855":
-                    temp = self.read_max31855_temp(
-                        sensor['temp_sensor_address'])
+                    temp = self.read_max31855_temp(sensor['temp_sensor_address'])
                     hum = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
                     hum = None
             if temp != -1 and hum != -1:
-                temp = round(self.to_float(
-                    temp), 1) if not sensor['use_fahrenheit'] else round(self.to_float(temp) * 1.8 + 32, 1)
+                temp = round(self.to_float(temp), 1) if not sensor['use_fahrenheit'] else round(
+                    self.to_float(temp) * 1.8 + 32, 1)
                 hum = round(self.to_float(hum), 1)
                 return temp, hum
             return None, None
@@ -574,23 +527,22 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handle_temperature_events(self):
         for temperature_alarm in [item for item in self.rpi_outputs if item['output_type'] == 'temperature_alarm']:
-            set_temperature = self.to_float(
-                temperature_alarm['alarm_set_temp'])
+            set_temperature = self.to_float(temperature_alarm['alarm_set_temp'])
             if int(set_temperature) is 0:
                 continue
-            linked_data = [item for item in self.temperature_sensor_data if item['index_id'] ==
-                           temperature_alarm['linked_temp_sensor']].pop()
+            linked_data = [item for item in self.temperature_sensor_data if
+                           item['index_id'] == temperature_alarm['linked_temp_sensor']].pop()
             sensor_temperature = self.to_float(linked_data['temperature'])
             if set_temperature < sensor_temperature:
                 for rpi_controlled_output in self.rpi_outputs:
-                    if self.to_int(temperature_alarm['controlled_io']) == self.to_int(rpi_controlled_output['index_id']):
+                    if self.to_int(temperature_alarm['controlled_io']) == self.to_int(
+                            rpi_controlled_output['index_id']):
                         val = GPIO.LOW if rpi_controlled_output['active_low'] else GPIO.HIGH
-                        self.write_gpio(self.to_int(
-                            rpi_controlled_output['gpio_pin']), val)
+                        self.write_gpio(self.to_int(rpi_controlled_output['gpio_pin']), val)
                         for notification in self.notifications:
                             if notification['temperatureAction']:
-                                msg = ("Temperature action: enclosure temperature exceed " +
-                                       temperature_alarm['alarm_set_temp'])
+                                msg = ("Temperature action: enclosure temperature exceed " + temperature_alarm[
+                                    'alarm_set_temp'])
                                 self.send_notification(msg)
 
     def read_dummy_temp(self):
@@ -606,67 +558,64 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def read_dht_temp(self, sensor, pin):
         try:
-            script = os.path.dirname(
-                os.path.realpath(__file__)) + "/getDHTTemp.py "
+            script = os.path.dirname(os.path.realpath(__file__)) + "/getDHTTemp.py "
             if self._settings.get(["use_sudo"]):
                 sudo_str = "sudo "
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(sensor) + " " + str(pin)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Temperature dht cmd: %s", cmd)
+                self._logger.debug("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Dht result: %s", stdout)
+                self._logger.debug("Dht result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
-                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
     def read_bme280_temp(self, address):
         try:
-            script = os.path.dirname(
-                os.path.realpath(__file__)) + "/BME280.py "
+            script = os.path.dirname(os.path.realpath(__file__)) + "/BME280.py "
             if self._settings.get(["use_sudo"]):
                 sudo_str = "sudo "
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(address)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Temperature BME280 cmd: %s", cmd)
+                self._logger.debug("Temperature BME280 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("BME280 result: %s", stdout)
+                self._logger.debug("BME280 result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
-                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
     def read_si7021_temp(self, address):
         try:
-            script = os.path.dirname(
-                os.path.realpath(__file__)) + "/SI7021.py "
+            script = os.path.dirname(os.path.realpath(__file__)) + "/SI7021.py "
             if self._settings.get(["use_sudo"]):
                 sudo_str = "sudo "
             else:
                 sudo_str = ""
             cmd = sudo_str + "python " + script + str(address)
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Temperature SI7021 cmd: %s", cmd)
+                self._logger.debug("Temperature SI7021 cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("SI7021 result: %s", stdout)
+                self._logger.debug("SI7021 result: %s", stdout)
             temp, hum = stdout.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
-                "Failed to excecute python scripts, try disabling use SUDO on advanced section of the plugin.")
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
 
@@ -683,7 +632,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             temp_string = lines[1][equals_pos + 2:]
             temp_c = float(temp_string) / 1000.
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("DS18B20 result: %s", temp_c)
+                self._logger.debug("DS18B20 result: %s", temp_c)
             return '{0:0.1f}'.format(temp_c)
         return 0
 
@@ -701,46 +650,43 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             script = os.path.dirname(os.path.realpath(__file__)) + "/tmp102.py"
             args = ["python", script, str(address)]
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Temperature TMP102 cmd: %s", " ".join(args))
+                self._logger.debug("Temperature TMP102 cmd: %s", " ".join(args))
             proc = Popen(args, stdout=PIPE)
             stdout, _ = proc.communicate()
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("TMP102 result: %s", stdout)
+                self._logger.debug("TMP102 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
-            self._logger.info(
-                "Failed to excecute python scripts, try disabling use SUDO on advanced section.")
+            self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
-    
+
     def read_max31855_temp(self, address):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/max31855.py"
             args = ["python", script, str(address)]
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("Temperature MAX31855 cmd: %s", " ".join(args))
+                self._logger.debug("Temperature MAX31855 cmd: %s", " ".join(args))
             proc = Popen(args, stdout=PIPE)
             stdout, _ = proc.communicate()
             if self._settings.get(["debug"]) is True and self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.info("MAX31855 result: %s", stdout)
+                self._logger.debug("MAX31855 result: %s", stdout)
             return self.to_float(stdout.strip())
         except Exception as ex:
-            self._logger.info(
-                "Failed to excecute python scripts, try disabling use SUDO on advanced section.")
+            self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
-    
+
     def handle_pwm_linked_temperature(self):
         try:
-            for pwm_output in list(filter(lambda item: item['output_type'] == 'pwm' and item['pwm_temperature_linked'], self.rpi_outputs)):
+            for pwm_output in list(filter(lambda item: item['output_type'] == 'pwm' and item['pwm_temperature_linked'],
+                                          self.rpi_outputs)):
                 gpio_pin = self.to_int(pwm_output['gpio_pin'])
-                if True==True: #if self._printer.is_printing():
+                if self._printer.is_printing():
                     index_id = self.to_int(pwm_output['index_id'])
                     linked_id = self.to_int(pwm_output['linked_temp_sensor'])
-                    linked_data = self.get_linked_temp_sensor_data(
-                        linked_id)
-                    current_temp = self.to_float(
-                        linked_data['temperature'])
+                    linked_data = self.get_linked_temp_sensor_data(linked_id)
+                    current_temp = self.to_float(linked_data['temperature'])
 
                     duty_a = self.to_float(pwm_output['duty_a'])
                     duty_b = self.to_float(pwm_output['duty_b'])
@@ -748,57 +694,47 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     temp_b = self.to_float(pwm_output['temperature_b'])
 
                     try:
-                        calculated_duty = ((current_temp - temp_a) *
-                                           (duty_b - duty_a) / (temp_b - temp_a)) + duty_a
+                        calculated_duty = ((current_temp - temp_a) * (duty_b - duty_a) / (temp_b - temp_a)) + duty_a
                     except:
                         calculated_duty = 0
 
-
-                    self._logger.info(
-                            "Calculated duty for PWM %s is %s", index_id, calculated_duty)
+                    self._logger.debug("Calculated duty for PWM %s is %s", index_id, calculated_duty)
                 elif self.print_complete:
                     calculated_duty = self.to_int(pwm_output['duty_cycle'])
                 else:
                     calculated_duty = 0
 
-                self.write_pwm(gpio_pin, self.constrain(
-                    calculated_duty, 0, 100))
+                self.write_pwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
 
         except Exception as ex:
             self.log_error(ex)
 
     def get_linked_temp_sensor_data(self, linked_id):
         try:
-            linked_data = [
-                data for data in self.temperature_sensor_data if data['index_id'] == linked_id].pop()
+            linked_data = [data for data in self.temperature_sensor_data if data['index_id'] == linked_id].pop()
             return linked_data
         except:
-            self._logger.warn(
-                "No linked temperature sensor found for %s", linked_id)
+            self._logger.warn("No linked temperature sensor found for %s", linked_id)
             return None
 
     def handle_temp_hum_control(self):
         try:
-            for temp_hum_control in list(filter(lambda item: item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
+            for temp_hum_control in list(
+                    filter(lambda item: item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
 
-                set_temperature = self.to_float(
-                    temp_hum_control['temp_ctr_set_value'])
-                temp_deadband = self.to_float(
-                    temp_hum_control['temp_ctr_deadband'])
-                max_temp = self.to_float(
-                    temp_hum_control['temp_ctr_max_temp'])
+                set_temperature = self.to_float(temp_hum_control['temp_ctr_set_value'])
+                temp_deadband = self.to_float(temp_hum_control['temp_ctr_deadband'])
+                max_temp = self.to_float(temp_hum_control['temp_ctr_max_temp'])
 
                 linked_id = temp_hum_control['linked_temp_sensor']
 
-                previous_status = list(filter(
-                    lambda item: item['index_id'] == temp_hum_control['index_id'],
+                previous_status = list(filter(lambda item: item['index_id'] == temp_hum_control['index_id'],
                     self.temp_hum_control_status)).pop()['status']
 
                 if set_temperature == 0:
                     current_status = False
                 else:
-                    linked_data = self.get_linked_temp_sensor_data(
-                        linked_id)
+                    linked_data = self.get_linked_temp_sensor_data(linked_id)
 
                     control_type = str(temp_hum_control['temp_ctr_type'])
 
@@ -806,8 +742,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         current_value = self.to_float(linked_data['humidity'])
                         temp_deadband = 0
                     else:
-                        current_value = self.to_float(
-                            linked_data['temperature'])
+                        current_value = self.to_float(linked_data['temperature'])
 
                     if control_type == 'cooler' or control_type == 'dehumidifier':
                         if current_value <= set_temperature and current_value >= (set_temperature - temp_deadband):
@@ -825,19 +760,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                             current_status = True
 
                     if control_type == 'heater' and max_temp > 0.0 and max_temp < current_value:
-                        if self._settings.get(["debug"]) is True:
-                            self._logger.info(
-                                "Maximun temperature reached for temperature control %s", temp_hum_control['index_id'])
+                        self._logger.debug("Maximum temperature reached for temperature control %s",
+                                temp_hum_control['index_id'])
                         temp_hum_control['temp_ctr_set_value'] = 0
                         current_status = False
 
                 if current_status != previous_status:
                     if current_status:
-                        self._logger.info(
-                            "Turning gpio to control temperature on.")
+                        self._logger.info("Turning gpio to control temperature on.")
                         val = False if temp_hum_control['active_low'] else True
-                        self.write_gpio(self.to_int(
-                            temp_hum_control['gpio_pin']), val)
+                        self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
                     else:
                         index_id = temp_hum_control['index_id']
                         if index_id in self.waiting_temperature:
@@ -846,11 +778,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         if not self.waiting_temperature and self._printer.is_paused():
                             self._printer.resume_print()
 
-                        self._logger.info(
-                            "Turning gpio to control temperature off.")
+                        self._logger.info("Turning gpio to control temperature off.")
                         val = True if temp_hum_control['active_low'] else False
-                        self.write_gpio(self.to_int(
-                            temp_hum_control['gpio_pin']), val)
+                        self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
                     for control_status in self.temp_hum_control_status:
                         if control_status['index_id'] == temp_hum_control['index_id']:
                             control_status['status'] = current_status
@@ -859,22 +789,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def log_error(self, ex):
         template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
-        message = template.format(
-            type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
+        message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
         self._logger.warn(message)
 
     def setup_gpio(self):
         try:
             current_mode = GPIO.getmode()
-            set_mode = GPIO.BOARD if self._settings.get(
-                ["use_board_pin_number"]) else GPIO.BCM
+            set_mode = GPIO.BOARD if self._settings.get(["use_board_pin_number"]) else GPIO.BCM
             if current_mode is None:
-                outputs = list(filter(lambda item: item['output_type'] == 'regular' or
-                                      item['output_type'] == 'pwm' or
-                                      item['output_type'] == 'temp_hum_control' or
-                                      item['output_type'] == 'neopixel_direct', self.rpi_outputs))
-                inputs = list(filter(
-                    lambda item: item['input_type'] == 'gpio', self.rpi_inputs))
+                outputs = list(filter(
+                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
+                    self.rpi_outputs))
+                inputs = list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs))
                 gpios = outputs + inputs
                 if gpios:
                     GPIO.setmode(set_mode)
@@ -883,13 +810,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             elif current_mode != set_mode:
                 GPIO.setmode(current_mode)
                 tempstr = "BOARD" if current_mode == GPIO.BOARD else "BCM"
-                self._settings.set(["use_board_pin_number"],
-                                   True if current_mode == GPIO.BOARD else False)
-                warn_msg = "GPIO mode was configured before, GPIO mode will be forced to use: " + \
-                    tempstr + " as pin numbers. Please update GPIO accordingly!"
+                self._settings.set(["use_board_pin_number"], True if current_mode == GPIO.BOARD else False)
+                warn_msg = "GPIO mode was configured before, GPIO mode will be forced to use: " + tempstr + " as pin numbers. Please update GPIO accordingly!"
                 self._logger.info(warn_msg)
-                self._plugin_manager.send_plugin_message(
-                    self._identifier, dict(is_msg=True, msg=warn_msg, msg_type="error"))
+                self._plugin_manager.send_plugin_message(self._identifier,
+                    dict(is_msg=True, msg=warn_msg, msg_type="error"))
             GPIO.setwarnings(False)
         except Exception as ex:
             self.log_error(ex)
@@ -897,18 +822,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def clear_gpio(self):
         try:
 
-            for gpio_out in list(filter(lambda item: item['output_type'] == 'regular' or
-                                        item['output_type'] == 'pwm' or
-                                        item['output_type'] == 'temp_hum_control' or
-                                        item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
+            for gpio_out in list(filter(
+                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
+                    self.rpi_outputs)):
                 gpio_pin = self.to_int(gpio_out['gpio_pin'])
                 if gpio_pin not in self.rpi_outputs_not_changed:
                     GPIO.cleanup(gpio_pin)
 
             for gpio_in in list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs)):
                 try:
-                    GPIO.remove_event_detect(
-                        self.to_int(gpio_in['gpio_pin']))
+                    GPIO.remove_event_detect(self.to_int(gpio_in['gpio_pin']))
                 except:
                     pass
                 GPIO.cleanup(self.to_int(gpio_in['gpio_pin']))
@@ -916,7 +840,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.log_error(ex)
 
     def clear_channel(self, channel):
-        self._logger.debug("Clearing channel: %s", channel)
         try:
             GPIO.cleanup(self.to_int(channel))
         except Exception as ex:
@@ -924,43 +847,34 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def generate_temp_hum_control_status(self):
         status = []
-        for temp_hum_control in list(filter(lambda item:
-                                            item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
-            status.append(
-                dict(index_id=temp_hum_control['index_id'], status=False))
+        for temp_hum_control in list(filter(lambda item: item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
+            status.append(dict(index_id=temp_hum_control['index_id'], status=False))
         self.temp_hum_control_status = status
 
     def configure_gpio(self):
         try:
 
-            for gpio_out in list(filter(lambda item: item['output_type'] == 'regular' or
-                                        item['output_type'] == 'temp_hum_control', self.rpi_outputs)):
+            for gpio_out in list(
+                    filter(lambda item: item['output_type'] == 'regular' or item['output_type'] == 'temp_hum_control',
+                           self.rpi_outputs)):
                 initial_value = GPIO.HIGH if gpio_out['active_low'] else GPIO.LOW
                 pin = self.to_int(gpio_out['gpio_pin'])
                 if pin not in self.rpi_outputs_not_changed:
-                    self._logger.info(
-                        "Setting GPIO pin %s as OUTPUT with initial value: %s", pin, initial_value)
+                    self._logger.info("Setting GPIO pin %s as OUTPUT with initial value: %s", pin, initial_value)
                     GPIO.setup(pin, GPIO.OUT, initial=initial_value)
             for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_pwm['gpio_pin'])
                 self._logger.info("Setting GPIO pin %s as PWM", pin)
-
-                for pwm in (pwm_dict for pwm_dict in self.pwm_intances if pin in pwm_dict):
-                    pwm[pin].stop()
-                    self.pwm_intances.remove(pwm)
+                for pwm in (pwm_dict for pwm_dict in self.pwm_instances if pin in pwm_dict):
+                    self.pwm_instances.remove(pwm)
                 self.clear_channel(pin)
-                try:
-                    GPIO.setup(pin, GPIO.OUT)
-                    pwm_instance = GPIO.PWM(pin, self.to_int(
-                        gpio_out_pwm['pwm_frequency']))
-                    pwm_instance.start(0)
-                    self.pwm_intances.append({pin: pwm_instance})
-                except Exception as e:
-                    self._logger.error(e.message)
-                    self._logger.error(e.args)
-                    self._logger.error(e)
-
-            for gpio_out_neopixel in list(filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
+                GPIO.setup(pin, GPIO.OUT)
+                pwm_instance = GPIO.PWM(pin, self.to_int(gpio_out_pwm['pwm_frequency']))
+                self._logger.info("starting PWM on pin %s", pin)
+                pwm_instance.start(0)
+                self.pwm_instances.append({pin: pwm_instance})
+            for gpio_out_neopixel in list(
+                    filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
                 self.clear_channel(pin)
 
@@ -980,33 +894,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                             edge = GPIO.BOTH
 
                 if rpi_input['action_type'] == 'output_control':
-                    self._logger.info(
-                        "Adding GPIO event detect on pin %s with edge: %s", gpio_pin, edge)
-                    GPIO.add_event_detect(
-                        gpio_pin, edge, callback=self.handle_gpio_control, bouncetime=200)
+                    self._logger.info("Adding GPIO event detect on pin %s with edge: %s", gpio_pin, edge)
+                    GPIO.add_event_detect(gpio_pin, edge, callback=self.handle_gpio_control, bouncetime=200)
                 if (rpi_input['action_type'] == 'printer_control' and rpi_input['printer_action'] != 'filament'):
-                    GPIO.add_event_detect(
-                        gpio_pin, edge, callback=self.handle_printer_action, bouncetime=200)
-                    self._logger.info(
-                        "Adding PRINTER CONTROL event detect on pin %s with edge: %s", gpio_pin, edge)
+                    GPIO.add_event_detect(gpio_pin, edge, callback=self.handle_printer_action, bouncetime=200)
+                    self._logger.info("Adding PRINTER CONTROL event detect on pin %s with edge: %s", gpio_pin, edge)
         except Exception as ex:
             self.log_error(ex)
 
     def handle_filamment_detection(self, channel):
         try:
-            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
-                                               item['action_type'] == 'printer_control' and
-                                               item['printer_action'] == 'filament' and
-                                               self.to_int(item['gpio_pin']) == self.to_int(channel), self.rpi_inputs)):
+            for filament_sensor in list(filter(
+                    lambda item: item['input_type'] == 'gpio' and item['action_type'] == 'printer_control' and item[
+                        'printer_action'] == 'filament' and self.to_int(item['gpio_pin']) == self.to_int(channel),
+                    self.rpi_inputs)):
                 if ((filament_sensor['edge'] == 'fall') ^ (GPIO.input(self.to_int(filament_sensor['gpio_pin']))) and
                         filament_sensor['filament_sensor_enabled']):
                     last_detected_time = list(filter(lambda item: item['index_id'] == filament_sensor['index_id'],
                                                      self.last_filament_end_detected)).pop()['time']
                     time_now = time.time()
-                    time_difference = self.to_int(
-                        time_now - last_detected_time)
-                    time_out_value = self.to_int(
-                        filament_sensor['filament_sensor_timeout'])
+                    time_difference = self.to_int(time_now - last_detected_time)
+                    time_out_value = self.to_int(filament_sensor['filament_sensor_timeout'])
                     if time_difference > time_out_value:
                         self._logger.info("Detected end of filament.")
                         for item in self.last_filament_end_detected:
@@ -1015,48 +923,43 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         for line in self._settings.get(["filament_sensor_gcode"]).split('\n'):
                             if line:
                                 self._printer.commands(line.strip().upper())
-                                self._logger.info(
-                                    "Sending GCODE command: %s", line.strip().upper())
+                                self._logger.info("Sending GCODE command: %s", line.strip().upper())
                                 time.sleep(0.2)
                         for notification in self.notifications:
                             if notification['filamentChange']:
-                                msg = "Filament change action caused by sensor: " + \
-                                    str(filament_sensor['label'])
+                                msg = "Filament change action caused by sensor: " + str(filament_sensor['label'])
                                 self.send_notification(msg)
                     else:
-                        self._logger.info(
-                            "Prevented end of filament detection, filament sensor timeout not elapsed.")
+                        self._logger.info("Prevented end of filament detection, filament sensor timeout not elapsed.")
         except Exception as ex:
             self.log_error(ex)
 
     def start_filament_detection(self):
         self.stop_filament_detection()
         try:
-            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
-                                               item['action_type'] == 'printer_control' and
-                                               item['printer_action'] == 'filament', self.rpi_inputs)):
+            for filament_sensor in list(filter(
+                    lambda item: item['input_type'] == 'gpio' and item['action_type'] == 'printer_control' and item[
+                        'printer_action'] == 'filament', self.rpi_inputs)):
                 edge = GPIO.RISING if filament_sensor['edge'] == 'rise' else GPIO.FALLING
                 if GPIO.input(self.to_int(filament_sensor['gpio_pin'])) == (edge == GPIO.RISING):
                     self._printer.pause_print()
                     self._logger.info("Started printing with no filament.")
                 else:
-                    self.last_filament_end_detected.append(
-                        dict(index_id=filament_sensor['index_id'], time=0))
-                    self._logger.info(
-                        "Adding GPIO event detect on pin %s with edge: %s", filament_sensor['gpio_pin'], edge)
-                    GPIO.add_event_detect(self.to_int(
-                        filament_sensor['gpio_pin']), edge, callback=self.handle_filamment_detection, bouncetime=200)
+                    self.last_filament_end_detected.append(dict(index_id=filament_sensor['index_id'], time=0))
+                    self._logger.info("Adding GPIO event detect on pin %s with edge: %s", filament_sensor['gpio_pin'],
+                        edge)
+                    GPIO.add_event_detect(self.to_int(filament_sensor['gpio_pin']), edge,
+                        callback=self.handle_filamment_detection, bouncetime=200)
         except Exception as ex:
             self.log_error(ex)
 
     def stop_filament_detection(self):
         try:
             self.last_filament_end_detected = []
-            for filament_sensor in list(filter(lambda item: item['input_type'] == 'gpio' and
-                                               item['action_type'] == 'printer_control' and
-                                               item['printer_action'] == 'filament', self.rpi_inputs)):
-                GPIO.remove_event_detect(
-                    self.to_int(filament_sensor['gpio_pin']))
+            for filament_sensor in list(filter(
+                    lambda item: item['input_type'] == 'gpio' and item['action_type'] == 'printer_control' and item[
+                        'printer_action'] == 'filament', self.rpi_inputs)):
+                GPIO.remove_event_detect(self.to_int(filament_sensor['gpio_pin']))
         except Exception as ex:
             self.log_error(ex)
 
@@ -1070,17 +973,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
     def handle_initial_gpio_control(self):
         try:
-            for rpi_input in list(filter(lambda item: item['input_type'] == 'gpio' and
-                                         item['action_type'] == 'output_control', self.rpi_inputs)):
+            for rpi_input in list(
+                    filter(lambda item: item['input_type'] == 'gpio' and item['action_type'] == 'output_control',
+                           self.rpi_inputs)):
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
                 controlled_io = self.to_int(rpi_input['controlled_io'])
                 if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
-                    rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-                        r_out['index_id']) == controlled_io].pop()
+                    rpi_output = [r_out for r_out in self.rpi_outputs if
+                                  self.to_int(r_out['index_id']) == controlled_io].pop()
                     if rpi_output['output_type'] == 'regular':
                         val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                        self.write_gpio(self.to_int(
-                            rpi_output['gpio_pin']), val)
+                        self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         except Exception as ex:
             self.log_error(ex)
             pass
@@ -1088,44 +991,43 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def shell_command(self, command):
         try:
             stdout = (Popen(command, shell=True, stdout=PIPE).stdout).read()
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(is_msg=True, msg=stdout, msg_type="success"))
+            self._plugin_manager.send_plugin_message(self._identifier,
+                dict(is_msg=True, msg=stdout, msg_type="success"))
         except Exception as ex:
             self.log_error(ex)
-            self._plugin_manager.send_plugin_message(
-                self._identifier, dict(is_msg=True, msg="Could not execute shell script", msg_type="error"))
+            self._plugin_manager.send_plugin_message(self._identifier,
+                dict(is_msg=True, msg="Could not execute shell script", msg_type="error"))
 
     def handle_gpio_control(self, channel):
+
         try:
-            if self._settings.get(["debug"]) is True:
-                self._logger.info(
-                    "GPIO event triggered on channel %s", channel)
-            for rpi_input in list(filter(lambda item: self.to_int(item['gpio_pin']) == self.to_int(channel), self.rpi_inputs)):
+            self._logger.debug("GPIO event triggered on channel %s", channel)
+            for rpi_input in list(
+                    filter(lambda item: self.to_int(item['gpio_pin']) == self.to_int(channel), self.rpi_inputs)):
                 gpio_pin = self.to_int(rpi_input['gpio_pin'])
                 controlled_io = self.to_int(rpi_input['controlled_io'])
                 if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
-                    rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-                        r_out['index_id']) == controlled_io].pop()
+                    rpi_output = [r_out for r_out in self.rpi_outputs if
+                                  self.to_int(r_out['index_id']) == controlled_io].pop()
                     if rpi_output['output_type'] == 'regular':
                         if rpi_input['controlled_io_set_value'] == 'toggle':
-                            val = GPIO.LOW if GPIO.input(self.to_int(
-                                rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
+                            val = GPIO.LOW if GPIO.input(
+                                self.to_int(rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
                         else:
                             val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                        self.write_gpio(self.to_int(
-                            rpi_output['gpio_pin']), val)
+                        self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
                         for notification in self.notifications:
                             if notification['gpioAction']:
-                                msg = "GPIO control action caused by input " + str(rpi_input['label']) + ". Setting GPIO" + str(
+                                msg = "GPIO control action caused by input " + str(
+                                    rpi_input['label']) + ". Setting GPIO" + str(
                                     rpi_input['controlled_io']) + " to: " + str(rpi_input['controlled_io_set_value'])
                                 self.send_notification(msg)
                     if rpi_output['output_type'] == 'gcode_output':
                         self.send_gcode_command(rpi_output['gcode'])
                         for notification in self.notifications:
                             if notification['gpioAction']:
-                                msg = "GPIO control action caused by input " + \
-                                    str(rpi_input['label']) + \
-                                    ". Sending GCODE command"
+                                msg = "GPIO control action caused by input " + str(
+                                    rpi_input['label']) + ". Sending GCODE command"
                                 self.send_notification(msg)
                     if rpi_output['output_type'] == 'shell_output':
                         command = rpi_output['shell_script']
@@ -1138,16 +1040,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         for line in command.split('\n'):
             if line:
                 self._printer.commands(line.strip().upper())
-                self._logger.info(
-                    "Sending GCODE command: %s", line.strip().upper())
+                self._logger.info("Sending GCODE command: %s", line.strip().upper())
                 time.sleep(0.2)
 
     def handle_printer_action(self, channel):
         try:
             for rpi_input in self.rpi_inputs:
-                if (channel == self.to_int(rpi_input['gpio_pin']) and
-                        rpi_input['action_type'] == 'printer_control' and
-                        ((rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
+                if (channel == self.to_int(rpi_input['gpio_pin']) and rpi_input[
+                    'action_type'] == 'printer_control' and (
+                        (rpi_input['edge'] == 'fall') ^ GPIO.input(self.to_int(rpi_input['gpio_pin'])))):
                     if rpi_input['printer_action'] == 'resume':
                         self._logger.info("Printer action resume.")
                         self._printer.resume_print()
@@ -1176,17 +1077,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         else:
                             self._printer.connect()
                     elif rpi_input['printer_action'] == 'stop_temp_hum_control':
-                        self._logger.info(
-                            "Printer action stoping temperature control.")
+                        self._logger.info("Printer action stopping temperature control.")
                         for rpi_output in self.rpi_outputs:
                             if rpi_output['auto_shutdown'] and rpi_output['output_type'] == 'temp_hum_control':
                                 rpi_output['temp_ctr_set_value'] = 0
                         self.handle_temp_hum_control()
                     for notification in self.notifications:
                         if notification['printer_action']:
-                            msg = "Printer action: " + \
-                                rpi_input['printer_action'] + \
-                                " caused by input: " + str(rpi_input['label'])
+                            msg = "Printer action: " + rpi_input['printer_action'] + " caused by input: " + str(
+                                rpi_input['label'])
                             self.send_notification(msg)
         except Exception as ex:
             self.log_error(ex)
@@ -1195,41 +1094,30 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def write_gpio(self, gpio, value, queue_id=None):
         try:
             GPIO.output(gpio, value)
-            if self._settings.get(["debug"]) is True:
-                if queue_id is not None:
-                    self._logger.info("Runing scheduled queue id %s", queue_id)
-                self._logger.info("Writing on gpio: %s value %s", gpio, value)
+            if queue_id is not None:
+                self._logger.debug("Running scheduled queue id %s", queue_id)
+            self._logger.debug("Writing on GPIO: %s value %s", gpio, value)
             self.update_ui()
             if queue_id is not None:
                 self.stop_queue_item(queue_id)
         except Exception as ex:
             template = "An exception of type {0} occurred on {1} when writing on pin {2}. Arguments:\n{3!r}"
-            message = template.format(
-                type(ex).__name__, inspect.currentframe().f_code.co_name, gpio, ex.args)
+            message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, gpio, ex.args)
             self._logger.warn(message)
             pass
 
     def write_pwm(self, gpio, pwm_value, queue_id=None):
-        pwm_value =int(pwm_value)
-        self._logger.debug("Calling write_pwm: %s, %s ,%s", gpio, pwm_value, queue_id)
         try:
-            if queue_id is not None and self._settings.get(["debug"]) is True:
-                self._logger.info("Running scheduled queue id %s", queue_id)
-            self._logger.debug("pwm_instances: %s", self.pwm_intances)
-            for pwm in self.pwm_intances:
-                self._logger.debug("is gpio in pwm? : %s", (gpio in pwm))
+            if queue_id is not None:
+                self._logger.debug("running scheduled queue id %s", queue_id)
+            for pwm in self.pwm_instances:
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
-
-
-                    pwm['duty_cycle'] = pwm_value
-                    self._logger.debug("Changing duty cycle: %s", pwm_value)
-                    self._logger.debug("PWM Object is: %s", pwm_object)
-                    pwm_object.start(pwm_value)
-                    self._logger.debug(
-                            "Writing PWM on gpio: %s value %s", gpio, pwm_value)
-
+                    if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
+                        pwm['duty_cycle'] = pwm_value
+                        pwm_object.start(pwm_value)
+                        self._logger.debug("Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
                     if queue_id is not None:
                         self.stop_queue_item(queue_id)
@@ -1251,9 +1139,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if provider == 'ifttt':
                 event = self._settings.get(["notification_event_name"])
                 api_key = self._settings.get(["notification_api_key"])
-                if self._settings.get(["debug"]) is True:
-                    self._logger.info(
-                        "Sending notification to: %s with msg: %s with key: %s", provider, message, api_key)
+                self._logger.debug("Sending notification to: %s with msg: %s with key: %s", provider, message,
+                        api_key)
                 try:
                     res = self.ifttt_notification(message, event, api_key)
                 except requests.exceptions.ConnectionError:
@@ -1270,8 +1157,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     try:
                         j = res.json()
                     except ValueError:
-                        self._logger.info(
-                            'Error: Could not parse server response. Event not sent')
+                        self._logger.info('Error: Could not parse server response. Event not sent')
                     for err in j['errors']:
                         self._logger.info('Error: {}'.format(err['message']))
         except Exception as ex:
@@ -1279,8 +1165,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pass
 
     def ifttt_notification(self, message, event, api_key):
-        url = "https://maker.ifttt.com/trigger/{e}/with/key/{k}/".format(
-            e=event, k=api_key)
+        url = "https://maker.ifttt.com/trigger/{e}/with/key/{k}/".format(e=event, k=api_key)
         payload = {'value1': message}
         return requests.post(url, data=payload)
 
@@ -1291,7 +1176,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         if event == Events.CLIENT_OPENED:
             self.update_ui()
-            
+
         if event == Events.PRINT_RESUMED:
             self.start_filament_detection()
 
@@ -1302,18 +1187,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.start_filament_detection()
             for rpi_output in self.rpi_outputs:
                 if rpi_output['auto_startup']:
-                    delay_seconds = self.get_startup_delay_from_output(
-                        rpi_output)
-                    self.schedule_auto_startup_outputs(
-                        rpi_output, delay_seconds)
+                    delay_seconds = self.get_startup_delay_from_output(rpi_output)
+                    self.schedule_auto_startup_outputs(rpi_output, delay_seconds)
                 if rpi_output['toggle_timer']:
                     if rpi_output['output_type'] == 'regular' or rpi_output['output_type'] == 'pwm':
                         self.toggle_output(rpi_output['index_id'], True)
                 if self.is_hour(rpi_output['shutdown_time']):
-                    shutdown_delay_seconds = self.get_shutdown_delay_from_output(
-                        rpi_output)
-                    self.schedule_auto_shutdown_outputs(
-                        rpi_output, shutdown_delay_seconds)
+                    shutdown_delay_seconds = self.get_shutdown_delay_from_output(rpi_output)
+                    self.schedule_auto_shutdown_outputs(rpi_output, shutdown_delay_seconds)
             self.run_tasks()
             self.update_ui()
 
@@ -1326,8 +1207,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     rpi_output['duty_cycle'] = rpi_output['default_duty_cycle']
                 if rpi_output['auto_shutdown'] and not self.is_hour(shutdown_time):
                     delay_seconds = self.to_float(shutdown_time)
-                    self.schedule_auto_shutdown_outputs(
-                        rpi_output, delay_seconds)
+                    self.schedule_auto_shutdown_outputs(rpi_output, delay_seconds)
             self.run_tasks()
             self.update_ui()
 
@@ -1342,8 +1222,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                         rpi_output['duty_cycle'] = rpi_output['default_duty_cycle']
                     if rpi_output['auto_shutdown'] and not self.is_hour(shutdown_time):
                         delay_seconds = self.to_float(shutdown_time)
-                        self.schedule_auto_shutdown_outputs(
-                            rpi_output, delay_seconds)
+                        self.schedule_auto_shutdown_outputs(rpi_output, delay_seconds)
                         if rpi_output['output_type'] == 'temp_hum_control':
                             rpi_output['temp_ctr_set_value'] = 0
             self.run_tasks()
@@ -1353,10 +1232,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 if notification['printFinish']:
                     file_name = os.path.basename(payload["file"])
                     elapsed_time_in_seconds = payload["time"]
-                    elapsed_time = octoprint.util.get_formatted_timedelta(
-                        timedelta(seconds=elapsed_time_in_seconds))
-                    msg = "Print job finished: " + file_name + \
-                        "finished printing in " + file_name, elapsed_time
+                    elapsed_time = octoprint.util.get_formatted_timedelta(timedelta(seconds=elapsed_time_in_seconds))
+                    msg = "Print job finished: " + file_name + "finished printing in " + file_name, elapsed_time
                     self.send_notification(msg)
 
     def run_tasks(self):
@@ -1368,26 +1245,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         sufix = 'auto_shutdown'
         if rpi_output['output_type'] == 'regular':
             value = True if rpi_output['active_low'] else False
-            self.add_regular_output_to_queue(
-                shutdown_delay_seconds, rpi_output, value, sufix)
+            self.add_regular_output_to_queue(shutdown_delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
             self.ledstrip_set_rgb(rpi_output)
         if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = 0
-            self.add_pwm_output_to_queue(
-                shutdown_delay_seconds, rpi_output, value, sufix)
+            self.add_pwm_output_to_queue(shutdown_delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'pwm' and rpi_output['pwm_temperature_linked']:
-            self.schedule_pwm_duty_on_queue(
-                shutdown_delay_seconds, rpi_output, 0, sufix)
+            self.schedule_pwm_duty_on_queue(shutdown_delay_seconds, rpi_output, 0, sufix)
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-            self.add_neopixel_output_to_queue(
-                rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
+            self.add_neopixel_output_to_queue(rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
         if rpi_output['output_type'] == 'temp_hum_control':
             value = 0
-            self.add_temperature_output_temperature_queue(
-                shutdown_delay_seconds, rpi_output, value, sufix)
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("Events scheduled to run %s", self.event_queue)
+            self.add_temperature_output_temperature_queue(shutdown_delay_seconds, rpi_output, value, sufix)
+        self._logger.debug("Events scheduled to run %s", self.event_queue)
 
     def ledstrip_set_rgb(self, rpi_output, rgb=None):
         clk = rpi_output["ledstrip_gpio_clk"]
@@ -1415,15 +1286,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     value = self.to_int(rpi_output['default_duty_cycle'])
                     self.write_pwm(gpio, value)
                 if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-                    red, green, blue = self.get_color_from_rgb(
-                        rpi_output['default_neopixel_color'])
+                    red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
                     led_count = rpi_output['neopixel_count']
                     led_brightness = rpi_output['neopixel_brightness']
                     address = rpi_output['microcontroller_address']
                     index_id = self.to_int(rpi_output['index_id'])
-                    neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
-                    self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green, blue,
-                                               address, neopixel_dirrect, index_id)
+                    neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
+                    self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red,
+                                               green, blue, address, neopixel_direct, index_id)
                 if rpi_output['output_type'] == 'temp_hum_control':
                     rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
 
@@ -1431,25 +1301,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         sufix = 'auto_startup'
         if rpi_output['output_type'] == 'regular':
             value = False if rpi_output['active_low'] else True
-            self.add_regular_output_to_queue(
-                delay_seconds, rpi_output, value, sufix)
+            self.add_regular_output_to_queue(delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
             self.ledstrip_set_rgb(rpi_output)
         if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
             value = self.to_int(rpi_output['default_duty_cycle'])
-            self.add_pwm_output_to_queue(
-                delay_seconds, rpi_output, value, sufix)
+            self.add_pwm_output_to_queue(delay_seconds, rpi_output, value, sufix)
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
-            red, green, blue = self.get_color_from_rgb(
-                rpi_output['default_neopixel_color'])
-            self.add_neopixel_output_to_queue(
-                rpi_output, delay_seconds, red, green, blue, sufix)
+            red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
+            self.add_neopixel_output_to_queue(rpi_output, delay_seconds, red, green, blue, sufix)
         if rpi_output['output_type'] == 'temp_hum_control':
             value = rpi_output['temp_ctr_default_value']
-            self.add_temperature_output_temperature_queue(
-                delay_seconds, rpi_output, value, sufix)
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("Events scheduled to run %s", self.event_queue)
+            self.add_temperature_output_temperature_queue(delay_seconds, rpi_output, value, sufix)
+        self._logger.debug("Events scheduled to run %s", self.event_queue)
 
     def get_color_from_rgb(self, stringColor):
         stringColor = stringColor.replace('rgb(', '')
@@ -1482,39 +1346,30 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         queue_id = '{0!s}_{1!s}'.format(index_id, sufix)
 
-        if self._settings.get(["debug"]) is True:
-            self._logger.info(
-                "Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
+        
+        self._logger.debug("Scheduling neopixel output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
-        thread = threading.Timer(delay_seconds,
-                                 self.send_neopixel_command,
-                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct, index_id, queue_id])
+        thread = threading.Timer(delay_seconds, self.send_neopixel_command,
+                                 args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct,
+                                       index_id, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def add_pwm_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
-        if self._settings.get(["debug"]) is True:
-            self._logger.info(
-                "Scheduling pwm output id %s for on %s delay_seconds", queue_id, delay_seconds)
+        self._logger.debug("Scheduling pwm output id %s for on %s delay_seconds", queue_id, delay_seconds)
 
-        thread = threading.Timer(delay_seconds,
-                                 self.write_pwm,
+        thread = threading.Timer(delay_seconds, self.write_pwm,
                                  args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def schedule_pwm_duty_on_queue(self, delay_seconds, rpi_output, value, sufix):
-        queue_id = '{0!s}_{1!s}_{2!s}'.format(
-            rpi_output['index_id'], "pwm_linked_temp", sufix)
-        thread = threading.Timer(delay_seconds,
-                                 self.set_pwm_duty_cycle,
-                                 args=[rpi_output, value, queue_id])
+        queue_id = '{0!s}_{1!s}_{2!s}'.format(rpi_output['index_id'], "pwm_linked_temp", sufix)
+        thread = threading.Timer(delay_seconds, self.set_pwm_duty_cycle, args=[rpi_output, value, queue_id])
 
-        if self._settings.get(["debug"]) is True:
-            self._logger.info(
-                "Scheduling pwm linked temp output id %s on %s delay_seconds", queue_id, delay_seconds)
+        self._logger.debug("Scheduling pwm linked temp output id %s on %s delay_seconds", queue_id, delay_seconds)
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
@@ -1526,41 +1381,33 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
-        if self._settings.get(["debug"]) is True:
-            self._logger.info(
-                "Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
+        self._logger.debug("Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
 
-        thread = threading.Timer(delay_seconds,
-                                 self.write_gpio,
+        thread = threading.Timer(delay_seconds, self.write_gpio,
                                  args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def add_temperature_output_temperature_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
-        if self._settings.get(["debug"]) is True:
-            self._logger.info(
-                "Scheduling temperature control id %s on %s delay_seconds", queue_id, delay_seconds)
+        self._logger.debug("Scheduling temperature control id %s on %s delay_seconds", queue_id, delay_seconds)
 
-        thread = threading.Timer(delay_seconds,
-                                 self.write_temperature_to_output,
+        thread = threading.Timer(delay_seconds, self.write_temperature_to_output,
                                  args=[self.to_int(rpi_output['index_id']), value, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def write_temperature_to_output(self, rpi_output_index, value, queue_id=None):
         try:
-            rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(
-                r_out['index_id']) == rpi_output_index].pop()
+            rpi_output = [r_out for r_out in self.rpi_outputs if
+                          self.to_int(r_out['index_id']) == rpi_output_index].pop()
 
             if rpi_output['output_type'] == 'temp_hum_control':
                 rpi_output['temp_ctr_set_value'] = value
 
-            if self._settings.get(["debug"]) is True:
                 if queue_id is not None:
-                    self._logger.info("Runing scheduled queue id %s", queue_id)
-                self._logger.info(
-                    "Setting temperature to output index: %s value %s", rpi_output['index_id'], value)
+                    self._logger.debug("running scheduled queue id %s", queue_id)
+                self._logger.debug("Setting temperature to output index: %s value %s", rpi_output['index_id'], value)
 
             self.update_ui()
             if queue_id is not None:
@@ -1568,8 +1415,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
         except Exception as ex:
             template = "An exception of type {0} occurred on {1}. Arguments:\n{3!r}"
-            message = template.format(
-                type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
+            message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
             self._logger.warn(message)
             pass
 
@@ -1580,11 +1426,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if start_up_date_time < datetime.now():
                 delay_seconds = 0.0
             else:
-                delay_seconds = (start_up_date_time -
-                                 datetime.now()).total_seconds()
+                delay_seconds = (start_up_date_time - datetime.now()).total_seconds()
         else:
-            delay_seconds = self.to_float(
-                rpi_output['startup_time'])
+            delay_seconds = self.to_float(rpi_output['startup_time'])
         return delay_seconds
 
     # ~~ SettingsPlugin mixin
@@ -1604,84 +1448,50 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self.rpi_outputs_not_changed = commonPins
         self.clear_gpio()
 
-        if self._settings.get(["debug"]) is True:
-            self._logger.info("rpi_outputs: %s", self.rpi_outputs)
-            self._logger.info("rpi_inputs: %s", self.rpi_inputs)
+        self._logger.debug("rpi_outputs: %s", self.rpi_outputs)
+        self._logger.debug("rpi_inputs: %s", self.rpi_inputs)
         self.setup_gpio()
         self.configure_gpio()
         self.generate_temp_hum_control_status()
 
     def get_settings_defaults(self):
-        return dict(
-            rpi_outputs=[],
-            rpi_inputs=[],
-            filament_sensor_gcode="G91  ;Set Relative Mode \n" +
-            "G1 E-5.000000 F500 ;Retract 5mm\n" +
-            "G1 Z15 F300         ;move Z up 15mm\n" +
-            "G90            ;Set Absolute Mode\n " +
-            "G1 X20 Y20 F9000      ;Move to hold position\n" +
-            "G91            ;Set Relative Mode\n" +
-            "G1 E-40 F500      ;Retract 40mm\n" +
-            "M0            ;Idle Hold\n" +
-            "G90            ;Set Absolute Mode\n" +
-            "G1 F5000         ;Set speed limits\n" +
-            "G28 X0 Y0         ;Home X Y\n" +
-            "M82            ;Set extruder to Absolute Mode\n" +
-            "G92 E0         ;Set Extruder to 0",
-            use_sudo=True,
-            neopixel_dma=10,
-            debug=False,
-            gcode_control=False,
-            debug_temperature_log=False,
-            use_board_pin_number=False,
-            notification_provider="disabled",
-            notification_api_key="",
-            notification_event_name="printer_event",
-            notifications=[{'printFinish': True, 'filamentChange': True,
-                            'printer_action': True, 'temperatureAction': True, 'gpioAction': True}]
-        )
+        return dict(rpi_outputs=[], rpi_inputs=[],
+            filament_sensor_gcode="G91  ;Set Relative Mode \n" + "G1 E-5.000000 F500 ;Retract 5mm\n" + "G1 Z15 F300         ;move Z up 15mm\n" + "G90            ;Set Absolute Mode\n " + "G1 X20 Y20 F9000      ;Move to hold position\n" + "G91            ;Set Relative Mode\n" + "G1 E-40 F500      ;Retract 40mm\n" + "M0            ;Idle Hold\n" + "G90            ;Set Absolute Mode\n" + "G1 F5000         ;Set speed limits\n" + "G28 X0 Y0         ;Home X Y\n" + "M82            ;Set extruder to Absolute Mode\n" + "G92 E0         ;Set Extruder to 0",
+            use_sudo=True, neopixel_dma=10, debug=False, gcode_control=False, debug_temperature_log=False,
+            use_board_pin_number=False, notification_provider="disabled", notification_api_key="",
+            notification_event_name="printer_event", notifications=[{
+                                                                        'printFinish'      : True,
+                                                                        'filamentChange'   : True,
+                                                                        'printer_action'   : True,
+                                                                        'temperatureAction': True, 'gpioAction': True
+                                                                    }])
 
     # ~~ TemplatePlugin
     def get_template_configs(self):
-        return [
-            dict(type="settings", custom_bindings=True),
-            dict(type="tab", custom_bindings=True),
-            dict(type="navbar", custom_bindings=True,
-                 suffix="_1", classes=["dropdown"]),
-            dict(type="navbar", custom_bindings=True,
-                 template="enclosure_navbar_input.jinja2", suffix="_2", classes=["dropdown"])
-        ]
+        return [dict(type="settings", custom_bindings=True), dict(type="tab", custom_bindings=True),
+            dict(type="navbar", custom_bindings=True, suffix="_1", classes=["dropdown"]),
+            dict(type="navbar", custom_bindings=True, template="enclosure_navbar_input.jinja2", suffix="_2",
+                 classes=["dropdown"])]
 
     # ~~ AssetPlugin mixin
     def get_assets(self):
-        return dict(
-            js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
-            css=["css/bootstrap-colorpicker.css", "css/enclosure.css"]
-        )
+        return dict(js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
+            css=["css/bootstrap-colorpicker.css", "css/enclosure.css"])
 
     # ~~ Softwareupdate hook
     def get_update_information(self):
-        return dict(
-            enclosure=dict(
-                displayName="Enclosure Plugin",
-                displayVersion=self._plugin_version,
-                # version check: github repository
-                type="github_release",
-                user="vitormhenrique",
-                repo="OctoPrint-Enclosure",
-                current=self._plugin_version,
-                # update method: pip
-                pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"
-            )
-        )
+        return dict(enclosure=dict(displayName="Enclosure Plugin", displayVersion=self._plugin_version,
+            # version check: github repository
+            type="github_release", user="vitormhenrique", repo="OctoPrint-Enclosure", current=self._plugin_version,
+            # update method: pip
+            pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"))
 
     def hook_gcode_queuing(self, comm_instance, phase, cmd, cmd_type, gcode, *args, **kwargs):
         if self._settings.get(["gcode_control"]) is False:
             return
 
         if cmd.strip().startswith("ENC"):
-            if self._settings.get(["debug"]) is True:
-                self._logger.info("Gcode queuing: %s", cmd)
+            self._logger.debug("Gcode queuing: %s", cmd)
             index_id = self.to_int(self.get_gcode_value(cmd, 'O'))
             for output in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
                 if output['output_type'] == 'regular':
@@ -1690,16 +1500,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     value = True if set_value == 1 else False
                     value = (not value) if output['active_low'] else value
                     self.write_gpio(self.to_int(output['gpio_pin']), value)
-                    comm_instance._log(
-                        "Setting REGULAR output %s to value %s" % (index_id, value))
+                    comm_instance._log("Setting REGULAR output %s to value %s" % (index_id, value))
                     return
                 if output['output_type'] == 'pwm':
                     set_value = self.to_int(self.get_gcode_value(cmd, 'S'))
                     set_value = self.constrain(set_value, 0, 100)
                     output['duty_cycle'] = set_value
                     self.write_pwm(self.to_int(output['gpio_pin']), set_value)
-                    comm_instance._log(
-                        "Setting PWM output %s to value %s" % (index_id, set_value))
+                    comm_instance._log("Setting PWM output %s to value %s" % (index_id, set_value))
                     return
                 if output['output_type'] == 'neopixel_indirect' or output['output_type'] == 'neopixel_direct':
                     red = self.get_gcode_value(cmd, 'R')
@@ -1712,11 +1520,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
 
                     index_id = self.to_int(output['index_id'])
 
-                    neopixel_dirrect = output['output_type'] == 'neopixel_direct'
+                    neopixel_direct = output['output_type'] == 'neopixel_direct'
 
-                    self.send_neopixel_command(
-                        self.to_int(output['gpio_pin']),
-                        led_count, led_brightness, red, green, blue, address, neopixel_dirrect, index_id)
+                    self.send_neopixel_command(self.to_int(output['gpio_pin']), led_count, led_brightness, red, green,
+                        blue, address, neopixel_direct, index_id)
                     comm_instance._log(
                         "Setting NEOPIXEL output %s to red: %s green: %s blue: %s" % (index_id, red, green, blue))
                     return
@@ -1729,8 +1536,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     output['temp_ctr_set_value'] = set_value
                     self.update_ui_set_temperature()
                     self.handle_temp_hum_control()
-                    comm_instance._log(
-                        "Setting TEMP/HUM control output %s to value %s" % (index_id, set_value))
+                    comm_instance._log("Setting TEMP/HUM control output %s to value %s" % (index_id, set_value))
                     return
 
 
@@ -1743,6 +1549,6 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        "octoprint.comm.protocol.gcode.queuing": __plugin_implementation__.hook_gcode_queuing,
+        "octoprint.comm.protocol.gcode.queuing"       : __plugin_implementation__.hook_gcode_queuing,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
     }
