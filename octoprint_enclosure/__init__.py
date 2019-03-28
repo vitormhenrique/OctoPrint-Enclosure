@@ -916,7 +916,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.log_error(ex)
 
     def clear_channel(self, channel):
-        self._logging.debug("Clearing channel: %s", channel)
+        self._logger.debug("Clearing channel: %s", channel)
         try:
             GPIO.cleanup(self.to_int(channel))
         except Exception as ex:
@@ -946,6 +946,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                 self._logger.info("Setting GPIO pin %s as PWM", pin)
 
                 for pwm in (pwm_dict for pwm_dict in self.pwm_intances if pin in pwm_dict):
+                    pwm.stop()
                     self.pwm_intances.remove(pwm)
                 self.clear_channel(pin)
                 try:
