@@ -1202,7 +1202,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             pass
 
     def write_pwm(self, gpio, pwm_value, queue_id=None):
-        gpio =int(gpio)
+        pwm_value =int(pwm_value)
         self._logger.debug("Calling write_pwm: %s, %s ,%s", gpio, pwm_value, queue_id)
         try:
             if queue_id is not None and self._settings.get(["debug"]) is True:
