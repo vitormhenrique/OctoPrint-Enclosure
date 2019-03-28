@@ -1226,10 +1226,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     pwm['duty_cycle'] = pwm_value
                     self._logger.debug("Changing duty cycle: %s", pwm_value)
                     self._logger.debug("PWM Object is: %s", pwm_object)
-                    pwm_object.ChangeDutyCycle(pwm_value)
+                    pwm_object.start(pwm_value)
                     self._logger.debug(
                             "Writing PWM on gpio: %s value %s", gpio, pwm_value)
-
 
                     self.update_ui()
                     if queue_id is not None:
