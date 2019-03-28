@@ -842,6 +842,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def clear_channel(self, channel):
         try:
             GPIO.cleanup(self.to_int(channel))
+            self._logger.debug("Clearing channel %s", channel)
         except Exception as ex:
             self.log_error(ex)
 
@@ -1116,7 +1117,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
                     if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
                         pwm['duty_cycle'] = pwm_value
-                        pwm_object.start(pwm_value)
+                        pwm_object.start(pwm_value) #should be changed back to pwm_object.ChangeDutyCycle() but this
+                        # was causing errors.
                         self._logger.debug("Writing PWM on gpio: %s value %s", gpio, pwm_value)
                     self.update_ui()
                     if queue_id is not None:
