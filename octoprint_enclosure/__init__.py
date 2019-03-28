@@ -916,6 +916,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             self.log_error(ex)
 
     def clear_channel(self, channel):
+        self._logging.debug("Clearing channel: %s", channel)
         try:
             GPIO.cleanup(self.to_int(channel))
         except Exception as ex:
@@ -942,16 +943,22 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
                     GPIO.setup(pin, GPIO.OUT, initial=initial_value)
             for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_pwm['gpio_pin'])
-                self._logger.info(
-                    "Setting GPIO pin %s as PWM", pin)
+                self._logger.info("Setting GPIO pin %s as PWM", pin)
+
                 for pwm in (pwm_dict for pwm_dict in self.pwm_intances if pin in pwm_dict):
                     self.pwm_intances.remove(pwm)
                 self.clear_channel(pin)
-                GPIO.setup(pin, GPIO.OUT)
-                pwm_instance = GPIO.PWM(pin, self.to_int(
-                    gpio_out_pwm['pwm_frequency']))
-                pwm_instance.start(0)
-                self.pwm_intances.append({pin: pwm_instance})
+                try:
+                    GPIO.setup(pin, GPIO.OUT)
+                    pwm_instance = GPIO.PWM(pin, self.to_int(
+                        gpio_out_pwm['pwm_frequency']))
+                    pwm_instance.start(0)
+                    self.pwm_intances.append({pin: pwm_instance})
+                except Exception as e:
+                    self._logger.error(e.message)
+                    self._logger.error(e.args)
+                    self._logger.error(e)
+
             for gpio_out_neopixel in list(filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])
                 self.clear_channel(pin)
