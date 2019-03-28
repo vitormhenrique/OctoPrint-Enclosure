@@ -1207,8 +1207,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         try:
             if queue_id is not None and self._settings.get(["debug"]) is True:
                 self._logger.info("Running scheduled queue id %s", queue_id)
+            self._logger.debug("pwm_instances: %s", self.pwm_intances)
             for pwm in self.pwm_intances:
-                self._logger.debug("pwm: %s", pwm)
+                self._logger.debug("is gpio in pwm? : %s", (gpio in pwm))
                 if gpio in pwm:
                     pwm_object = pwm[gpio]
                     old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
