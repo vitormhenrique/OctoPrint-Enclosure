@@ -695,7 +695,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
                     try:
                         calculated_duty = ((current_temp - temp_a) * (duty_b - duty_a) / (temp_b - temp_a)) + duty_a
-                        calculated_duty = self.constrain(calculated_duty, duty_a,100)
+                        if calculated_duty < temp_a:
+                            calculated_duty = 0
                     except:
                         calculated_duty = 0
 
