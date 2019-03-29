@@ -695,7 +695,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
                     try:
                         calculated_duty = ((current_temp - temp_a) * (duty_b - duty_a) / (temp_b - temp_a)) + duty_a
-                        if calculated_duty < temp_a:
+
+                        if current_temp < temp_a:
                             calculated_duty = 0
                     except:
                         calculated_duty = 0
