@@ -342,11 +342,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
             sensor_data = []
             for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
-                temp, hum = self.get_sensor_data(sensor)
+                temp, hum, airquality = self.get_sensor_data(sensor)
                 if  self._settings.get(["debug_temperature_log"]) is True:
-                    self._logger.debug("Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
-                if temp is not None and hum is not None:
-                    sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
+                    self._logger.debug("Sensor %s Temperature: %s humidity %s Airquality %s", sensor['label'], temp, hum, airquality)
+                if temp is not None and hum is not None and airquality is not None:
+                    sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum, airquality=airquality))
                     self.temperature_sensor_data = sensor_data
                     self.handle_temp_hum_control()
                     self.handle_temperature_events()
@@ -495,35 +495,43 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_sensor_data(self, sensor):
         try:
             if self.development_mode:
-                temp, hum = self.read_dummy_temp()
+                temp, hum, airquality = self.read_dummy_temp()
             else:
                 if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
                     temp, hum = self.read_dht_temp(sensor['temp_sensor_type'], sensor['gpio_pin'])
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "bme280":
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "bme680":
                     temp, hum, airquality = self.read_bme680_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "si7021":
                     temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'])
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "tmp102":
                     temp = self.read_tmp102_temp(sensor['temp_sensor_address'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "max31855":
                     temp = self.read_max31855_temp(sensor['temp_sensor_address'])
                     hum = 0
+					airquality = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
                     hum = None
-            if temp != -1 and hum != -1:
+					airquality = None
+            if temp != -1 and hum != -1 and airquality != -1:
                 temp = round(self.to_float(temp), 1) if not sensor['use_fahrenheit'] else round(
                     self.to_float(temp) * 1.8 + 32, 1)
                 hum = round(self.to_float(hum), 1)
-                return temp, hum
-            return None, None
+				airquality = round(self.to_float(airquality), 1)
+                return temp, hum, airquality
+            return None, None, None
+			
         except Exception as ex:
             self.log_error(ex)
 
@@ -556,7 +564,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         self.dummy_value = return_value
 
-        return return_value, return_value
+        return return_value, return_value, return_value
 
     def read_dht_temp(self, sensor, pin):
         try:
