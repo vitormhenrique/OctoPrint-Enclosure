@@ -1,11 +1,5 @@
 import bme680
 
-# if len(sys.argv) == 2:
-#     DEVICE = int(sys.argv[1],16)
-# else:
-#     print('-1 | -1')
-#     sys.exit(1)
-
 try:
     sensor = bme680.BME680(bme680.I2C_ADDR_PRIMARY)
 except IOError:
