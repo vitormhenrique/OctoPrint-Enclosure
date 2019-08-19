@@ -504,6 +504,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     hum = 0
                 elif sensor['temp_sensor_type'] == "bme280":
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
+                elif sensor['temp_sensor_type'] == "bme680":
+                    temp, hum = self.read_bme680_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "si7021":
                     temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "tmp102":
@@ -598,6 +600,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self.log_error(ex)
             return (0, 0)
 
+    def read_bme680_temp(self, address):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/BME680.py "
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(address)
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Temperature BME680 cmd: %s", cmd)
+            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("BME680 result: %s", stdout)
+            temp, hum = stdout.split("|")
+            return (self.to_float(temp.strip()), self.to_float(hum.strip()))
+        except Exception as ex:
+            self._logger.info(
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self.log_error(ex)
+            return (0, 0)
+            
     def read_si7021_temp(self, address):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/SI7021.py "
