@@ -1,3 +1,4 @@
+import sys
 import smbus
 
 # default I2C address for device.
@@ -27,24 +28,29 @@ MCP9808_REG_CONFIG_ALERTMODE = 0x0001
 
 
 def main():
+	# get bus address if provided or use default address
+	address = MCP9808_I2CADDR_DEFAULT
+	if len(sys.argv) == 2:
+		address = int(sys.argv[1], 16)
+
 	# get I2C bus
 	bus = smbus.SMBus(1)
 
-	# MCP9808 address, 0x18(24)
+	# MCP9808 address, default 0x18(24)
 	# configuration register, 0x01(1)
 	# continuous conversion mode, power-up default
 	config = [MCP9808_REG_CONFIG_CONTCONV, 0x00]
-	bus.write_i2c_block_data(MCP9808_I2CADDR_DEFAULT, MCP9808_REG_CONFIG, config)
+	bus.write_i2c_block_data(address, MCP9808_REG_CONFIG, config)
 
-	# MCP9808 address, 0x18(24)
+	# MCP9808 address, default 0x18(24)
 	# select resolution rgister, 0x08(8)
 	# resolution = +0.0625 / C, 0x03(03)
-	bus.write_byte_data(MCP9808_I2CADDR_DEFAULT, MCP9808_REG_RESOLUTION, 0x03)
+	bus.write_byte_data(address, MCP9808_REG_RESOLUTION, 0x03)
 
-	# MCP9808 address, 0x18(24)
+	# MCP9808 address, default 0x18(24)
 	# read data back from 0x05(5), 2 bytes
 	# temp MSB, TEMP LSB
-	data = bus.read_i2c_block_data(MCP9808_I2CADDR_DEFAULT, MCP9808_REG_AMBIENT_TEMP, 2)
+	data = bus.read_i2c_block_data(address, MCP9808_REG_AMBIENT_TEMP, 2)
 
 	# convert the data to 13-bits
 	ctemp = ((data[0] & 0x1F) * 256) + data[1]

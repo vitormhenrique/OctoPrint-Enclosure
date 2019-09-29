@@ -513,7 +513,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     temp = self.read_max31855_temp(sensor['temp_sensor_address'])
                     hum = 0
                 elif sensor['temp_sensor_type'] == "mcp9808":
-                    temp = self.read_mcp_temp()
+                    temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
@@ -559,10 +559,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         return return_value, return_value
 
-    def read_mcp_temp(self):
+    def read_mcp_temp(self, address):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/mcp9808.py"
-            args = ["python", script]
+            args = ["python", script, str(address)]
             if self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature MCP9808 cmd: %s", " ".join(args))
             proc = Popen(args, stdout=PIPE)
