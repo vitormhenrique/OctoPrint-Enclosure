@@ -86,7 +86,7 @@ The response will either have YES or NO at the end of the first line. If it is y
 
 Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the 28-, for example 28-0000069834ff.
 
-* For the SI7021, BME280 and TMP102 sensors
+* For the SI7021, BME280, TMP102 and MCP9808 sensors
 
 Enable I2C on your raspberry pi, depending on raspi-config version, step by step can be different:
 
