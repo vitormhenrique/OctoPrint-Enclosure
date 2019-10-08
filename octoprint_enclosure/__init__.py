@@ -174,6 +174,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 gpio_status.append(dict(index_id=index, status=val))
         return flask.Response(json.dumps(gpio_status), mimetype='application/json')
 
+    @octoprint.plugin.BlueprintPlugin.route("/getTemperatureStatus", methods=["GET"])
+    def get_temperature_status(self):
+        temperature_status = []
+        for rpi_input in self.rpi_input:
+            if rpi_input['input_type'] == 'temperature_sensor':
+                temperature = self.to_int(rpi_input['temp_sensor_temp'])
+                humidity = self.to_int(rpi_input['temp_sensor_humidity'])
+                index = self.to_int(rpi_input['index_id'])
+                label = rpi_input['label']
+                temperature_status.append(dict(index_id=index, label=label, temperature=temperature, humidity=humidity))
+        return flask.Response(json.dumps(temperature_status), mimetype='application/json')
+
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
     def set_io(self):
         index = flask.request.values["index_id"]
