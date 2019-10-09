@@ -7,6 +7,8 @@ from .ledstrip import LEDStrip
 import octoprint.plugin
 import RPi.GPIO as GPIO
 import flask
+from flask import jsonify, request, make_response, Response
+from werkzeug.exceptions import BadRequest
 import time
 import sys
 import glob
@@ -159,7 +161,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     @octoprint.plugin.BlueprintPlugin.route("/getTemperatureStatus", methods=["GET"])
     def get_temperature_status(self):
         temperature_status = []
-        for rpi_input in self.rpi_input:
+        for rpi_input in self.rpi_inputs:
             if rpi_input['input_type'] == 'temperature_sensor':
                 temperature = self.to_int(rpi_input['temp_sensor_temp'])
                 humidity = self.to_int(rpi_input['temp_sensor_humidity'])
@@ -253,8 +255,211 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     ## POST filament/$id
     ## maybe think of a GET for this as well
+    @octoprint.plugin.BlueprintPlugin.route("/filament/<int:identifier>", methods=["PATCH"])
+    def set_filament_sensor(self, identifier):
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+
+        if 'status' not in data:
+            return make_response("missing status attribute", 406)
+
+        value = data["status"]
+
+        for sensor in self.rpi_inputs:
+            if identifier == self.to_int(sensor['index_id']):
+                sensor['filament_sensor_enabled'] = value
+                self._logger.info("Setting filament sensor for input %s to : %s", identifier, value)
+        self._settings.set(["rpi_inputs"], self.rpi_inputs)
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/filament/<int:identifier>", methods=["GET"])
+    def get_filament_sensor(self, identifier):
+        for sensor in self.rpi_inputs:
+            if identifier == self.to_int(sensor['index_id']):
+                return jsonify(sensor)
+        return make_response('', 404)
+
+    @octoprint.plugin.BlueprintPlugin.route("/pwm/<int:identifier>", methods=["PATCH"])
+    def set_pwm(self, identifier):
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+
+        if 'dutyCycle' not in data:
+            return make_response("missing dutyCycle attribute", 406)
+
+        set_value = self.to_int(data['dutyCycle'])
+        for rpi_output in [item for item in self.rpi_outputs if item['index_id'] == identifier]:
+            rpi_output['duty_cycle'] = set_value
+            rpi_output['new_duty_cycle'] = ""
+            gpio = self.to_int(rpi_output['gpio_pin'])
+            self.write_pwm(gpio, set_value)
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/gcode/<int:identifier>", methods=["POST"])
+    def requested_gcode_command(self, identifier):
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == identifier].pop()
+        self.send_gcode_command(rpi_output['gcode'])
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/neopixel/<int:identifier>", methods=["PATCH"])
+    def set_neopixel(self, identifier):
+        """ set_neopixel method get request from octoprint and send the command to arduino or neopixel"""
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+
+        if 'red' not in data:
+            return make_response("missing red attribute", 406)
+        if 'green' not in data:
+            return make_response("missing green attribute", 406)
+        if 'blue' not in data:
+            return make_response("missing blue attribute", 406)
+
+        red = data['red']
+        green = data['green']
+        blue = data['blue']
+
+        for rpi_output in self.rpi_outputs:
+            if identifier == self.to_int(rpi_output['index_id']):
+                led_count = rpi_output['neopixel_count']
+                led_brightness = rpi_output['neopixel_brightness']
+                address = rpi_output['microcontroller_address']
+
+                neopixel_dirrect = rpi_output['output_type'] == 'neopixel_direct'
+
+                self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red, green,
+                    blue, address, neopixel_dirrect, identifier)
+
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/rgb-led/<int:identifier>", methods=["PATCH"])
+    def set_ledstrip_color(self, identifier):
+        """ set_ledstrip_color method get request from octoprint and send the command to Open-Smart RGB LED Strip"""
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+
+        if 'rgb' not in data:
+            return make_response("missing rgb attribute", 406)
+        rgb = data['rgb']
+
+        for rpi_output in self.rpi_outputs:
+            if identifier == self.to_int(rpi_output['index_id']):
+                self.ledstrip_set_rgb(rpi_output, rgb)
+
+        return make_response('', 204)
+
+
+
+
+
+    """
+    DEPRECATION
+    This API will be deprecated in a future version
+    """
+
+    # ~~ Blueprintplugin mixin
+    @octoprint.plugin.BlueprintPlugin.route("/setEnclosureTempHum", methods=["GET"])
+    def set_enclosure_temp_humidity_old(self):
+        set_value = self.to_float(flask.request.values["set_temperature"])
+        index_id = self.to_int(flask.request.values["index_id"])
+
+        for temp_hum_control in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
+            temp_hum_control['temp_ctr_set_value'] = set_value
+
+        self.handle_temp_hum_control()
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/clearGPIOMode", methods=["GET"])
+    def clear_gpio_mode_old(self):
+        GPIO.cleanup()
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/updateUI", methods=["GET"])
+    def update_ui_requested_old(self):
+        self.update_ui()
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/getOutputStatus", methods=["GET"])
+    def get_output_status_old(self):
+        gpio_status = []
+        for rpi_output in self.rpi_outputs:
+            if rpi_output['output_type'] == 'regular':
+                pin = self.to_int(rpi_output['gpio_pin'])
+                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                index = self.to_int(rpi_output['index_id'])
+                gpio_status.append(dict(index_id=index, status=val))
+        return flask.Response(json.dumps(gpio_status), mimetype='application/json')
+
+    @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
+    def set_io_old(self):
+        index = flask.request.values["index_id"]
+        value = True if flask.request.values["status"] == 'true' else False
+        for rpi_output in self.rpi_outputs:
+            if self.to_int(index) == self.to_int(rpi_output['index_id']):
+                val = (not value) if rpi_output['active_low'] else value
+                self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/sendShellCommand", methods=["GET"])
+    def send_shell_command_old(self):
+        output_index = self.to_int(flask.request.values["index_id"])
+
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == output_index].pop()
+
+        command = rpi_output['shell_script']
+        self.shell_command(command)
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/setAutoStartUp", methods=["GET"])
+    def set_auto_startup_old(self):
+        index = flask.request.values["index_id"]
+        value = True if flask.request.values["status"] == 'true' else False
+
+        if not value:
+            suffix = 'auto_startup'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
+            self.stop_queue_item(queue_id)
+        for output in self.rpi_outputs:
+            if self.to_int(index) == self.to_int(output['index_id']):
+                output['auto_startup'] = value
+                self._logger.info("Setting auto startup for output %s to : %s", index, value)
+        self._settings.set(["rpi_outputs"], self.rpi_outputs)
+        return flask.jsonify(success=True)
+
+    @octoprint.plugin.BlueprintPlugin.route("/setAutoShutdown", methods=["GET"])
+    def set_auto_shutdown_old(self):
+        index = flask.request.values["index_id"]
+        value = True if flask.request.values["status"] == 'true' else False
+
+        if not value:
+            suffix = 'auto_shutdown'
+            queue_id = '{0!s}_{1!s}'.format(index, suffix)
+            self.stop_queue_item(queue_id)
+
+        for output in self.rpi_outputs:
+            if self.to_int(index) == self.to_int(output['index_id']):
+                output['auto_shutdown'] = value
+                self._logger.info("Setting auto shutdown for output %s to : %s", index, value)
+        self._settings.set(["rpi_outputs"], self.rpi_outputs)
+        return flask.jsonify(success=True)
+
     @octoprint.plugin.BlueprintPlugin.route("/setFilamentSensor", methods=["GET"])
-    def set_filament_sensor(self):
+    def set_filament_sensor_old(self):
         index = flask.request.values["index_id"]
         value = True if flask.request.values["status"] == 'true' else False
         for sensor in self.rpi_inputs:
@@ -264,9 +469,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return flask.jsonify(success=True)
 
-    ## POST pwm/$id
     @octoprint.plugin.BlueprintPlugin.route("/setPWM", methods=["GET"])
-    def set_pwm(self):
+    def set_pwm_old(self):
         set_value = self.to_int(flask.request.values["new_duty_cycle"])
         index_id = self.to_int(flask.request.values["index_id"])
         for rpi_output in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
@@ -276,18 +480,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self.write_pwm(gpio, set_value)
         return flask.jsonify(success=True)
 
-    ## POST gcode/$id
-    ## I think id might not even be needed here
     @octoprint.plugin.BlueprintPlugin.route("/sendGcodeCommand", methods=["GET"])
-    def requested_gcode_command(self):
+    def requested_gcode_command_old(self):
         gpio_index = self.to_int(flask.request.values["index_id"])
         rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == gpio_index].pop()
         self.send_gcode_command(rpi_output['gcode'])
         return flask.jsonify(success=True)
 
-    ## POST neopixel/$id
     @octoprint.plugin.BlueprintPlugin.route("/setNeopixel", methods=["GET"])
-    def set_neopixel(self):
+    def set_neopixel_old(self):
         """ set_neopixel method get request from octoprint and send the command to arduino or neopixel"""
         gpio_index = self.to_int(flask.request.values["index_id"])
         red = flask.request.values["red"]
@@ -306,9 +507,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         return flask.jsonify(success=True)
 
-    ## POST rgb-led/$id
     @octoprint.plugin.BlueprintPlugin.route("/setLedstripColor", methods=["GET"])
-    def set_ledstrip_color(self):
+    def set_ledstrip_color_old(self):
         """ set_ledstrip_color method get request from octoprint and send the command to Open-Smart RGB LED Strip"""
         gpio_index = self.to_int(flask.request.values["index_id"])
         rgb = flask.request.values["rgb"]
@@ -317,6 +517,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 self.ledstrip_set_rgb(rpi_output, rgb)
 
         return flask.jsonify(success=True)
+
+    # DEPREACTION END
+
+
+
+
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
                               index_id, queue_id=None):
