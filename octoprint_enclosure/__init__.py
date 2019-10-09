@@ -220,7 +220,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 return Response(json.dumps(rpi_output), mimetype='application/json')
         return make_response('', 404)
 
-    @octoprint.plugin.BlueprintPlugin.route("/output/<int:identifier>", methods=["PATCH"])
+    @octoprint.plugin.BlueprintPlugin.route("/outputs/<int:identifier>", methods=["PATCH"])
     def set_io(self, identifier):
         if "application/json" not in request.headers["Content-Type"]:
             return make_response("expected json", 400)
@@ -240,25 +240,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         return make_response('', 204)
 
-    @octoprint.plugin.BlueprintPlugin.route("/clear-gpio", methods=["POST"])
-    def clear_gpio_mode(self):
-        GPIO.cleanup()
-        return make_response('', 204)
-
-    @octoprint.plugin.BlueprintPlugin.route("/update", methods=["POST"])
-    def update_ui_requested(self):
-        self.update_ui()
-        return make_response('', 204)
-
-    @octoprint.plugin.BlueprintPlugin.route("/shell/<int:identifier>", methods=["POST"])
-    def send_shell_command(self, identifier):
-        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == identifier].pop()
-
-        command = rpi_output['shell_script']
-        self.shell_command(command)
-        return make_response('', 204)
-
-    @octoprint.plugin.BlueprintPlugin.route("/output/<int:identifier>/auto-startup", methods=["PATCH"])
+    @octoprint.plugin.BlueprintPlugin.route("/outputs/<int:identifier>/auto-startup", methods=["PATCH"])
     def set_auto_startup(self, identifier):
         if "application/json" not in request.headers["Content-Type"]:
             return make_response("expected json", 400)
@@ -283,7 +265,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._settings.set(["rpi_outputs"], self.rpi_outputs)
         return make_response('', 204)
 
-    @octoprint.plugin.BlueprintPlugin.route("/output/<int:identifier>/auto-shutdown", methods=["PATCH"])
+    @octoprint.plugin.BlueprintPlugin.route("/outputs/<int:identifier>/auto-shutdown", methods=["PATCH"])
     def set_auto_shutdown(self, identifier):
         if "application/json" not in request.headers["Content-Type"]:
             return make_response("expected json", 400)
@@ -307,6 +289,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 output['auto_shutdown'] = value
                 self._logger.info("Setting auto shutdown for output %s to : %s", str(identifier), value)
         self._settings.set(["rpi_outputs"], self.rpi_outputs)
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/clear-gpio", methods=["POST"])
+    def clear_gpio_mode(self):
+        GPIO.cleanup()
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/update", methods=["POST"])
+    def update_ui_requested(self):
+        self.update_ui()
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/shell/<int:identifier>", methods=["POST"])
+    def send_shell_command(self, identifier):
+        rpi_output = [r_out for r_out in self.rpi_outputs if self.to_int(r_out['index_id']) == identifier].pop()
+
+        command = rpi_output['shell_script']
+        self.shell_command(command)
         return make_response('', 204)
 
     @octoprint.plugin.BlueprintPlugin.route("/pwm/<int:identifier>", methods=["PATCH"])
