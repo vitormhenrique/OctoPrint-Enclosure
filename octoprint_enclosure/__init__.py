@@ -152,14 +152,25 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 humidity = self.to_float(rpi_input['temp_sensor_humidity'])
                 index = self.to_int(rpi_input['index_id'])
                 label = rpi_input['label']
-                temperature_status.append(dict(index_id=index, label=label, temperature=temperature, humidity=humidity))
+                temperature_status.append({'index_id': index, 'label': label, 'temperature': temperature, 'humidity': humidity})
         return jsonify(temperature_status)
 
     @octoprint.plugin.BlueprintPlugin.route("/temperature/<int:identifier>", methods=["GET"])
     def get_single_temperature_status(self, identifier):
         for rpi_input in self.rpi_inputs:
             if identifier == self.to_int(rpi_input['index_id']):
-                return jsonify(rpi_input)
+                return jsonify({
+                    'indexId':  rpi_input['index_id'],
+                    'gpioPin':  rpi_input['gpio_pin'],
+                    'type': rpi_input['temp_sensor_type'],
+                    'inputType':  rpi_input['input_type'],
+                    'label':  rpi_input['label'],
+                    'address':  rpi_input['temp_sensor_address'],
+                    'humidity':  self.to_float(rpi_input['temp_sensor_humidity']),
+                    'temperature':  self.to_float(rpi_input['temp_sensor_temp']),
+                    'useFahrenheit': rpi_input['use_fahrenheit'],
+                    'showNavbar':  rpi_input['temp_sensor_navbar']
+                })
         return make_response('', 404)
 
     @octoprint.plugin.BlueprintPlugin.route("/temperature/<int:identifier>", methods=["PATCH"])
