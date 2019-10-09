@@ -6,7 +6,6 @@ from subprocess import Popen, PIPE
 from .ledstrip import LEDStrip
 import octoprint.plugin
 import RPi.GPIO as GPIO
-import flask
 from flask import jsonify, request, make_response, Response
 from werkzeug.exceptions import BadRequest
 import time
