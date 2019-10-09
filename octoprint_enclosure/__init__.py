@@ -143,18 +143,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
     # ~~ Blueprintplugin mixin
-    @octoprint.plugin.BlueprintPlugin.route("/input", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/inputs", methods=["GET"])
     def get_inputs(self):
         inputs = []
         for rpi_input in self.rpi_inputs:
-            inputs.append(dict(index_id=rpi_input['index_id'], label=rpi_input['label']))
-        return jsonify(inputs)
+            index = self.to_int(rpi_input['index_id'])
+            label = rpi_input['label']
+            inputs.append(dict(index_id=index, label=label))
+        return Response(json.dumps(inputs), mimetype='application/json')
 
-    @octoprint.plugin.BlueprintPlugin.route("/input/<int:identifier>", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/inputs/<int:identifier>", methods=["GET"])
     def get_input_status(self, identifier):
         for rpi_input in self.rpi_inputs:
             if identifier == self.to_int(rpi_input['index_id']):
-                return jsonify(rpi_input)
+                return Response(json.dumps(rpi_input), mimetype='application/json')
         return make_response('', 404)
 
     @octoprint.plugin.BlueprintPlugin.route("/temperature/<int:identifier>", methods=["PATCH"])
@@ -177,32 +179,45 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.handle_temp_hum_control()
         return make_response('', 204)
 
-    @octoprint.plugin.BlueprintPlugin.route("/clear-gpio", methods=["POST"])
-    def clear_gpio_mode(self):
-        GPIO.cleanup()
+    @octoprint.plugin.BlueprintPlugin.route("/filament/<int:identifier>", methods=["PATCH"])
+    def set_filament_sensor(self, identifier):
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+
+        if 'status' not in data:
+            return make_response("missing status attribute", 406)
+
+        value = data["status"]
+
+        for sensor in self.rpi_inputs:
+            if identifier == self.to_int(sensor['index_id']):
+                sensor['filament_sensor_enabled'] = value
+                self._logger.info("Setting filament sensor for input %s to : %s", str(identifier), value)
+        self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return make_response('', 204)
 
-    @octoprint.plugin.BlueprintPlugin.route("/update", methods=["POST"])
-    def update_ui_requested(self):
-        self.update_ui()
-        return make_response('', 204)
-
-    @octoprint.plugin.BlueprintPlugin.route("/output", methods=["GET"])
-    def get_output_status(self):
+    @octoprint.plugin.BlueprintPlugin.route("/outputs", methods=["GET"])
+    def get_outputs(self):
         gpio_status = []
         for rpi_output in self.rpi_outputs:
             if rpi_output['output_type'] == 'regular':
-                pin = self.to_int(rpi_output['gpio_pin'])
-                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
                 index = self.to_int(rpi_output['index_id'])
-                gpio_status.append(dict(index_id=index, status=val))
-        return jsonify(gpio_status)
+                label = rpi_output['label']
+                gpio_status.append(dict(index_id=index, label=label))
+        return Response(json.dumps(gpio_status), mimetype='application/json')
 
-    @octoprint.plugin.BlueprintPlugin.route("/output/<int:identifier>", methods=["GET"])
-    def get_single_output_status(self, identifier):
+    @octoprint.plugin.BlueprintPlugin.route("/outputs/<int:identifier>", methods=["GET"])
+    def get_output_status(self, identifier):
         for rpi_output in self.rpi_outputs:
             if identifier == self.to_int(rpi_output['index_id']):
-                return jsonify(rpi_output)
+                out = rpi_output.copy()
+                pin = self.to_int(rpi_output['gpio_pin'])
+                out['val'] = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                return Response(json.dumps(rpi_output), mimetype='application/json')
         return make_response('', 404)
 
     @octoprint.plugin.BlueprintPlugin.route("/output/<int:identifier>", methods=["PATCH"])
@@ -223,6 +238,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if identifier == self.to_int(rpi_output['index_id']):
                 val = (not value) if rpi_output['active_low'] else value
                 self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/clear-gpio", methods=["POST"])
+    def clear_gpio_mode(self):
+        GPIO.cleanup()
+        return make_response('', 204)
+
+    @octoprint.plugin.BlueprintPlugin.route("/update", methods=["POST"])
+    def update_ui_requested(self):
+        self.update_ui()
         return make_response('', 204)
 
     @octoprint.plugin.BlueprintPlugin.route("/shell/<int:identifier>", methods=["POST"])
@@ -282,36 +307,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 output['auto_shutdown'] = value
                 self._logger.info("Setting auto shutdown for output %s to : %s", str(identifier), value)
         self._settings.set(["rpi_outputs"], self.rpi_outputs)
-        return make_response('', 204)
-
-    @octoprint.plugin.BlueprintPlugin.route("/filament/<int:identifier>", methods=["GET"])
-    def get_filament_sensor(self, identifier):
-        for sensor in self.rpi_inputs:
-            if identifier == self.to_int(sensor['index_id']):
-                return jsonify(sensor)
-        return make_response('', 404)
-
-    # TODO: maybe get all filament sensors via GET /filament. What would be they correct type here?
-
-    @octoprint.plugin.BlueprintPlugin.route("/filament/<int:identifier>", methods=["PATCH"])
-    def set_filament_sensor(self, identifier):
-        if "application/json" not in request.headers["Content-Type"]:
-            return make_response("expected json", 400)
-        try:
-            data = request.json
-        except BadRequest:
-            return make_response("malformed request", 400)
-
-        if 'status' not in data:
-            return make_response("missing status attribute", 406)
-
-        value = data["status"]
-
-        for sensor in self.rpi_inputs:
-            if identifier == self.to_int(sensor['index_id']):
-                sensor['filament_sensor_enabled'] = value
-                self._logger.info("Setting filament sensor for input %s to : %s", str(identifier), value)
-        self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return make_response('', 204)
 
     @octoprint.plugin.BlueprintPlugin.route("/pwm/<int:identifier>", methods=["PATCH"])
