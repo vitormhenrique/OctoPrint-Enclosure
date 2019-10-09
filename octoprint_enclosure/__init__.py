@@ -202,13 +202,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     @octoprint.plugin.BlueprintPlugin.route("/outputs", methods=["GET"])
     def get_outputs(self):
-        gpio_status = []
+        outputs = []
         for rpi_output in self.rpi_outputs:
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                gpio_status.append(dict(index_id=index, label=label))
-        return Response(json.dumps(gpio_status), mimetype='application/json')
+                outputs.append(dict(index_id=index, label=label))
+        return Response(json.dumps(outputs), mimetype='application/json')
 
     @octoprint.plugin.BlueprintPlugin.route("/outputs/<int:identifier>", methods=["GET"])
     def get_output_status(self, identifier):
