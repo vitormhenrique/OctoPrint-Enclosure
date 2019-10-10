@@ -1,169 +1,342 @@
 # API Reference v2.0
 
-## List all Inputs.
+The API is located at \<OctoPrintURL>/plugin/enclosure. This needs to be added before each endpoint in order for the API to function properly. The API either returns a `application/json` body or an empty body for a successful request.
 
-Method: GET
+A failed request will return an error code as well as a short error description.
 
-http://<host>/plugin/enclosure/inputs?apikey=<APIKEY>
+## List all inputs
 
-Response:
+Endpoint: **GET** `/inputs`
+
+Response (200):
 
 ```
 [
     {
-        "index_id": 1,
-        "label": "Input 1"
+        "index_id": number,
+        "label": string
     }
 ]
 ```
 
+Error Responses:
+ - none
 
-## List a specific input.
+## List a specific input
 
-Method: GET
+Endpoint: **GET** `/inputs/<id>`
 
-http://<host>/plugin/enclosure/inputs/1?apikey=<APIKEY>
+*Note: id needs to be int (index_id)*
 
-Response:
+Response (200):
 ```
 {
     "controlled_io": null,
-    "filament_sensor_timeout": 120,
-    "filament_sensor_enabled": true,
-    "temp_sensor_address": "",
-    "printer_action": "filament",
-    "controlled_io_set_value": "low",
-    "temp_sensor_type": "11",
-    "temp_sensor_navbar": true,
-    "temp_sensor_humidity": 19,
-    "edge": "fall",
-    "ds18b20_serial": "",
-    "action_type": "output_control",
-    "input_pull_resistor": "input_pull_up",
-    "input_type": "temperature_sensor",
-    "temp_sensor_temp": 33,
-    "label": "Input 1",
-    "index_id": 1,
-    "use_fahrenheit": false,
-    "gpio_pin": "4"
+    "filament_sensor_timeout": number,
+    "filament_sensor_enabled": boolean,
+    "temp_sensor_address": string,
+    "printer_action": string,
+    "controlled_io_set_value": string,
+    "temp_sensor_type": string,
+    "temp_sensor_navbar": boolean,
+    "temp_sensor_humidity": number,
+    "edge": string,
+    "ds18b20_serial": string,
+    "action_type": string,
+    "input_pull_resistor": string,
+    "input_type": string,
+    "temp_sensor_temp": number,
+    "label": string,
+    "index_id": number,
+    "use_fahrenheit": boolean,
+    "gpio_pin": string
 }
 ```
 
+Error Responses:
+ - 404 if specified id cannot be found
+
 ## List all outputs
 
-Method: GET
+Endpoint: **GET** `/outputs`
 
-http://<host>/plugin/enclosure/outputs?apikey=<APIKEY>
-
-Response:
+Response (200):
 ```
 [
     {
-        "index_id": 1,
-        "label": "Ouput 1"
+        "index_id": number,
+        "label": string
     }
 ]
 ```
 
+Error Responses:
+ - none
+
 ## List a specific output
 
-Method: GET
+Endpoint: **GET** `/outputs/<id>`
 
-http://<host>/plugin/enclosure/outputs/1?apikey=<APIKEY>
+*Note: id needs to be int (index_id)*
 
-Response: 
+
+Response (200):
 ```
 {
-    "linked_temp_sensor": "",
-    "ledstrip_gpio_dat": "",
-    "startup_time": 0,
-    "temp_ctr_deadband": 0,
-    "neopixel_brightness": 255,
-    "new_duty_cycle": "",
-    "gpio_pin": 0,
-    "default_duty_cycle": 0,
-    "neopixel_color": "rgb(0,0,0)",
-    "hide_btn_ui": false,
-    "temp_ctr_set_value": 0,
-    "temp_ctr_default_value": 0,
-    "default_neopixel_color": "",
-    "controlled_io_set_value": "Low",
-    "auto_shutdown": false,
-    "shell_script": "",
-    "label": "Ouput 1",
-    "default_ledstrip_color": "",
-    "duty_a": 0,
-    "toggle_timer_off": 0,
-    "alarm_set_temp": 0,
-    "ledstrip_gpio_clk": "",
-    "auto_startup": false,
-    "controlled_io": 0,
-    "shutdown_time": 0,
-    "temp_ctr_type": "heater",
-    "gcode": "M117 Test",
-    "shutdown_on_failed": false,
-    "temperature_b": 0,
-    "ledstrip_color": "rgb(0,0,0)",
-    "temperature_a": 0,
-    "neopixel_count": 0,
-    "duty_cycle": 0,
-    "toggle_timer_on": 0,
-    "show_on_navbar": false,
-    "duty_b": 0,
-    "toggle_timer": false,
-    "pwm_status": 50,
-    "gpio_status": false,
-    "pwm_frequency": 50,
-    "new_ledstrip_color": "",
-    "startup_with_server": true,
-    "active_low": true,
-    "temp_ctr_max_temp": 0,
-    "pwm_temperature_linked": false,
-    "temp_ctr_new_set_value": "",
-    "output_type": "regular",
-    "microcontroller_address": 0,
-    "index_id": 1,
-    "new_neopixel_color": ""
+    "linked_temp_sensor": string,
+    "ledstrip_gpio_dat": string,
+    "startup_time": number,
+    "temp_ctr_deadband": number,
+    "neopixel_brightness": number,
+    "new_duty_cycle": string,
+    "gpio_pin": number,
+    "default_duty_cycle": number,
+    "neopixel_color": string,
+    "hide_btn_ui": boolean,
+    "temp_ctr_set_value": number,
+    "temp_ctr_default_value": number,
+    "default_neopixel_color": string,
+    "controlled_io_set_value": string,
+    "auto_shutdown": boolean,
+    "shell_script": string,
+    "label": string,
+    "default_ledstrip_color": string,
+    "duty_a": number,
+    "toggle_timer_off": number,
+    "alarm_set_temp": number,
+    "ledstrip_gpio_clk": string,
+    "auto_startup": boolean,
+    "controlled_io": number,
+    "shutdown_time": number,
+    "temp_ctr_type": string,
+    "gcode": string,
+    "shutdown_on_failed": boolean,
+    "temperature_b": number,
+    "ledstrip_color": string,
+    "temperature_a": number,
+    "neopixel_count": number,
+    "duty_cycle": number,
+    "toggle_timer_on": number,
+    "show_on_navbar": boolean,
+    "duty_b": number,
+    "toggle_timer": boolean,
+    "pwm_status": number,
+    "gpio_status": boolean,
+    "pwm_frequency": number,
+    "new_ledstrip_color": string,
+    "startup_with_server": boolean,
+    "active_low": boolean,
+    "temp_ctr_max_temp": number,
+    "pwm_temperature_linked": boolean,
+    "temp_ctr_new_set_value": string,
+    "output_type": string,
+    "microcontroller_address": number,
+    "index_id": number,
+    "new_neopixel_color": string
 }
 ```
 
-## Enable/Disable  Output:
+Error Responses:
+ - 404 if specified id cannot be found
 
-http://<host>/plugin/enclosure/outputs/1?apikey=<APIKEY>
+## Control specific output
 
-Method: PATCH
-Content-Type: application/json
-Body:  { "status": boolean }
+Endpoint: **PATCH** `/outputs/<id>`
 
-example:  
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
 ```
-{ "status": true }
-```
-
-
-## Enable/Disable  Output auto-shutdown:
-
-http://<host>/plugin/enclosure/outputs/1/auto-shutdown?apikey=<APIKEY>
-
-Method: PATCH
-Content-Type: application/json
-Body:  { "status": boolean }
-
-example:  
-```
-{ "status": true }
+{
+    "status": boolean
+}
 ```
 
+Response (204): No-Content
 
-## Enable/Disable  Output auto-shutdown:
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
 
-http://<host>/plugin/enclosure/outputs/1/auto-startup?apikey=<APIKEY>
+## Enable/Disable  Output auto-startup
 
-Method: PATCH
-Content-Type: application/json
-Body:  { "status": boolean }
+Endpoint: **PATCH** `/outputs/<id>/auto-startup`
 
-example:  
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
 ```
-{ "status": true }
+{
+    "status": boolean
+}
 ```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Control auto-shutdown for specific output
+
+Endpoint: **PATCH** `/outputs/<id>/auto-shutdown`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "status": boolean
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Control temperature
+
+Endpoint: **PATCH** `/temperature/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "temperature": number
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Control filament sensor
+
+Endpoint: **PATCH** `/filament/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "status": boolean
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Set PWM value
+
+Endpoint: **PATCH** `/pwm/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "duty_cycle": number
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Set RGB LED color
+
+Endpoint: **PATCH** `/rgb-led/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "rgb": string (rgb(r,g,b))
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Set neopixel color
+
+Endpoint: **PATCH** `/neopixel/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body (Content-Type: `application/json`):
+```
+{
+    "red": number,
+    "green": number,
+    "blue": number
+}
+```
+
+Response (204): No-Content
+
+Error Responses:
+- 400 - wrong Content-Type or malformed request
+- 406 - missing information (missing attribute given in response body)
+
+## Clear GPIO Pins
+
+Endpoint: **POST** `/clear-gpio`
+
+Body: empty
+
+Response (204): No-Content
+
+Error Responses:
+- none
+
+## Update UI
+
+Endpoint: **POST** `/update`
+
+Body: empty
+
+Response (204): No-Content
+
+Error Responses:
+- none
+
+## Send shell command
+
+Endpoint: **POST** `/shell/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body: empty
+
+Response (204): No-Content
+
+Error Responses:
+- none
+
+## Send gcode command
+
+Endpoint: **POST** `/gcode/<id>`
+
+*Note: id needs to be int (index_id)*
+
+Body: empty
+
+Response (204): No-Content
+
+Error Responses:
+- none
