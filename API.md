@@ -110,6 +110,7 @@ Response (200):
     "shutdown_time": number,
     "temp_ctr_type": string,
     "gcode": string,
+    "current_value": boolean,
     "shutdown_on_failed": boolean,
     "temperature_b": number,
     "ledstrip_color": string,

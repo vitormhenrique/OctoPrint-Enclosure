@@ -20,6 +20,7 @@ import requests
 import inspect
 import threading
 import json
+import copy
 
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
@@ -222,10 +223,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_output_status(self, identifier):
         for rpi_output in self.rpi_outputs:
             if identifier == self.to_int(rpi_output['index_id']):
-                out = rpi_output.copy()
+                out = copy.deepcopy(rpi_output)
                 pin = self.to_int(rpi_output['gpio_pin'])
-                out['val'] = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
-                return Response(json.dumps(rpi_output), mimetype='application/json')
+                out['current_value'] = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                return Response(json.dumps(out), mimetype='application/json')
         return make_response('', 404)
 
 
