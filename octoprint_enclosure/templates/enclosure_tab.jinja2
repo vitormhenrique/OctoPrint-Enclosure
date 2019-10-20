@@ -160,6 +160,19 @@
 </div>
 <!-- /ko -->
 
+<!-- ko if: ($data.output_type() == "ledstrip")  -->
+<h4>
+    <span data-bind="html: label"> </span>
+    <span class="badge">ledstrip</span>
+</h4>
+<div class="input-append ledstrip-div">
+    <input type="text" class="input-block-level" data-bind="click: $root.showColorPicker(), value: new_ledstrip_color, valueUpdate: 'input', attr: {placeholder:ledstrip_color, name: 'colorpicker'}">
+    <button type="submit" class="btn btn-input-inc" title="Set Color" data-bind="enable: $root.isUser(), click: $root.handleLedstripColor">
+        <i class="fa fa-check"></i>
+    </button>
+</div>
+<!-- /ko -->
+
 <!-- ko if: ($data.output_type() == "gcode_output")  -->
 <h4>
     <span data-bind="html: label"> </span>
@@ -237,7 +250,7 @@
 
 <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
 <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
-<!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm") -->
+<!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
 <div>
     <h5>
         <!-- ko if: ($root.isUser())  -->

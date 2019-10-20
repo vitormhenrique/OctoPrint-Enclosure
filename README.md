@@ -69,7 +69,7 @@ Start by adding the following line to /boot/config.txt
 <pre><code>dtoverlay=w1-gpio</code></pre>
 
 After rebooting, you can check if the OneWire device was found properly with
-<pre><code>dmesg | grep w1-gpip</code></pre>
+<pre><code>dmesg | grep w1-gpio</code></pre>
 You should see something like
 <pre><code>[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0</code></pre>
 
@@ -86,7 +86,7 @@ The response will either have YES or NO at the end of the first line. If it is y
 
 Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the 28-, for example 28-0000069834ff.
 
-* For the SI7021, BME280 and TMP102 sensors
+* For the SI7021, BME280, TMP102 and MCP9808 sensors
 
 Enable I2C on your raspberry pi, depending on raspi-config version, step by step can be different:
 
@@ -106,6 +106,27 @@ Install some packages (on raspberry pi system python not octoprint virtual envir
 Find the address of the sensor:
 
 <pre><code>i2cdetect -y 1</code></pre>
+
+* For Neopixel
+
+If your setup does not have pip install pip:
+`sudo apt-get install python-pip`
+
+Install the required library:
+`sudo pip install rpi_ws281x`
+
+rpi_ws281x really needs sudo, and you need to setup up so your rpi does not ask for a password when runing a python script, so run:
+
+`sudo visudo`
+
+and add `pi ALL=(ALL) NOPASSWD: ALL` to the end of the file.
+
+Also backlist the audio kernel:
+
+`sudo nano /etc/modprobe.d/snd-blacklist.conf`
+
+add the `blacklist snd_bcm2835` to the end of the file:
+
 
 * GPIO
 
