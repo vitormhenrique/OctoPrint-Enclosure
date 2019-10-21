@@ -33,7 +33,7 @@ plugin_url = "https://github.com/vitormhenrique/OctoPrint-Enclosure"
 plugin_license = "AGPLv3"
 
 # Any additional requirements besides OctoPrint should be listed here
-plugin_requires = ["RPi.GPIO==0.6.5", "requests==2.7",
+plugin_requires = ["RPi.GPIO==0.6.5", "requests>=2.7",
                    "Adafruit-DHT==1.4.0", "rpi-ws281x==4.2.2", "smbus==1.1.post2", "Adafruit-MAX31855==1.6.1", "bme680==1.0.5"]
 
 additional_setup_parameters = {}
