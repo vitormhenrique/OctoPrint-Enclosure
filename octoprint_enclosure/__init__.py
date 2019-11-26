@@ -637,6 +637,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if  self._settings.get(["debug_temperature_log"]) is True:
                     self._logger.debug("Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
                 if temp is not None and hum is not None:
+                    sensor["temp_sensor_temp"] = temp
+                    sensor["temp_sensor_humidity"] = hum
                     sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
                     self.temperature_sensor_data = sensor_data
                     self.handle_temp_hum_control()
