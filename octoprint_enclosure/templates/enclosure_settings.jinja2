@@ -536,6 +536,7 @@
             <option value="18b20">DS18B20</option>
             <option value="si7021">SI7021</option>
             <option value="bme280">BME280</option>
+            <option value="am2320">AM2320</option>
             <option value="tmp102">TMP102</option>
             <option value="max31855">MAX31855</option>
             <option value="mcp9808">MCP9808</option>
@@ -563,7 +564,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") -->
+      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -605,7 +606,7 @@
       </div>
       
       <!-- /ko -->
-      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") -->
+      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
