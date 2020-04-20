@@ -36,7 +36,6 @@ def getTemp(bus):
 			bus.write_byte(0x5C, 0x00)
 		except:
 			pass
-		#raise AM2320DeviceNotFound("Sensor not found")
 
 	bus.write_i2c_block_data(0x5C, 0x03, [0x02, 2])
 	time.sleep(0.001)
@@ -69,7 +68,6 @@ def getHumi(bus):
 	crc2 = _crc16(result[0:-2])
 	if crc1 != crc2:
 			raise AM2320ReadError("CRC Mismatch")
-			return
 	return (humi / 10.0)
 
 def main():
