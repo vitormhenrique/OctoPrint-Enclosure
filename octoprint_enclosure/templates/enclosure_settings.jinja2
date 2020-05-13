@@ -582,6 +582,14 @@
             <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
         </div>
       </div>
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-dhtPin">{{ _('i2c Bus') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_sensor_i2cbus">
+          <span class="help-inline">This value should remain 1 unless you've used dtoverlay=i2c-gpio.
+          </span>
+        </div>
+      </div>
       <!-- /ko -->
       <!-- ko if: ($data.temp_sensor_type() == "max31855") -->
       <div class="control-group">
