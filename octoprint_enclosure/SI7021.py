@@ -3,14 +3,18 @@ import time
 import sys
 
 
-if len(sys.argv) == 2:
+if len(sys.argv) == 2 or len(sys.argv) == 3:
     address = int(sys.argv[1],16)
+    if len(sys.argv) == 3:
+        busNum = int(sys.argv[2],16)
+    else:
+        busNum = 1
 else:
     print('-1 | -1')
     sys.exit(1)
 
 # Get I2C bus
-bus = smbus.SMBus(1)
+bus = smbus.SMBus(busNum)
 
 # SI7021 address, 0x40(64)
 #		0xF5(245)	Select Relative Humidity NO HOLD master mode
