@@ -1,3 +1,6 @@
+# QUICK NOTE: I suffered an injury last Sunday (06/20/20) and broke both bones on my left forearm, it will be impossible to work on on this plugin in the near future, I'm struggling to make it work with a full time job + masters in computers science. This plugin is not abandoned but it is on vacation mode.
+
+
 Find the plugin useful? Buy me a coffee
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
