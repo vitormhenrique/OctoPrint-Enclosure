@@ -100,7 +100,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for command in command_string.split(' '):
             index = command.upper().find(gcode.upper())
             if not index == -1:
-                return command.replace(gcode, '').upper()
+                return command.replace(gcode, '')
         return -1
 
     # ~~ StartupPlugin mixin
@@ -1261,8 +1261,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                                 item['time'] = time_now
                         for line in self._settings.get(["filament_sensor_gcode"]).split('\n'):
                             if line:
-                                self._printer.commands(line.strip().upper())
-                                self._logger.info("Sending GCODE command: %s", line.strip().upper())
+                                self._printer.commands(line.strip())
+                                self._logger.info("Sending GCODE command: %s", line.strip())
                                 time.sleep(0.2)
                         for notification in self.notifications:
                             if notification['filamentChange']:
@@ -1378,8 +1378,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def send_gcode_command(self, command):
         for line in command.split('\n'):
             if line:
-                self._printer.commands(line.strip().upper())
-                self._logger.info("Sending GCODE command: %s", line.strip().upper())
+                self._printer.commands(line.strip())
+                self._logger.info("Sending GCODE command: %s", line.strip())
                 time.sleep(0.2)
 
     def handle_printer_action(self, channel):
