@@ -835,7 +835,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 for rpi_controlled_output in self.rpi_outputs:
                     if self.to_int(temperature_alarm['controlled_io']) == self.to_int(
                             rpi_controlled_output['index_id']):
-                        val = GPIO.LOW if rpi_controlled_output['active_low'] else GPIO.HIGH
+                        val = GPIO.LOW if temperature_alarm['controlled_io_set_value'] == 'low' else GPIO.HIGH
                         self.write_gpio(self.to_int(rpi_controlled_output['gpio_pin']), val)
                         for notification in self.notifications:
                             if notification['temperatureAction']:
