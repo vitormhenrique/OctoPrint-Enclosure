@@ -1,0 +1,74 @@
+#enclosure-table {
+    table-layout: fixed;
+    width: 100%;
+    margin-top: 20px;
+}
+
+#enclosure-table th,
+#enclosure-table td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+
+#enclosure-table th.temperature_sensor,
+#enclosure-table td.temperature_sensor {
+    width: 15%;
+    text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#enclosure-table th.temperature_actual,
+#enclosure-table td.temperature_actual {
+    width: 20%;
+}
+
+#enclosure-table th.humidity_actual,
+#enclosure-table td.humidity_actual {
+    width: 15%;
+}
+
+#enclosure-table th.temp_hum_control,
+#enclosure-table td.temp_hum_control {
+    width: 15%;
+}
+
+#enclosure-table th.temperature_target,
+#enclosure-table td.temperature_target {
+    width: 35%;
+    overflow: visible;
+}
+
+.glyphs-on {
+    color: blue;
+    text-shadow: 4px 4px 15px blue;
+}
+
+.glyphs-off {
+    color: red;
+    text-shadow: 4px 4px 15px red;
+}
+
+.enclosure-link{
+   text-decoration: none;
+}
+
+.enclosure-link:hover{
+    text-decoration: none;
+}
+
+.navbar-enclosure{
+    text-shadow: 0 1px 0 #ccc;
+    color: #333;
+    float: none;
+    padding: 10px 15px 10px;
+    text-decoration: none;
+}
+
+.ledstrip-div, .neopixel-div{
+    width: 25%;
+}
+
+
