@@ -151,7 +151,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_input in self.rpi_inputs:
             index = self.to_int(rpi_input['index_id'])
             label = rpi_input['label']
-            inputs.append(dict(index_id=index, label=label))
+            pin = self.to_int(rpi_output['gpio_pin'])
+            val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))   
+            inputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, Status=val))
         return Response(json.dumps(inputs), mimetype='application/json')
 
 
@@ -215,7 +217,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                outputs.append(dict(index_id=index, label=label))
+                pin = self.to_int(rpi_output['gpio_pin'])
+                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))              
+                outputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, status=val))
         return Response(json.dumps(outputs), mimetype='application/json')
 
 
