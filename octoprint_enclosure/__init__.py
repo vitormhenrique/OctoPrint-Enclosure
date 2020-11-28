@@ -14,12 +14,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     # ~~ TemplatePlugin
     def get_template_configs(self):
         return [
-            dict(type="settings", template="enclosure_settings.jinja2", custom_bindings=True)
+            dict(type="settings", template="enclosureSettings.jinja2", custom_bindings=True)
             ]
 
     # ~~ AssetPlugin mixin
     def get_assets(self):
-        return dict(js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
+        return dict(
+            js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
             css=["css/bootstrap-colorpicker.css", "css/enclosure.css"])
 
     # ~~ Softwareupdate hook

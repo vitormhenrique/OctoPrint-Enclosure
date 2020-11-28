@@ -1,0 +1,44 @@
+<div id="settings_outputs_edit_dialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 class="modal-title">Add / Edit Output</h3>
+    </div>
+    <div class="modal-body">
+
+
+        <div class="full-sized-box">
+            <ul class="nav nav-pills">
+                <li class="active"><a href="#settings_outputs_edit_dialog_general" data-toggle="tab">{{ _('General') }}</a></li>
+                <li><a href="#settings_outputs_edit_dialog_buildvolume" data-toggle="tab">{{ _('Print bed & build volume') }}</a></li>
+                <li><a href="#settings_outputs_edit_dialog_axes" data-toggle="tab">{{ _('Axes') }}</a></li>
+                <li><a href="#settings_outputs_edit_dialog_extruder" data-toggle="tab">{{ _('Hotend & extruder') }}</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <div id="settings_outputs_edit_dialog_general" class="tab-pane active">
+                    {% include "outputEditorGeneral.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_buildvolume" class="tab-pane">
+                    <h3 class="modal-title">test2</h3>
+                </div>
+
+                <div id="settings_outputs_edit_dialog_axes" class="tab-pane">
+                    <h3 class="modal-title">test3</h3>
+                </div>
+
+                <div id="settings_outputs_edit_dialog_extruder" class="tab-pane">
+                    <h3 class="modal-title">test4</h3>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Abort') }}</button>
+        <button class="btn btn-primary btn-confirm">{{ _('Confirm') }}</button>
+    </div>
+</div>
+
+
