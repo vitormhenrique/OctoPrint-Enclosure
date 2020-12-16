@@ -23,6 +23,35 @@ import json
 import copy
 
 
+#Function that returns Boolean output state of the GPIO inputs / outputs
+def PinState_Boolean(pin, ActiveLow) :
+    try:
+        state = GPIO.input(pin)
+        if ActiveLow and not state: return True
+        if not ActiveLow and state: return True 
+        return False
+    except:
+        return "ERROR: Unable to read pin"
+
+#Function that returns human-readable output state of the GPIO inputs / outputs
+def PinState_Human(pin, ActiveLow):
+    PinState = PinState_Boolean(pin, ActiveLow)
+    if PinState == True :
+        return " ON "
+    elif PinState == False:		
+        return " OFF "
+    else:
+        return PinState
+
+#Translates the Pull-Up/Pull-Down GPIO resistor setting to ActiveLow/ActiveHigh boolean
+def CheckInputActiveLow(Input_Pull_Resistor):
+    #input_pull_up
+    #input_pull_down
+    if Input_Pull_Resistor == "input_pull_up":
+        return True
+    else:
+        return False
+        
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
@@ -52,10 +81,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     @staticmethod
     def to_float(value):
         """Converts value to flow
-
         Arguments:
             value {any} -- value to be
-
         Returns:
             float -- value converted
         """
@@ -144,6 +171,40 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._settings.set(["rpi_inputs"], [])
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
 
+    #Scan all configured inputs and outputs and return the pin value
+    @octoprint.plugin.BlueprintPlugin.route("/ReadPin/<int:identifier>", methods=["GET"])
+    def ReadSinglePin(self, identifier):
+        Resp = []
+        MatchFound = False
+        for rpi_input in self.rpi_inputs:
+            if identifier == self.to_int(rpi_input['gpio_pin']):
+                MatchFound = True
+                ConfiguredAs = "Input"
+                ActiveLow = CheckInputActiveLow(rpi_input['input_pull_resistor'])
+                pin = self.to_int(rpi_input['gpio_pin'])
+                val = PinState_Human(pin,ActiveLow)
+                label = rpi_input['label']
+                Resp.append(dict(Configured_As=ConfiguredAs, label=label, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        for rpi_output in self.rpi_outputs:
+            if identifier == self.to_int(rpi_output['gpio_pin']):
+                MatchFound = True
+                ConfiguredAs = "Output"
+                ActiveLow = CheckInputActiveLow(rpi_output['active_low'])
+                pin = self.to_int(rpi_output['gpio_pin'])
+                val = PinState_Human(pin,ActiveLow)
+                label = rpi_output['label']
+                Resp.append(dict(Configured_As=ConfiguredAs, label=label, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        if MatchFound == False:
+            pin = int(identifier)
+            ConfiguredAs = "Unknown"
+            ActiveLow = "Unknown"
+            try:
+                val = GPIO.input(pin)
+            except:
+                val = "GPIO pin not initialized."
+            Resp.append(dict(Configured_As=ConfiguredAs, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        return Response(json.dumps(Resp), mimetype='application/json')
+
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/inputs", methods=["GET"])
     def get_inputs(self):
@@ -151,9 +212,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_input in self.rpi_inputs:
             index = self.to_int(rpi_input['index_id'])
             label = rpi_input['label']
-            inputs.append(dict(index_id=index, label=label))
+            ActiveLow = CheckInputActiveLow(rpi_input['input_pull_resistor'])
+            pin = self.to_int(rpi_input['gpio_pin'])
+            val = PinState_Human(pin,ActiveLow)
+            inputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, State=val))
         return Response(json.dumps(inputs), mimetype='application/json')
-
 
     @octoprint.plugin.BlueprintPlugin.route("/inputs/<int:identifier>", methods=["GET"])
     def get_input_status(self, identifier):
@@ -207,7 +270,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return make_response('', 204)
 
-
     @octoprint.plugin.BlueprintPlugin.route("/outputs", methods=["GET"])
     def get_outputs(self):
         outputs = []
@@ -215,7 +277,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                outputs.append(dict(index_id=index, label=label))
+                pin = self.to_int(rpi_output['gpio_pin'])          
+                ActiveLow = rpi_output['active_low']
+                val = PinState_Human(pin,ActiveLow)
+                outputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, State=val))
         return Response(json.dumps(outputs), mimetype='application/json')
 
 
@@ -225,7 +290,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if identifier == self.to_int(rpi_output['index_id']):
                 out = copy.deepcopy(rpi_output)
                 pin = self.to_int(rpi_output['gpio_pin'])
-                out['current_value'] = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                out['current_value'] = PinState_Boolean(pin, rpi_output['active_low'] )
                 return Response(json.dumps(out), mimetype='application/json')
         return make_response('', 404)
 
@@ -454,9 +519,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_output in self.rpi_outputs:
             if rpi_output['output_type'] == 'regular':
                 pin = self.to_int(rpi_output['gpio_pin'])
-                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                ActiveLow = rpi_output['active_low']
+                val = PinState_Boolean(pin, ActiveLow)
+                val2 = PinState_Human(pin, ActiveLow)
                 index = self.to_int(rpi_output['index_id'])
-                gpio_status.append(dict(index_id=index, status=val))
+                gpio_status.append(dict(index_id=index, status=val, State=val2))
         return Response(json.dumps(gpio_status), mimetype='application/json')
 
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
@@ -581,7 +648,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
                               index_id, queue_id=None):
         """Send neopixel command
-
         Arguments:
             led_pin {int} -- GPIO number
             ledCount {int} -- number of LEDS
