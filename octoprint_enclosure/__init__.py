@@ -930,7 +930,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("MCP9808 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
@@ -949,7 +949,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Dht result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -970,7 +970,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("BME280 result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -991,7 +991,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("AM2320 result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -1012,7 +1012,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("SI7021 result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -1056,7 +1056,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("TMP102 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
@@ -1072,7 +1072,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("MAX31855 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
