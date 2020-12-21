@@ -1,8 +1,8 @@
 $(function () {
 
-  var cleanOutput = function () {
+  var cleanOutput = function (index_id) {
     return {
-      index_id: "",
+      index_id: index_id,
       label: "",
       output_type: "Regular",
       gpio: {
@@ -15,18 +15,24 @@ $(function () {
     var self = this;
 
     self.isNew = ko.observable(false);
+    self.index_id = ko.observable();
     self.label = ko.observable();
     self.output_type = ko.observable();
     self.gpio_pin = ko.observable();
+    self.enclosureOutputs = undefined;
 
     self.fromOutputData = function (data) {
 
       self.isNew(data === undefined);
 
       if (data === undefined) {
-        data = cleanOutput();
+        var arrRelaysLength = self.enclosureOutputs().length;
+        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureOutputs()[arrRelaysLength - 1].index_id + 1;
+        data = cleanOutput(nextIndex);
       }
 
+
+      self.index_id(data.index_id);
       self.label(data.label);
       self.output_type(data.output_type);
       self.gpio_pin(data.gpio.pin_name);
@@ -46,7 +52,7 @@ $(function () {
     };
 
     // end of EnclosureOutputEditorViewModel
-  }; 
+  };
 
   function EnclosureViewModel(parameters) {
     var self = this;
@@ -57,6 +63,15 @@ $(function () {
 
     self.enclosureOutputs = ko.observableArray();
 
+    self.onBeforeBinding = function () {
+      self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
+      // console.log(self.settingsViewModel.settings.plugins.enclosure)
+    };
+
+    self.onEventSettingsUpdated = function () {
+      self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
+    };
+
     self.createOutputEditor = function (data) {
       var outputEditor = new EnclosureOutputEditorViewModel();
 
@@ -64,6 +79,7 @@ $(function () {
     };
 
     self.outputEditor = self.createOutputEditor();
+    self.outputEditor.enclosureOutputs = self.enclosureOutputs;
 
     self.showOutputEditorDialog = function (data) {
 
@@ -87,10 +103,12 @@ $(function () {
     self.addOutputs = function () {
       var output = self.outputEditor.toOutputData();
 
+      self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs.push(output);
     };
 
-    self.print = function () {
-      console.log(self);
+    self.print_data = function () {
+      console.log(self.enclosureOutputs.root);
+      // console.log(self);
     };
 
     // end of EnclosureViewModel

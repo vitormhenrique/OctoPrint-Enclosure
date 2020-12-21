@@ -1,0 +1,70 @@
+<form class="form-horizontal">
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Output ID') }}</label>
+        <div class="controls">
+          <input type="text" data-bind="value: outputEditor.index_id" readonly>
+          <span class="help-inline">Auto generated ID for Output</span>
+        </div>
+      </div>
+    <div class="control-group">
+        <label class="control-label">{{ _('Name') }}</label>
+        <div class="controls">
+            <input type="text" data-bind="value: outputEditor.label">
+            <span class="help-inline">Name displayed on Enclosure Tab</span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Output Type') }}</label>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio"  value="regular" data-bind="checked: outputEditor.output_type"> {{ _('Regular IO') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="pwm" data-bind="checked: outputEditor.output_type"> {{ _('PWM') }}
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="neopixel" data-bind="checked: outputEditor.output_type"> {{ _('NeoPixel Direct') }}
+            </span>
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="led_strip" data-bind="checked: outputEditor.output_type"> {{ _('RGB LED Strip') }}
+            </span>
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="temp_hum_control" data-bind="checked: outputEditor.output_type"> {{ _('Temperature / Humidity Control') }}
+            </span>
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="temperature_alarm" data-bind="checked: outputEditor.output_type"> {{ _('Temperature Alarm') }}
+            </span>
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="gcode_output" data-bind="checked: outputEditor.output_type"> {{ _('GCode') }}
+            </span>
+          </label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" name="output_type_radio" value="shell_output" data-bind="checked: outputEditor.output_type"> {{ _('Shell Script') }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+
+
+</form>

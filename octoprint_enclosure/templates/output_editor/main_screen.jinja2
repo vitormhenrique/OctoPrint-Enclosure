@@ -1,0 +1,37 @@
+<div id="settings_outputs_edit_dialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 class="modal-title">Add / Edit Output</h3>
+    </div>
+    <div class="modal-body">
+
+
+        <div class="full-sized-box">
+            <ul class="nav nav-pills">
+                <li class="active"><a href="#settings_outputs_edit_dialog_general" data-toggle="tab">{{ _('General') }}</a></li>
+                 <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output" || outputEditor.output_type() == "led_strip") -->
+                <li><a href="#settings_outputs_edit_dialog_io" data-toggle="tab">{{ _('IO Settings') }}</a></li>
+                <!-- /ko -->
+
+            </ul>
+
+            <div class="tab-content">
+                <div id="settings_outputs_edit_dialog_general" class="tab-pane active">
+                    {% include "general_info.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_io" class="tab-pane">
+                    {% include "io_output.jinja2" %}
+                </div>
+
+
+            </div>
+        </div>
+
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Abort') }}</button>
+        <button class="btn btn-primary btn-confirm" data-bind="click: function() { $root.addOutputs(); }">{{ _('Save') }}</button>
+    </div>
+</div>

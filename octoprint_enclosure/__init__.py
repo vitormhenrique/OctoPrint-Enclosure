@@ -23,6 +23,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
             css=["css/bootstrap-colorpicker.css", "css/enclosure.css"])
 
+    # ~~ SettingsPlugin 
+    def get_settings_defaults(self):
+        return dict(enclosureOutputs=[])
+
     # ~~ Softwareupdate hook
     def get_update_information(self):
         return dict(enclosure=dict(displayName="Enclosure Plugin", displayVersion=self._plugin_version,
