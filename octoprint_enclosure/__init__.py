@@ -14,7 +14,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     # ~~ TemplatePlugin
     def get_template_configs(self):
         return [
-            dict(type="settings", template="enclosureSettings.jinja2", custom_bindings=True)
+            dict(type="settings", template="enclosure_settings.jinja2", custom_bindings=True)
             ]
 
     # ~~ AssetPlugin mixin
