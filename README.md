@@ -173,7 +173,7 @@ For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and 
 
 You can get a [USB Mini Desktop Fan](https://www.amazon.com/gp/product/B00WM7TRTY?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B00WM7TRTY) and control it over a relay.
 
-#### Filament sensor
+### Filament sensor
 
 You have the ability to add a filament sensor to the enclosure, it will automatically pause the print and run a gcode command to change the filament if you run out of filament, I can be any type of filament sensor, the sensor should connect to ground if is set as an "active low" when the filament run out or 3.3v if the sensor is set as "active high" when detected the end of filament, it does not matter if it is normally open or closed, that will only interfere on your wiring. I'm using the following sensor:
 
