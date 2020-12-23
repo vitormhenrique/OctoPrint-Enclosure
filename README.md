@@ -28,17 +28,17 @@ Here is a list of possibilities:
 
 Check pictures on thingiverse: http://www.thingiverse.com/thing:2245493
 
-## Software
-
-### Installation
+## Installation
 
 Install the plugin using the Plugin Manager bundled with OctoPrint, you can search for the Enclosure plugin or just use the url: https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip.
 
 ## Hardware
 
-This plugin support many hardware temperature sensors and led controller. Here are detailled instructions on how to setup them
+This plugin support many hardware temperature sensors, led, relays, heater...
 
-### Temperature sensor
+Here are detailled instructions on how to setup them.
+
+### Temperature sensors
 
 To control the enclosure temperature or get temperature triggered events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302, DS18B20, SI7021, BME280 and TMP102 temperature sensors.
 
@@ -132,7 +132,7 @@ Find the address of the sensor:
 i2cdetect -y 1
 ```
 
-### For Neopixel
+### Neopixel
 
 If your setup does not have pip install pip:
 `sudo apt-get install python-pip`
@@ -152,27 +152,24 @@ Also backlist the audio kernel:
 
 add the `blacklist snd_bcm2835` to the end of the file.
 
-* GPIO
+### GPIO
 
 This release uses RPi.GPIO to control IO of raspberry pi, it should install and work automatically. If it doesn't please update your octoprint with the latest release of octopi.
+You can use relays / mosfets to control you lights, heater, lockers etc... If you want to control mains voltage I recommend using [PowerSwitch Tail II](http://www.powerswitchtail.com/).
 
-### External hardware
-
-You can use relays / mosfets to control you lights, heater, lockers etc... If you want to control mains voltage I recommend using PowerSwitch Tail II.
-
-#### Relay
+### Relay
 
 The relays module that I used couple [SainSmart 2-Channel Relay Module](https://www.amazon.com/gp/product/B0057OC6D8?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B0057OC6D8). Those relays are active low, that means that they will turn on when you put LOW on the output of your pin. In order to not fry your Raspberry Pi pay attention on your wiring connection: remove the jumper link and connect 3.3v to VCC, 5V to JD-VCC and Ground to GND.
 
-#### Heater
+### Heater
 
-For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/) . The PowerSwitch Tail II is fully enclosed, making it a lot safer.
+For heating my enclosure I got a $15 lasko inside my enclosure. I opened it and added a relay to the mains wire. If you’re uncomfortable soldering or dealing with high voltage, please check out the [PowerSwitch Tail II](http://www.powerswitchtail.com/). It is fully enclosed, making it a lot safer.
 
 **CAUTION: VOLTAGE ON MAINS WIRE CAN KILL YOU, ONLY ATTEMPT TO DO THIS IF YOU KNOW WHAT YOU ARE DOING, AND DO AT YOUR OWN RISK**
 
 **CAUTION 2: THIS HEATER IS NOT INTENDED TO FUNCTION THIS WAY AND IT MIGHT BE A FIRE HAZARD. DO IT AT YOUR OWN RISK**
 
-#### Cooler
+### Cooler
 
 You can get a [USB Mini Desktop Fan](https://www.amazon.com/gp/product/B00WM7TRTY?ie=UTF8&tag=3dpstuff-20&camp=1789&linkCode=xm2&creativeASIN=B00WM7TRTY) and control it over a relay.
 
@@ -182,7 +179,7 @@ You have the ability to add a filament sensor to the enclosure, it will automati
 
 http://www.thingiverse.com/thing:1698397
 
-**Configuration**
+## Plugin configuration
 
 You need to enable what do you want the plugin to control. Settings from plugin version < 3.6 are not compatible anymore, you will loose all settings after upgrading the plugin.
 
