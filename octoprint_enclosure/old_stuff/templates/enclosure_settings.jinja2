@@ -83,13 +83,13 @@
       </div>
     </div> -->
     <!-- ko if: ($data.output_type() == "shell_output")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Script') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: shell_script">
         <span class="help-inline">Shell script to be executed</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip") -->
     <!-- <div class="control-group"> -->
@@ -111,7 +111,7 @@
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" ) -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
@@ -121,11 +121,11 @@
           duty cycle when print is complete.
         </span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Duty A') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: duty_a">
@@ -148,11 +148,11 @@
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temperature_b">
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
@@ -161,9 +161,9 @@
           PWM pins it will use the default PWM value when ON.
         </span>
       </div>
-    </div>
+    </div> -->
     <!-- ko if: ($data.toggle_timer()) -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('On Time') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
@@ -176,7 +176,7 @@
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
         <span class="help-inline">Time in secconds that the GPIO will remain when OFF</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
 
@@ -184,7 +184,7 @@
     <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
     <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
@@ -199,10 +199,10 @@
         </label>
         <span class="help-inline">Choose if output should turn on automatically when print starts</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: $data.auto_startup  -->
-    <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
+    <!-- <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
       <div class="control-group">
         <label class="control-label">{{ _('Startup Delay / Hour') }}</label>
         <div class="controls">
@@ -212,21 +212,21 @@
             forget to check timezone of your Raspberry Pi.</span>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
         </label>
         <span class="help-inline">Choose if output should turn off automatomatically when print finishes</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: $data.auto_shutdown  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
@@ -248,7 +248,7 @@
             <b>Link PWM to Temperature</b> option</span>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
 
@@ -264,30 +264,30 @@
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output" ||  $data.output_type() == "ledstrip") -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
         </label>
         <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
       </div>
-    </div>
+    </div> -->
     <!-- ko ifnot: ($data.output_type() == "ledstrip") -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: show_on_navbar"> {{ _('Show Button on Navbar') }}
         </label>
         <span class="help-inline">Add shortcut on navbar to toggle output</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
 
 
     <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
     <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
@@ -295,10 +295,10 @@
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
@@ -306,12 +306,12 @@
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "temp_hum_control")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Temp Control Type') }}</label>
       <div class="controls">
         <label class="radio">
@@ -325,39 +325,39 @@
         <label class="radio">
           <input type="radio" value="dehumidifier" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
       </div>
-    </div>
+    </div> -->
 
     <!-- ko if: ($data.auto_startup() || $data.startup_with_server())-->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Default Value') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_value">
         <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts or the server starts.</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
 
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Value Deadband') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_deadband">
         <span class="help-inline">Allowable drift on temperature / humidity control. Set it to zero to disable.</span>
       </div>
-    </div>
+    </div> -->
 
     <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Maximum Temperature') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
         <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
           it's set temperature is set again.</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "temperature_alarm")  -->
-    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+    <!-- <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
       <div class="control-group">
         <label class="control-label">{{ _('Set Temperature') }}</label>
         <div class="controls">
@@ -384,10 +384,10 @@
           <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
         </div>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "pwm")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('PWM Frequency') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: pwm_frequency">
@@ -400,7 +400,7 @@
         <input type="text" class="input-block-level" data-bind="value: default_duty_cycle">
         <span class="help-inline">Value is in percentage, between 0 and 100</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
     <div class="control-group">
@@ -413,7 +413,7 @@
     </div>
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "ledstrip")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('CLK') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: ledstrip_gpio_clk">
@@ -431,10 +431,10 @@
         <input type="text" class="input-block-level" data-bind="value: default_ledstrip_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
         <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "neopixel_indirect" || $data.output_type() == "neopixel_direct")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label">{{ _('Number of LEDS') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: neopixel_count">
@@ -454,17 +454,17 @@
         <input type="text" class="input-block-level" data-bind="value: default_neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
         <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "gcode_output")  -->
-    <div class="control-group">
+    <!-- <div class="control-group">
       <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Gcode') }}</label>
       <div class="controls">
         <textarea rows="4" class="block" data-bind="value: gcode"></textarea>
         <span class="help-inline">GCODE that will be sent to the printer. You should add
           <code>ENTER</code> on the end of every line sent to the printer</span>
       </div>
-    </div>
+    </div> -->
     <!-- /ko -->
 
     <div class="control-group">

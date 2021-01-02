@@ -1,4 +1,54 @@
 <form class="form-horizontal">
+    <div class="control-group">
+        <div class="controls">
+          <label class="checkbox">
+            <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
+          </label>
+          <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
+            B, temperature B. This output will automatically start when a print starts and will default to the default
+            duty cycle when print is complete.
+          </span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature A') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_a">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Duty B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: duty_b">
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Temperature B') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temperature_b">
+        </div>
+      </div>
 
 
+      <div class="control-group">
+        <label class="control-label">{{ _('PWM Frequency') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: pwm_frequency">
+          <span class="help-inline">Value is in Hz</span>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Default Duty Cycle') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: default_duty_cycle">
+          <span class="help-inline">Value is in percentage, between 0 and 100</span>
+        </div>
+      </div>
+      
 </form>

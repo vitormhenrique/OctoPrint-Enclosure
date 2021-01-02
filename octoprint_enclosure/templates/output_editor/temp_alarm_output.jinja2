@@ -1,5 +1,32 @@
 <form class="form-horizontal">
 
-
+    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+        <div class="control-group">
+            <label class="control-label">{{ _('Set Temperature') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: alarm_set_temp">
+                <span class="help-inline">Set temperature that will trigger the event</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label"> Controlled IO</label>
+            <div class="controls">
+                <select data-bind="options: $root.settings_outputs_regular, optionsText: 'label',
+                      optionsValue: 'index_id', value: $data.controlled_io">
+                </select>
+                <span class="help-inline">When the event happen, you want control which IO?</span>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Set Controlled IO Value</label>
+            <div class="controls">
+                <select data-bind="value: controlled_io_set_value">
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                </select>
+                <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
+            </div>
+        </div>
+    </div>
 
 </form>

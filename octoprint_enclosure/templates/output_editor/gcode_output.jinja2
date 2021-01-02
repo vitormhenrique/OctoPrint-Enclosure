@@ -1,4 +1,12 @@
 <form class="form-horizontal">
-
+  
+  <div class="control-group">
+    <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Gcode') }}</label>
+    <div class="controls">
+      <textarea rows="4" class="block" data-bind="value: gcode"></textarea>
+      <span class="help-inline">GCODE that will be sent to the printer. You should add
+        <code>ENTER</code> on the end of every line sent to the printer</span>
+    </div>
+  </div>
 
 </form>

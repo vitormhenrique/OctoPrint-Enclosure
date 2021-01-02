@@ -1,0 +1,86 @@
+<form class="form-horizontal">
+
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
+      </label>
+      <span class="help-inline">Toggle output every amount of seconds. It will start when the print starts and stop when
+        print is complete. For
+        PWM pins it will use the default PWM value when ON.
+      </span>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label">{{ _('On Time') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
+      <span class="help-inline">Time in seconds that the GPIO will remain ON</span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Off Time') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
+      <span class="help-inline">Time in seconds that the GPIO will remain when OFF</span>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
+      </label>
+      <span class="help-inline">Choose if output should turn on automatically when OctoPrint starts</span>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: auto_startup"> {{ _('Auto Startup') }}
+      </label>
+      <span class="help-inline">Choose if output should turn on automatically when print starts</span>
+    </div>
+  </div>
+
+  <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
+    <div class="control-group">
+      <label class="control-label">{{ _('Startup Delay') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: startup_time">
+        <span class="help-inline">Time delay in seconds to turn on GPIO when print starts</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
+      </label>
+      <span class="help-inline">Choose if output should turn off automatically when print finishes</span>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
+      </label>
+      <span class="help-inline">Choose if output should turn off automatically when print is canceled or fails</span>
+    </div>
+  </div>
+
+  <div data-bind="attr: {id: 'auto_shutdownField_' + $index() }">
+    <div class="control-group">
+      <label class="control-label">{{ _('Shutdown Delay') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: shutdown_time">
+        <span class="help-inline">Time delay in seconds to turn on GPIO when print finishes.</span>
+        <span class="label label-important">Attention</span>
+      </div>
+    </div>
+  </div>
+
+</form>

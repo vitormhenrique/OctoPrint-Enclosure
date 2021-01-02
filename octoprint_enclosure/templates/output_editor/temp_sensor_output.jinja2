@@ -1,3 +1,63 @@
 <form class="form-horizontal">
 
+    <div class="control-group">
+        <label class="control-label">Temperature Sensor</label>
+        <div class="controls">
+          <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
+                        optionsValue: 'index_id', value: $data.linked_temp_sensor">
+          </select>
+          <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">Temperature Sensor</label>
+        <div class="controls">
+          <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                        optionsValue: 'index_id', value: $data.linked_temp_sensor">
+          </select>
+          <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">{{ _('Temp Control Type') }}</label>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="heater" name="option_radio_box" data-bind="checked: temp_ctr_type"> {{ _('Heater') }}</label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="cooler" name="option_radio_box" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="dehumidifier" name="option_radio_box" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">{{ _('Default Value') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_ctr_default_value">
+          <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts or the server starts.</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">{{ _('Value Deadband') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_ctr_deadband">
+          <span class="help-inline">Allowable drift on temperature / humidity control. Set it to zero to disable.</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label">{{ _('Maximum Temperature') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
+          <span class="help-inline">Maximum temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
+            it's set temperature is set again.</span>
+        </div>
+      </div>
 </form>
