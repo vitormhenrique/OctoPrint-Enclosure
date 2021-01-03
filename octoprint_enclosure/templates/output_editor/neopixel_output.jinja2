@@ -3,21 +3,21 @@
     <div class="control-group">
         <label class="control-label">{{ _('Number of LEDS') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: neopixel_count">
+          <input type="text" class="input-block-level" data-bind="value: outputEditor.neopixel_count">
           <span class="help-inline">Number of led's on strip</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">{{ _('Brightness') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: neopixel_brightness">
+          <input type="text" class="input-block-level" data-bind="value: outputEditor.neopixel_brightness">
           <span class="help-inline">Value between 0 and 255</span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label">{{ _('Default Color') }}</label>
         <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: default_neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
+          <input type="text" class="input-block-level" data-bind="value: outputEditor.default_neopixel_color, attr: {name: 'colorpicker' } , click: $root.showColorPicker()">
           <span class="help-inline">Value needs to follow the format rgb(value_red,value_green,value_blue) where values should be between 0 and 255</span>
         </div>
       </div>

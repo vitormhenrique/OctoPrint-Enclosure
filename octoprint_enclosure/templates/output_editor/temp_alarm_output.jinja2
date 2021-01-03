@@ -1,10 +1,20 @@
 <form class="form-horizontal">
 
+    <div class="control-group">
+        <label class="control-label">Temperature Sensor</label>
+        <div class="controls">
+          <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                        optionsValue: 'index_id', value: outputEditor.alarm_linked_temp_sensor">
+          </select>
+          <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
+        </div>
+      </div>
+
     <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
         <div class="control-group">
             <label class="control-label">{{ _('Set Temperature') }}</label>
             <div class="controls">
-                <input type="text" class="input-block-level" data-bind="value: alarm_set_temp">
+                <input type="text" class="input-block-level" data-bind="value: outputEditor.alarm_set_temp">
                 <span class="help-inline">Set temperature that will trigger the event</span>
             </div>
         </div>
@@ -12,7 +22,7 @@
             <label class="control-label"> Controlled IO</label>
             <div class="controls">
                 <select data-bind="options: $root.settings_outputs_regular, optionsText: 'label',
-                      optionsValue: 'index_id', value: $data.controlled_io">
+                      optionsValue: 'index_id', value: outputEditor.controlled_io">
                 </select>
                 <span class="help-inline">When the event happen, you want control which IO?</span>
             </div>
@@ -20,7 +30,7 @@
         <div class="control-group">
             <label class="control-label">Set Controlled IO Value</label>
             <div class="controls">
-                <select data-bind="value: controlled_io_set_value">
+                <select data-bind="value: outputEditor.controlled_io_set_value">
                     <option value="low">Low</option>
                     <option value="high">High</option>
                 </select>

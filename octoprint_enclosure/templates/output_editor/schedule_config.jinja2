@@ -1,9 +1,9 @@
 <form class="form-horizontal">
-
+  <!-- ko if: (outputEditor.output_type() == "regular" || (outputEditor.output_type() == "pwm" && !outputEditor.pwm_temperature_linked()) ) -->
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
-        <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
+        <input type="checkbox" data-bind="checked: outputEditor.toggle_timer"> {{ _('Timer Toggle') }}
       </label>
       <span class="help-inline">Toggle output every amount of seconds. It will start when the print starts and stop when
         print is complete. For
@@ -11,26 +11,31 @@
       </span>
     </div>
   </div>
-
+  <!-- ko if: (outputEditor.toggle_timer()) -->
   <div class="control-group">
     <label class="control-label">{{ _('On Time') }}</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.toggle_timer_on">
       <span class="help-inline">Time in seconds that the GPIO will remain ON</span>
     </div>
   </div>
   <div class="control-group">
     <label class="control-label">{{ _('Off Time') }}</label>
     <div class="controls">
-      <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.toggle_timer_off">
       <span class="help-inline">Time in seconds that the GPIO will remain when OFF</span>
     </div>
   </div>
+  <!-- /ko -->
+  <!-- /ko -->
 
+  <!-- ko ifnot: ((outputEditor.output_type() == "regular" || outputEditor.output_type() == "pwm") &&  outputEditor.toggle_timer()) -->
+  <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output") -->
+  <!-- ko ifnot: (outputEditor.output_type() == "pwm" && outputEditor.pwm_temperature_linked()) -->
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
-        <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
+        <input type="checkbox" data-bind="checked: outputEditor.startup_with_server"> {{ _('Start with server') }}
       </label>
       <span class="help-inline">Choose if output should turn on automatically when OctoPrint starts</span>
     </div>
@@ -38,49 +43,58 @@
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
-        <input type="checkbox" data-bind="checked: auto_startup"> {{ _('Auto Startup') }}
+        <input type="checkbox" data-bind="checked: outputEditor.auto_startup"> {{ _('Auto Startup') }}
       </label>
       <span class="help-inline">Choose if output should turn on automatically when print starts</span>
     </div>
   </div>
-
-  <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
+  <!-- /ko -->
+  <!-- ko if: outputEditor.auto_startup  -->
+  <div>
     <div class="control-group">
       <label class="control-label">{{ _('Startup Delay') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: startup_time">
+        <input type="text" class="input-block-level" data-bind="value: outputEditor.startup_time_delay">
         <span class="help-inline">Time delay in seconds to turn on GPIO when print starts</span>
       </div>
     </div>
   </div>
-
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
-      </label>
-      <span class="help-inline">Choose if output should turn off automatically when print finishes</span>
-    </div>
-  </div>
-
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
-      </label>
-      <span class="help-inline">Choose if output should turn off automatically when print is canceled or fails</span>
-    </div>
-  </div>
-
-  <div data-bind="attr: {id: 'auto_shutdownField_' + $index() }">
+  <!-- /ko -->
+  <!-- /ko -->
+    <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output") -->
     <div class="control-group">
-      <label class="control-label">{{ _('Shutdown Delay') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: shutdown_time">
-        <span class="help-inline">Time delay in seconds to turn on GPIO when print finishes.</span>
-        <span class="label label-important">Attention</span>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: outputEditor.auto_shutdown"> {{ _('Auto Shutdown') }}
+        </label>
+        <span class="help-inline">Choose if output should turn off automatically when print finishes</span>
       </div>
     </div>
-  </div>
+
+    <!-- /ko -->
+    <!-- ko if: outputEditor.auto_shutdown  -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: outputEditor.shutdown_on_failed">
+          {{ _('Shutdown on Failed or Canceled') }}
+        </label>
+        <span class="help-inline">Choose if output should turn off automatically when print is canceled or fails</span>
+      </div>
+    </div>
+
+    <div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Shutdown Delay') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: outputEditor.shutdown_time_delay">
+          <span class="help-inline">Time delay in seconds to turn on GPIO when print finishes.</span>
+          <span class="label label-important">Attention</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- /ko -->
+  <!-- /ko -->
 
 </form>

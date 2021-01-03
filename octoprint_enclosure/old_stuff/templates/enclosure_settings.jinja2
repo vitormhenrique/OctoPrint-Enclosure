@@ -92,22 +92,22 @@
     </div> -->
     <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip") -->
-    <!-- <div class="control-group"> -->
-      <!-- <label class="control-label">{{ _('IO Number') }}</label> -->
-      <!-- <div class="controls"> -->
-        <!-- <input type="text" class="input-block-level" data-bind="value: gpio_pin"> -->
+    <div class="control-group">
+      <label class="control-label">{{ _('IO Number') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_pin">
         <!-- ko ifnot: ($data.output_type() == "neopixel_indirect")  -->
-        <!-- <span class="help-inline">GPIO number that will be controlled.</span> -->
+        <span class="help-inline">GPIO number that will be controlled.</span>
+        /ko
+        ko if: ($data.output_type() == "neopixel_indirect") 
+        <span class="help-inline">
+          <span class="label label-danger">Attention</span> Neopixel requires a microcontroller (ex: arduino) 
+            connected to I2C bus. This is the pin on the
+          microcontroller that is connected to the Neopixel.
+        </span>
         <!-- /ko -->
-        <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
-        <!-- <span class="help-inline"> -->
-          <!-- <span class="label label-danger">Attention</span> Neopixel requires a microcontroller (ex: arduino)  -->
-            <!-- connected to I2C bus. This is the pin on the -->
-          <!-- microcontroller that is connected to the Neopixel. -->
-        <!-- </span> -->
-        <!-- /ko -->
-      <!-- </div> -->
-    <!-- </div> -->
+      </div>
+    </div>
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" ) -->
@@ -152,7 +152,7 @@
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: toggle_timer"> {{ _('Timer Toggle') }}
@@ -161,9 +161,9 @@
           PWM pins it will use the default PWM value when ON.
         </span>
       </div>
-    </div> -->
+    </div>
     <!-- ko if: ($data.toggle_timer()) -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">{{ _('On Time') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_on">
@@ -176,7 +176,7 @@
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
         <span class="help-inline">Time in secconds that the GPIO will remain when OFF</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
 
@@ -184,7 +184,7 @@
     <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
     <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: startup_with_server"> {{ _('Start with server') }}
@@ -199,10 +199,10 @@
         </label>
         <span class="help-inline">Choose if output should turn on automatically when print starts</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- ko if: $data.auto_startup  -->
-    <!-- <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
+    <div data-bind="attr: {id: 'auto_startupField_' + $index() }">
       <div class="control-group">
         <label class="control-label">{{ _('Startup Delay / Hour') }}</label>
         <div class="controls">
@@ -212,21 +212,21 @@
             forget to check timezone of your Raspberry Pi.</span>
         </div>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
         </label>
         <span class="help-inline">Choose if output should turn off automatomatically when print finishes</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- ko if: $data.auto_shutdown  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
@@ -248,7 +248,7 @@
             <b>Link PWM to Temperature</b> option</span>
         </div>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
 
@@ -457,14 +457,14 @@
     </div> -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "gcode_output")  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label" for="settings-enclosure-filament-sensor">{{ _('Gcode') }}</label>
       <div class="controls">
         <textarea rows="4" class="block" data-bind="value: gcode"></textarea>
         <span class="help-inline">GCODE that will be sent to the printer. You should add
           <code>ENTER</code> on the end of every line sent to the printer</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
 
     <div class="control-group">

@@ -9,9 +9,41 @@
         <div class="full-sized-box">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#settings_outputs_edit_dialog_general" data-toggle="tab">{{ _('General') }}</a></li>
-                 <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output" || outputEditor.output_type() == "led_strip") -->
+                 <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output" || outputEditor.output_type() == "led_strip" || outputEditor.output_type() == "neopixel") -->
                 <li><a href="#settings_outputs_edit_dialog_io" data-toggle="tab">{{ _('IO Settings') }}</a></li>
                 <!-- /ko -->
+
+                 <!-- ko if: (outputEditor.output_type() == "gcode_output")  -->
+                <li><a href="#settings_outputs_edit_dialog_gcode" data-toggle="tab">{{ _('GCode') }}</a></li>
+                 <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "led_strip")  -->
+                <li><a href="#settings_outputs_edit_dialog_led_strip" data-toggle="tab">{{ _('LED Strip') }}</a></li>
+                <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "neopixel")  -->
+                <li><a href="#settings_outputs_edit_dialog_neopixel" data-toggle="tab">{{ _('Neopixel') }}</a></li>
+                <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "pwm")  -->
+                <li><a href="#settings_outputs_edit_dialog_pwm" data-toggle="tab">{{ _('PWM') }}</a></li>
+                <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "temp_hum_control")  -->
+                <li><a href="#settings_outputs_edit_dialog_temp_hum_control" data-toggle="tab">{{ _('Temp / Hum Control') }}</a></li>
+                <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "temperature_alarm")  -->
+                <li><a href="#settings_outputs_edit_dialog_temperature_alarm" data-toggle="tab">{{ _('Temperature Alarm) }}</a></li>
+                <!-- /ko -->
+
+                <!-- ko if: (outputEditor.output_type() == "shell_output")  -->
+                <li><a href="#settings_outputs_edit_dialog_shell_output" data-toggle="tab">{{ _('Shell Output') }}</a></li>
+                <!-- /ko -->
+
+                <li><a href="#settings_outputs_edit_dialog_schedule" data-toggle="tab">{{ _('Schedule') }}</a></li>
+
+                <li><a href="#settings_outputs_edit_dialog_other" data-toggle="tab">{{ _('Other') }}</a></li>
 
             </ul>
 
@@ -24,6 +56,41 @@
                     {% include "output_editor/io_output.jinja2" %}
                 </div>
 
+                <div id="settings_outputs_edit_dialog_gcode" class="tab-pane">
+                    {% include "output_editor/gcode_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_led_strip" class="tab-pane">
+                    {% include "output_editor/led_strip_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_neopixel" class="tab-pane">
+                    {% include "output_editor/neopixel_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_pwm" class="tab-pane">
+                    {% include "output_editor/pwm_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_temp_hum_control" class="tab-pane">
+                    {% include "output_editor/temp_control_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_temperature_alarm" class="tab-pane">
+                    {% include "output_editor/temp_alarm_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_shell_output" class="tab-pane">
+                    {% include "output_editor/shell_script_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_schedule" class="tab-pane">
+                    {% include "output_editor/shell_script_output.jinja2" %}
+                </div>
+
+                <div id="settings_outputs_edit_dialog_other" class="tab-pane">
+                    {% include "output_editor/shell_script_output.jinja2" %}
+                </div>
 
             </div>
         </div>

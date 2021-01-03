@@ -4,7 +4,7 @@ $(function () {
     return {
       index_id: index_id,
       label: "",
-      output_type: "Regular",
+      output_type: "regular",
       gpio: {
         pin_name: ""
       }
@@ -15,10 +15,63 @@ $(function () {
     var self = this;
 
     self.isNew = ko.observable(false);
+    // general info
     self.index_id = ko.observable();
     self.label = ko.observable();
     self.output_type = ko.observable();
+    // gpio output
     self.gpio_pin = ko.observable();
+    self.active_low = ko.observable();
+    // gcode output
+    self.gcode = ko.observable();
+    // neopixel output
+    self.neopixel_count = ko.observable();
+    self.neopixel_brightness = ko.observable();
+    self.default_neopixel_color = ko.observable();
+    // other output configurations
+    self.hide_btn_ui = ko.observable();
+    self.show_on_navbar = ko.observable();
+    // pwm output
+    self.pwm_temperature_linked = ko.observable();
+    self.duty_a = ko.observable();
+    self.temperature_a = ko.observable();
+    self.duty_b = ko.observable();
+    self.temperature_b = ko.observable();
+    self.pwm_frequency = ko.observable();
+    self.default_duty_cycle = ko.observable();
+    // led strip output
+    self.led_trip_gpio_clk = ko.observable()
+    self.led_strip_gpio_data = ko.observable()
+    self.default_led_strip_color = ko.observable()
+    // schedule config
+    self.toggle_timer =  ko.observable()
+    self.toggle_timer_on =  ko.observable()
+    self.toggle_timer_off =  ko.observable()
+    self.startup_with_server =  ko.observable()
+    self.auto_startup =  ko.observable()
+    self.startup_time_delay =  ko.observable()
+    self.auto_shutdown =  ko.observable()
+    self.shutdown_on_failed =  ko.observable()
+    self.shutdown_time_delay =  ko.observable()
+    // shell script output
+    self.shell_script =  ko.observable()
+    // temp alarm output
+    self.alarm_linked_temp_sensor =  ko.observable()
+    self.alarm_set_temp =  ko.observable()
+    self.controlled_io =  ko.observable()
+    self.controlled_io_set_value =  ko.observable()
+    // temp control output
+    self.temp_ctr_linked_sensor =  ko.observable()
+    self.temp_ctr_type =  ko.observable()
+    self.temp_ctr_type =  ko.observable()
+    self.temp_ctr_type =  ko.observable()
+    self.temp_ctr_default_value =  ko.observable()
+    self.temp_ctr_deadband =  ko.observable()
+    self.temp_ctr_max_temp =  ko.observable()
+
+
+
+
     self.enclosureOutputs = undefined;
 
     self.fromOutputData = function (data) {
