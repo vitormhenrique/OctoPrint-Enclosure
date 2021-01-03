@@ -111,7 +111,7 @@
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" ) -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
@@ -121,11 +121,11 @@
           duty cycle when print is complete.
         </span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">{{ _('Duty A') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: duty_a">
@@ -148,7 +148,7 @@
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temperature_b">
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
@@ -253,41 +253,41 @@
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control" )  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: active_low"> {{ _('Active Low') }}
         </label>
         <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output" ||  $data.output_type() == "ledstrip") -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: hide_btn_ui"> {{ _('Hide UI Button') }}
         </label>
         <span class="help-inline">If you plan to use a physical button (INPUT) and want to hide the button from enclosure tab check this.</span>
       </div>
-    </div> -->
+    </div>
     <!-- ko ifnot: ($data.output_type() == "ledstrip") -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <div class="controls">
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: show_on_navbar"> {{ _('Show Button on Navbar') }}
         </label>
         <span class="help-inline">Add shortcut on navbar to toggle output</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
 
 
     <!-- ko if: ($data.output_type() == "temperature_alarm" || $data.output_type() == "temp_hum_control" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
     <!-- ko if: ($data.temp_ctr_type() == "heater" || $data.temp_ctr_type() == "cooler" || ($data.output_type() == "pwm" && $data.pwm_temperature_linked()))  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
@@ -295,10 +295,10 @@
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- ko if: ($data.temp_ctr_type() == "dehumidifier")  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">Temperature Sensor</label>
       <div class="controls">
         <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
@@ -306,12 +306,12 @@
         </select>
         <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "temp_hum_control")  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">{{ _('Temp Control Type') }}</label>
       <div class="controls">
         <label class="radio">
@@ -325,7 +325,7 @@
         <label class="radio">
           <input type="radio" value="dehumidifier" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
       </div>
-    </div> -->
+    </div>
 
     <!-- ko if: ($data.auto_startup() || $data.startup_with_server())-->
     <!-- <div class="control-group">
@@ -346,18 +346,18 @@
     </div> -->
 
     <!-- ko if: ($data.temp_ctr_type() == "heater")  -->
-    <!-- <div class="control-group">
+    <div class="control-group">
       <label class="control-label">{{ _('Maximum Temperature') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
         <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
           it's set temperature is set again.</span>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "temperature_alarm")  -->
-    <!-- <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
       <div class="control-group">
         <label class="control-label">{{ _('Set Temperature') }}</label>
         <div class="controls">
@@ -384,7 +384,7 @@
           <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
         </div>
       </div>
-    </div> -->
+    </div>
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "pwm")  -->
     <!-- <div class="control-group">

@@ -34,16 +34,20 @@
                 <!-- /ko -->
 
                 <!-- ko if: (outputEditor.output_type() == "temperature_alarm")  -->
-                <li><a href="#settings_outputs_edit_dialog_temperature_alarm" data-toggle="tab">{{ _('Temperature Alarm) }}</a></li>
+                <li><a href="#settings_outputs_edit_dialog_temperature_alarm" data-toggle="tab">{{ _('Temperature Alarm') }}</a></li>
                 <!-- /ko -->
 
                 <!-- ko if: (outputEditor.output_type() == "shell_output")  -->
                 <li><a href="#settings_outputs_edit_dialog_shell_output" data-toggle="tab">{{ _('Shell Output') }}</a></li>
                 <!-- /ko -->
 
+                <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output") -->
                 <li><a href="#settings_outputs_edit_dialog_schedule" data-toggle="tab">{{ _('Schedule') }}</a></li>
+                <!-- /ko -->
 
+                 <!-- ko if: (outputEditor.output_type() == "regular" || outputEditor.output_type() == "gcode_output" ||  outputEditor.output_type() == "shell_output") -->
                 <li><a href="#settings_outputs_edit_dialog_other" data-toggle="tab">{{ _('Other') }}</a></li>
+                <!-- /ko -->
 
             </ul>
 
@@ -73,7 +77,7 @@
                 </div>
 
                 <div id="settings_outputs_edit_dialog_temp_hum_control" class="tab-pane">
-                    {% include "output_editor/temp_control_output.jinja2" %}
+                    {% include "output_editor/temp_hum_control_output.jinja2" %}
                 </div>
 
                 <div id="settings_outputs_edit_dialog_temperature_alarm" class="tab-pane">
@@ -85,11 +89,11 @@
                 </div>
 
                 <div id="settings_outputs_edit_dialog_schedule" class="tab-pane">
-                    {% include "output_editor/shell_script_output.jinja2" %}
+                    {% include "output_editor/schedule_config.jinja2" %}
                 </div>
 
                 <div id="settings_outputs_edit_dialog_other" class="tab-pane">
-                    {% include "output_editor/shell_script_output.jinja2" %}
+                    {% include "output_editor/other_config.jinja2" %}
                 </div>
 
             </div>

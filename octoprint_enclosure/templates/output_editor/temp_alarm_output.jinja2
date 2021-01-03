@@ -3,14 +3,14 @@
     <div class="control-group">
         <label class="control-label">Temperature Sensor</label>
         <div class="controls">
-          <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+            <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
                         optionsValue: 'index_id', value: outputEditor.alarm_linked_temp_sensor">
-          </select>
-          <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
+            </select>
+            <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the
+                input side of the plugin.</span>
         </div>
-      </div>
-
-    <div data-bind="attr: {id: 'temp_controlled_' + $index() }">
+    </div>
+    <div>
         <div class="control-group">
             <label class="control-label">{{ _('Set Temperature') }}</label>
             <div class="controls">

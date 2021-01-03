@@ -30,38 +30,35 @@
   <!-- /ko -->
 
   <!-- ko ifnot: ((outputEditor.output_type() == "regular" || outputEditor.output_type() == "pwm") &&  outputEditor.toggle_timer()) -->
-  <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output") -->
-  <!-- ko ifnot: (outputEditor.output_type() == "pwm" && outputEditor.pwm_temperature_linked()) -->
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: outputEditor.startup_with_server"> {{ _('Start with server') }}
-      </label>
-      <span class="help-inline">Choose if output should turn on automatically when OctoPrint starts</span>
-    </div>
-  </div>
-  <div class="control-group">
-    <div class="controls">
-      <label class="checkbox">
-        <input type="checkbox" data-bind="checked: outputEditor.auto_startup"> {{ _('Auto Startup') }}
-      </label>
-      <span class="help-inline">Choose if output should turn on automatically when print starts</span>
-    </div>
-  </div>
-  <!-- /ko -->
-  <!-- ko if: outputEditor.auto_startup  -->
-  <div>
+    <!-- ko ifnot: (outputEditor.output_type() == "pwm" && outputEditor.pwm_temperature_linked()) -->
     <div class="control-group">
-      <label class="control-label">{{ _('Startup Delay') }}</label>
       <div class="controls">
-        <input type="text" class="input-block-level" data-bind="value: outputEditor.startup_time_delay">
-        <span class="help-inline">Time delay in seconds to turn on GPIO when print starts</span>
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: outputEditor.startup_with_server"> {{ _('Start with server') }}
+        </label>
+        <span class="help-inline">Choose if output should turn on automatically when OctoPrint starts</span>
       </div>
     </div>
-  </div>
-  <!-- /ko -->
-  <!-- /ko -->
-    <!-- ko ifnot: (outputEditor.output_type() == "gcode_output" || outputEditor.output_type() == "temperature_alarm" || outputEditor.output_type() == "shell_output") -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: outputEditor.auto_startup"> {{ _('Auto Startup') }}
+        </label>
+        <span class="help-inline">Choose if output should turn on automatically when print starts</span>
+      </div>
+    </div>
+    <!-- /ko -->
+    <!-- ko if: outputEditor.auto_startup  -->
+    <div>
+      <div class="control-group">
+        <label class="control-label">{{ _('Startup Delay') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: outputEditor.startup_time_delay">
+          <span class="help-inline">Time delay in seconds to turn on GPIO when print starts</span>
+        </div>
+      </div>
+    </div>
+    <!-- /ko -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -70,8 +67,6 @@
         <span class="help-inline">Choose if output should turn off automatically when print finishes</span>
       </div>
     </div>
-
-    <!-- /ko -->
     <!-- ko if: outputEditor.auto_shutdown  -->
     <div class="control-group">
       <div class="controls">
@@ -89,7 +84,7 @@
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: outputEditor.shutdown_time_delay">
           <span class="help-inline">Time delay in seconds to turn on GPIO when print finishes.</span>
-          <span class="label label-important">Attention</span>
+          <!-- <span class="label label-important">Attention</span> -->
         </div>
       </div>
     </div>

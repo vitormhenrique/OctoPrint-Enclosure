@@ -39,6 +39,7 @@ $(function () {
     self.temperature_b = ko.observable();
     self.pwm_frequency = ko.observable();
     self.default_duty_cycle = ko.observable();
+    self.pwm_linked_temp_sensor = ko.observable();
     // led strip output
     self.led_trip_gpio_clk = ko.observable()
     self.led_strip_gpio_data = ko.observable()
@@ -89,6 +90,10 @@ $(function () {
       self.label(data.label);
       self.output_type(data.output_type);
       self.gpio_pin(data.gpio.pin_name);
+
+    };
+
+    self.showColorPicker = function(){
 
     };
 

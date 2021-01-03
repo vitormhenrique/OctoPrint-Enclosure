@@ -7,7 +7,7 @@
       <span class="help-inline">GPIO number that will be controlled.</span>
     </div>
   </div>
-
+  <!-- ko if: (outputEditor.output_type() == "regular" || outputEditor.output_type() == "temp_hum_control" )  -->
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
@@ -16,5 +16,6 @@
       <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
     </div>
   </div>
+  <!-- /ko -->
 
 </form>

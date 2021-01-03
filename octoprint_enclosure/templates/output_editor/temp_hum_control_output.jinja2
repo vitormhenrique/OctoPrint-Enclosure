@@ -1,6 +1,6 @@
 <form class="form-horizontal">
 
-
+       <!-- ko if: (outputEditor.temp_ctr_type() == "heater" || outputEditor.temp_ctr_type() == "cooler") -->
       <div class="control-group">
         <label class="control-label">Temperature Sensor</label>
         <div class="controls">
@@ -10,6 +10,18 @@
           <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
         </div>
       </div>
+      <!-- /ko -->
+      <!-- ko if: (outputEditor.temp_ctr_type() == "dehumidifier")  -->
+      <div class="control-group">
+        <label class="control-label">Humidity Sensor</label>
+        <div class="controls">
+          <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                        optionsValue: 'index_id', value: outputEditor.temp_ctr_linked_sensor">
+          </select>
+          <span class="help-inline">Humidity sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
+        </div>
+      </div>
+      <!-- /ko -->
 
       <div class="control-group">
         <label class="control-label">{{ _('Temp Control Type') }}</label>
@@ -31,7 +43,7 @@
         <label class="control-label">{{ _('Default Value') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: outputEditor.temp_ctr_default_value">
-          <span class="help-inline">Default temperature / humidity that temperature control will be set when the print starts or the server starts.</span>
+          <span class="help-inline">Default temperature / humidity that temperature control will be set IF auto startup is set on schedule tab.</span>
         </div>
       </div>
 
@@ -43,6 +55,7 @@
         </div>
       </div>
 
+      <!-- ko if: (outputEditor.temp_ctr_type() == "heater")  -->
       <div class="control-group">
         <label class="control-label">{{ _('Maximum Temperature') }}</label>
         <div class="controls">
@@ -51,4 +64,6 @@
             it's set temperature is set again.</span>
         </div>
       </div>
+
+      <!-- /ko -->
 </form>

@@ -1,54 +1,70 @@
 <form class="form-horizontal">
-    <div class="control-group">
-        <div class="controls">
-          <label class="checkbox">
-            <input type="checkbox" data-bind="checked: outputEditor.pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
-          </label>
-          <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
-            B, temperature B. This output will automatically start when a print starts and will default to the default
-            duty cycle when print is complete.
-          </span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Duty A') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.duty_a">
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Temperature A') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_a">
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Duty B') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.duty_b">
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Temperature B') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_b">
-        </div>
-      </div>
+  <div class="control-group">
+    <div class="controls">
+      <label class="checkbox">
+        <input type="checkbox" data-bind="checked: outputEditor.pwm_temperature_linked">
+        {{ _('Link PWM to Temperature') }}
+      </label>
+      <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from
+        duty A, temperature A -> duty
+        B, temperature B. This output will automatically start when a print starts and will default to the default
+        duty cycle when print is complete.
+      </span>
+    </div>
+  </div>
+  <!-- ko if: outputEditor.pwm_temperature_linked  -->
+  <div class="control-group">
+    <label class="control-label">Temperature Sensor</label>
+    <div class="controls">
+        <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
+                    optionsValue: 'index_id', value: outputEditor.pwm_linked_temp_sensor">
+        </select>
+        <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the
+            input side of the plugin.</span>
+    </div>
+</div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Duty A') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.duty_a">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Temperature A') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_a">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Duty B') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.duty_b">
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Temperature B') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_b">
+    </div>
+  </div>
+  <!-- /ko -->
+  <div class="control-group">
+    <label class="control-label">{{ _('PWM Frequency') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.pwm_frequency">
+      <span class="help-inline">Value is in Hz</span>
+    </div>
+  </div>
+  <div class="control-group">
+    <label class="control-label">{{ _('Default Duty Cycle') }}</label>
+    <div class="controls">
+      <input type="text" class="input-block-level" data-bind="value: outputEditor.default_duty_cycle">
+      <span class="help-inline">Value is in percentage, between 0 and 100</span>
+      <!-- ko if: outputEditor.pwm_temperature_linked  -->
+      <span class="help-inline">Default duty cycle that will be set if "auto shutdown" is enabled on the Schedule tab</span>
+      <!-- /ko -->
 
+    </div>
+  </div>
 
-      <div class="control-group">
-        <label class="control-label">{{ _('PWM Frequency') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.pwm_frequency">
-          <span class="help-inline">Value is in Hz</span>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label">{{ _('Default Duty Cycle') }}</label>
-        <div class="controls">
-          <input type="text" class="input-block-level" data-bind="value: outputEditor.default_duty_cycle">
-          <span class="help-inline">Value is in percentage, between 0 and 100</span>
-        </div>
-      </div>
-      
 </form>
