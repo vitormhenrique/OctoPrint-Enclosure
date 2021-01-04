@@ -1,7 +1,22 @@
 <form class="form-horizontal">
+      <div class="control-group">
+        <label class="control-label">{{ _('Temp Control Type') }}</label>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="heater" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Heater') }}</label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="cooler" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Cooler') }}</label>
+        </div>
+        <div class="controls">
+          <label class="radio">
+            <input type="radio" value="dehumidifier" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Dehumidifier') }}</label>
+        </div>
+      </div>
 
        <!-- ko if: (outputEditor.temp_ctr_type() == "heater" || outputEditor.temp_ctr_type() == "cooler") -->
-      <div class="control-group">
+       <div class="control-group">
         <label class="control-label">Temperature Sensor</label>
         <div class="controls">
           <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
@@ -22,22 +37,6 @@
         </div>
       </div>
       <!-- /ko -->
-
-      <div class="control-group">
-        <label class="control-label">{{ _('Temp Control Type') }}</label>
-        <div class="controls">
-          <label class="radio">
-            <input type="radio" value="heater" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Heater') }}</label>
-        </div>
-        <div class="controls">
-          <label class="radio">
-            <input type="radio" value="cooler" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Cooler') }}</label>
-        </div>
-        <div class="controls">
-          <label class="radio">
-            <input type="radio" value="dehumidifier" name="option_radio_box" data-bind="checked: outputEditor.temp_ctr_type"> {{ _('Dehumidifier') }}</label>
-        </div>
-      </div>
 
       <div class="control-group">
         <label class="control-label">{{ _('Default Value') }}</label>
