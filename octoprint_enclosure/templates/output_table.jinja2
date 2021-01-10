@@ -2,8 +2,10 @@
   <thead>
     <tr>
       <th class="">Id</th>
+      <th class="">Label</th>
       <th class="">Type</th>
       <th class="">GPIO</th>
+      <th class="">{{ _('Action') }}</th>
     </tr>
   </thead>
   <tbody data-bind="foreach: $root.enclosureOutputs">
@@ -11,6 +13,16 @@
       <td class="" data-bind="text: index_id"></td>
       <td class="" data-bind="text: label"></td>
       <td class="" data-bind="text: output_type"></td>
+      <!-- ko if: gpio.pin_name  -->
+      <td class="" data-bind="text: gpio.pin_name"></td>
+      <!-- /ko -->
+      <!-- ko ifnot: (gpio.pin_name ) -->
+      <td class="" >N/A</td>
+      <!-- /ko -->
+      <td class="">
+        <a href="#" class="fa fa-pencil" title="{{ _('Edit Output')|edq }}" data-bind="click: function() { $root.showOutputEditorDialog($data); }"></a>&nbsp;|&nbsp;
+        <a href="#" class="fa fa-trash-o" title="{{ _('Delete Output')|edq }}" data-bind="click: function() { $root.removeOutput($data); }"></a>
+    </td>
     </tr>
   </tbody>
 </table>

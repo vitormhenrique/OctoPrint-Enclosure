@@ -1,3 +1,8 @@
+function isInteger(value) {
+  return /^\d+$/.test(value);
+}
+
+
 $(function () {
 
   var cleanOutput = function (index_id) {
@@ -125,6 +130,16 @@ $(function () {
 
     self.enclosureOutputs = undefined;
 
+    self.validOutput = ko.pureComputed(function () {
+
+      if (self.output_type() == "regular") {
+        if (self.label() != "" && self.gpio_pin() != "" && isInteger(self.gpio_pin())) {
+          return true
+        }
+      }
+      return false;
+    });
+
     self.fromOutputData = function (data) {
 
       self.isNew(data === undefined);
@@ -133,6 +148,9 @@ $(function () {
         var arrRelaysLength = self.enclosureOutputs().length;
         var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureOutputs()[arrRelaysLength - 1].index_id + 1;
         data = cleanOutput(nextIndex);
+      } else{
+        objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == data.index_id));
+        data = self.enclosureOutputs()[objIndex];
       }
 
       // general info
@@ -274,11 +292,14 @@ $(function () {
 
     self.onBeforeBinding = function () {
       self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
-      // console.log(self.settingsViewModel.settings.plugins.enclosure)
     };
 
     self.onEventSettingsUpdated = function () {
-      self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
+      // self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
+    };
+
+    self.syncSettings = function(){
+      self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs(self.enclosureOutputs());
     };
 
     self.createOutputEditor = function (data) {
@@ -290,12 +311,18 @@ $(function () {
     self.outputEditor = self.createOutputEditor();
     self.outputEditor.enclosureOutputs = self.enclosureOutputs;
 
+    self.removeOutput = function(data){
+      self.enclosureOutputs.remove(data);
+      self.syncSettings();
+    };
+
     self.showOutputEditorDialog = function (data) {
 
       self.outputEditor.fromOutputData(data);
 
       var editDialog = $("#settings_outputs_edit_dialog");
 
+      $('ul.nav-pills a[data-toggle="tab"]:first', editDialog).tab("show");
       editDialog.modal({
         minHeight: function () {
           return Math.max($.fn.modal.defaults.maxHeight() - 80, 250);
@@ -308,16 +335,40 @@ $(function () {
       });
     };
 
+    self.confirmEditOutput = function () {
 
-    self.addOutputs = function () {
+      if(self.outputEditor.validOutput()){
+        var callback = function () {
+          $("#settings_outputs_edit_dialog").modal("hide");
+        };
+  
+        self.addOutputs(callback);
+
+        self.syncSettings();
+      }
+    };
+
+
+    self.addOutputs = function (callback) {
+      var isNew = self.outputEditor.isNew();
+
       var output = self.outputEditor.toOutputData();
 
-      self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs.push(output);
+      if (isNew){
+        self.enclosureOutputs.push(output);
+      } else{
+        objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == output.index_id));
+        var _old_output = self.enclosureOutputs()[objIndex];
+        self.enclosureOutputs.replace(_old_output,output);
+      }
+      
+      if (callback !== undefined) {
+        callback();
+      }
     };
 
     self.print_data = function () {
-      console.log(self.enclosureOutputs.root);
-      // console.log(self);
+      console.log(self);
     };
 
     // end of EnclosureViewModel

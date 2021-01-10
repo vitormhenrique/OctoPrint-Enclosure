@@ -10,7 +10,7 @@
     <div class="control-group">
         <label class="control-label">{{ _('Name') }}</label>
         <div class="controls">
-            <input type="text" data-bind="value: outputEditor.label">
+            <input type="text" data-bind="value: outputEditor.label, valueUpdate: 'afterkeydown'">
             <span class="help-inline">Name displayed on Enclosure Tab</span>
         </div>
     </div>

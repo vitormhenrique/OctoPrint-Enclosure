@@ -103,6 +103,7 @@
     </div>
     <div class="modal-footer">
         <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Abort') }}</button>
-        <button class="btn btn-primary btn-confirm" data-bind="click: function() { $root.addOutputs(); }">{{ _('Save') }}</button>
+        <button class="btn btn-primary btn-confirm" data-bind="click: function() { $root.confirmEditOutput();}, css: {disabled: !outputEditor.validOutput()}">{{ _('Save') }}</button>
+        <!-- <button class="btn btn-primary btn-confirm" enabled=false>{{ _('Save') }}</button> -->
     </div>
 </div>

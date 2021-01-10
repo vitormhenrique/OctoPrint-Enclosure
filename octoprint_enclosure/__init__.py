@@ -27,6 +27,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_settings_defaults(self):
         return dict(enclosureOutputs=[])
 
+    # ~~ SettingsPlugin mixin
+    def on_settings_save(self, data):
+        enclosureOutputs = self._settings.get(["enclosureOutputs"])
+        print(data)
+
     # ~~ Softwareupdate hook
     def get_update_information(self):
         return dict(enclosure=dict(displayName="Enclosure Plugin", displayVersion=self._plugin_version,
