@@ -31,6 +31,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def on_settings_save(self, data):
         enclosureOutputs = self._settings.get(["enclosureOutputs"])
         print(data)
+        octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     # ~~ Softwareupdate hook
     def get_update_information(self):

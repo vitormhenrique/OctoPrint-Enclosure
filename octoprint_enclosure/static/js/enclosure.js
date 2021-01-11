@@ -2,8 +2,35 @@ function isInteger(value) {
   return /^\d+$/.test(value);
 }
 
-
 $(function () {
+
+  var cleanInput = function (index_id) {
+    return {
+      index_id: index_id,
+      label: "",
+      input_type: "",
+      gpio: {
+        pin_name: "",
+        pull_resistor: "input_pull_up",
+        linked_action: "output_control",
+        edge_detection: "fall",
+      },
+      linked_printer_action: {
+        action: "filament",
+        filament_sensor_enabled: false,
+        filament_sensor_timeout: 120,
+      },
+      linked_output_action: {
+        output_index_id: "",
+        output_set_value: "low",
+      },
+      temperature_sensor: {
+        type: "DS18B20",
+        address: "",
+        unit: "C",
+      }
+    }
+  };
 
   var cleanOutput = function (index_id) {
     return {
@@ -71,6 +98,115 @@ $(function () {
     }
   };
 
+  function EnclosureInputEditorViewModel(parameters) {
+    var self = this;
+
+    self.isNew = ko.observable(false);
+    // general info
+    self.index_id = ko.observable();
+    self.label = ko.observable();
+    self.input_type = ko.observable();
+    // gpio output
+    self.gpio_pin = ko.observable();
+    self.pull_resistor = ko.observable();
+    self.linked_action = ko.observable();
+    self.edge_detection = ko.observable();
+    // output on linked action
+    self.controlled_output = ko.observable();
+    self.controlled_output_set_value = ko.observable();
+    // printer action on linked action
+    self.printed_action = ko.observable();
+    self.filament_sensor_enabled = ko.observable();
+    self.filament_sensor_timeout = ko.observable();
+    // temperature sensor
+    self.temperature_sensor_type = ko.observable();
+    self.temperature_sensor_address = ko.observable();
+    self.temperature_sensor_unit = ko.observable();
+
+    self.enclosureInputs = undefined;
+
+    self.validInput = ko.pureComputed(function () {
+
+      if (self.input_type() == "regular") {
+        if (self.label() != "") {
+          return true;
+        }
+      }
+
+      return false
+
+    });
+
+    self.fromInputData = function (data) {
+
+      self.isNew(data === undefined);
+
+      if (data === undefined) {
+        var arrRelaysLength = self.enclosureInputs().length;
+        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureInputs()[arrRelaysLength - 1].index_id + 1;
+        data = cleanInput(nextIndex);
+      } else {
+        objIndex = self.enclosureInputs().findIndex((obj => obj.index_id == data.index_id));
+        data = self.enclosureInputs()[objIndex];
+      }
+
+      // general info
+      self.index_id(data.index_id);
+      self.label(data.label);
+      self.input_type(data.input_type);
+      // gpio output
+      self.gpio_pin(data.gpio.pin_name);
+      self.pull_resistor(data.gpio.pull_resistor);
+      self.linked_action(data.gpio.linked_action);
+      self.edge_detection(data.gpio.edge_detection);
+      // output on linked action
+      self.controlled_output(data.linked_output_action.output_index_id);
+      self.controlled_output_set_value(data.linked_output_action.output_set_value);
+      // printer action on linked action
+      self.printed_action(data.linked_printer_action.action);
+      self.filament_sensor_enabled(data.linked_printer_action.filament_sensor_enabled);
+      self.filament_sensor_timeout(data.linked_printer_action.filament_sensor_timeout);
+      // temperature sensor
+      self.temperature_sensor_type(data.type);
+      self.temperature_sensor_address(data.address);
+      self.temperature_sensor_unit(data.unit);
+
+    };
+
+    self.toOutputData = function (data) {
+      var output_data = {
+        index_id: self.index_id(),
+        label: self.label(),
+        input_type: self.input_type(),
+        gpio: {
+          pin_name: self.gpio_pin(),
+          pull_resistor: self.pull_resistor(),
+          linked_action: self.linked_action(),
+          edge_detection: self.edge_detection(),
+        },
+        linked_printer_action: {
+          action: self.printed_action(),
+          filament_sensor_enabled: self.filament_sensor_enabled(),
+          filament_sensor_timeout: self.filament_sensor_timeout(),
+        },
+        linked_output_action: {
+          output_index_id: self.controlled_output(),
+          output_set_value: self.controlled_output_set_value(),
+        },
+        temperature_sensor: {
+          type: self.temperature_sensor_type(),
+          address: self.temperature_sensor_address(),
+          unit: self.temperature_sensor_unit(),
+        }
+      }
+
+      return output_data;
+    };
+
+
+    // end of EnclosureInputEditorViewModel
+  };
+
   function EnclosureOutputEditorViewModel(parameters) {
     var self = this;
 
@@ -134,7 +270,7 @@ $(function () {
 
       if (self.output_type() == "regular") {
         if (self.label() != "" && self.gpio_pin() != "" && isInteger(self.gpio_pin())) {
-          return true
+          return true;
         }
       }
       return false;
@@ -148,7 +284,7 @@ $(function () {
         var arrRelaysLength = self.enclosureOutputs().length;
         var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureOutputs()[arrRelaysLength - 1].index_id + 1;
         data = cleanOutput(nextIndex);
-      } else{
+      } else {
         objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == data.index_id));
         data = self.enclosureOutputs()[objIndex];
       }
@@ -289,6 +425,7 @@ $(function () {
     self.printerStateViewModel = parameters[2];
 
     self.enclosureOutputs = ko.observableArray();
+    self.enclosureInputs = ko.observableArray();
 
     self.onBeforeBinding = function () {
       self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
@@ -298,23 +435,36 @@ $(function () {
       // self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
     };
 
-    self.syncSettings = function(){
+    self.syncSettings = function () {
       self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs(self.enclosureOutputs());
     };
 
     self.createOutputEditor = function (data) {
       var outputEditor = new EnclosureOutputEditorViewModel();
-
       return outputEditor;
+    };
+
+    self.createInputEditor = function (data) {
+      var inputEditor = new EnclosureInputEditorViewModel();
+      return inputEditor;
     };
 
     self.outputEditor = self.createOutputEditor();
     self.outputEditor.enclosureOutputs = self.enclosureOutputs;
 
-    self.removeOutput = function(data){
+    self.inputEditor = self.createInputEditor();
+    self.inputEditor.enclosureInputs = self.enclosureInputs;
+
+
+    self.removeOutput = function (data) {
       self.enclosureOutputs.remove(data);
       self.syncSettings();
     };
+
+    self.removeInput = function(data){
+      self.enclosureInputs.remove(data);
+      self.syncSettings();
+    }
 
     self.showOutputEditorDialog = function (data) {
 
@@ -335,14 +485,46 @@ $(function () {
       });
     };
 
+    self.showInputEditorDialog = function (data) {
+
+      self.inputEditor.fromOutputData(data);
+
+      var editDialog = $("#settings_inputs_edit_dialog");
+
+      $('ul.nav-pills a[data-toggle="tab"]:first', editDialog).tab("show");
+      editDialog.modal({
+        minHeight: function () {
+          return Math.max($.fn.modal.defaults.maxHeight() - 80, 250);
+        }
+      }).css({
+        width: 'auto',
+        'margin-left': function () {
+          return -($(this).width());
+        }
+      });
+    };
+
     self.confirmEditOutput = function () {
 
-      if(self.outputEditor.validOutput()){
+      if (self.outputEditor.validOutput()) {
         var callback = function () {
           $("#settings_outputs_edit_dialog").modal("hide");
         };
-  
+
         self.addOutputs(callback);
+
+        self.syncSettings();
+      }
+    };
+
+    self.confirmEditInput = function () {
+
+      if (self.inputEditor.validInput()) {
+        var callback = function () {
+          $("#settings_inputs_edit_dialog").modal("hide");
+        };
+
+        self.addInputs(callback);
 
         self.syncSettings();
       }
@@ -354,14 +536,32 @@ $(function () {
 
       var output = self.outputEditor.toOutputData();
 
-      if (isNew){
+      if (isNew) {
         self.enclosureOutputs.push(output);
-      } else{
+      } else {
         objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == output.index_id));
         var _old_output = self.enclosureOutputs()[objIndex];
-        self.enclosureOutputs.replace(_old_output,output);
+        self.enclosureOutputs.replace(_old_output, output);
       }
-      
+
+      if (callback !== undefined) {
+        callback();
+      }
+    };
+
+    self.addInputs = function (callback) {
+      var isNew = self.inputEditor.isNew();
+
+      var input = self.inputEditor.toOutputData();
+
+      if (isNew) {
+        self.enclosureInputs.push(input);
+      } else {
+        objIndex = self.enclosureInputs().findIndex((obj => obj.index_id == input.index_id));
+        var _old_input = self.enclosureInputs()[objIndex];
+        self.enclosureInputs.replace(_old_input, input);
+      }
+
       if (callback !== undefined) {
         callback();
       }
