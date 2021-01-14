@@ -1,5 +1,5 @@
 <form class="form-horizontal">
-  <!-- ko if: (outputEditor.output_type() == "regular" || (outputEditor.output_type() == "pwm" && !outputEditor.pwm_temperature_linked()) ) -->
+  <!-- ko if: (outputEditor.output_type() == "regular_gpio" || (outputEditor.output_type() == "pwm" && !outputEditor.pwm_temperature_linked()) ) -->
   <div class="control-group">
     <div class="controls">
       <label class="checkbox">
@@ -29,7 +29,7 @@
   <!-- /ko -->
   <!-- /ko -->
 
-  <!-- ko ifnot: ((outputEditor.output_type() == "regular" || outputEditor.output_type() == "pwm") &&  outputEditor.toggle_timer()) -->
+  <!-- ko ifnot: ((outputEditor.output_type() == "regular_gpio" || outputEditor.output_type() == "pwm") &&  outputEditor.toggle_timer()) -->
     <!-- ko ifnot: (outputEditor.output_type() == "pwm" && outputEditor.pwm_temperature_linked()) -->
     <div class="control-group">
       <div class="controls">

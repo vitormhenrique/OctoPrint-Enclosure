@@ -138,10 +138,10 @@
 <!-- ko foreach: $root.rpi_outputs() -->
 <!-- ko ifnot: ($data.hide_btn_ui())  -->
 
-<!-- ko if: ($data.output_type() == "regular")  -->
+<!-- ko if: ($data.output_type() == "regular_gpio")  -->
 <h4>
     <span data-bind="html: label"> </span>
-    <span class="badge">regular gpio</span>
+    <span class="badge">regular_gpio gpio</span>
     <!-- ko if: ($data.gpio_status())  -->
     <span class="badge badge-success help-inline">on</span>
     <!-- /ko -->
@@ -249,7 +249,7 @@
 <!-- /ko -->
 
 <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
-<!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
+<!-- ko ifnot: (($data.output_type() == "regular_gpio" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
 <div>
     <h5>
@@ -287,7 +287,7 @@
 <!-- /ko -->
 <!-- /ko -->
 
-<!-- ko if: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
+<!-- ko if: (($data.output_type() == "regular_gpio" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
 <h5>
     <span>Time Toggle</span>
     <span class="badge"> active</span>

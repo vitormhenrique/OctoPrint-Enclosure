@@ -15,7 +15,7 @@
       <label class="control-label">{{ _('Output Type') }}</label>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="regular" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Regular IO') }}
+          <input type="radio" value="regular_gpio" data-bind="checked: output_type, attr: {name: 'output_type_' + $index() }"> {{ _('Regular IO') }}
         </label>
       </div>
       <div class="controls">
@@ -116,7 +116,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
         </label>
-        <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
+        <span class="help-inline">Link PWM output to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty
           B, temperature B. This output will automatically start when a print starts and will default to the default
           duty cycle when print is complete.
         </span>
@@ -151,7 +151,7 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
+    <!-- ko if: ($data.output_type() == "regular_gpio" || ($data.output_type() == "pwm" && !$data.pwm_temperature_linked()) ) -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -174,14 +174,14 @@
       <label class="control-label">{{ _('Off Time') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
-        <span class="help-inline">Time in secconds that the GPIO will remain when OFF</span>
+        <span class="help-inline">Time in seconds that the GPIO will remain when OFF</span>
       </div>
     </div>
     <!-- /ko -->
     <!-- /ko -->
 
 
-    <!-- ko ifnot: (($data.output_type() == "regular" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
+    <!-- ko ifnot: (($data.output_type() == "regular_gpio" || $data.output_type() == "pwm") &&  $data.toggle_timer()) -->
     <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
     <!-- ko ifnot: ($data.output_type() == "pwm" && $data.pwm_temperature_linked()) -->
     <div class="control-group">
@@ -208,7 +208,7 @@
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: startup_time">
           <span class="help-inline">Time delay in seconds to turn on GPIO when print starts OR exact time that the event should happen, note that
-            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+            events will only be scheduled after a print starts, time should be formatted as HH:MM on a 24 hours format, don't
             forget to check timezone of your Raspberry Pi.</span>
         </div>
       </div>
@@ -221,7 +221,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: auto_shutdown"> {{ _('Auto Shutdown') }}
         </label>
-        <span class="help-inline">Choose if output should turn off automatomatically when print finishes</span>
+        <span class="help-inline">Choose if output should turn off automatically when print finishes</span>
       </div>
     </div>
     <!-- /ko -->
@@ -231,7 +231,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: shutdown_on_failed"> {{ _('Shutdown on Failed or Canceled') }}
         </label>
-        <span class="help-inline">Choose if output should turn off automatomatically when print is canceled or fails</span>
+        <span class="help-inline">Choose if output should turn off automatically when print is canceled or fails</span>
       </div>
     </div>
 
@@ -240,8 +240,8 @@
         <label class="control-label">{{ _('Shutdown Delay / Hour') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: shutdown_time">
-          <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
-            events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
+          <span class="help-inline">Time delay in seconds to turn on GPIO when print starts OR exact time that the event should happen, note that
+            events will only be scheduled after a print starts, time should be formatted as HH:MM on a 24 hours format, don't
             forget to check timezone of your raspberry pi.</span>
           <span class="label label-important">Attention</span>
           <span> Hour schedule does not work with
@@ -252,7 +252,7 @@
     <!-- /ko -->
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control" )  -->
+    <!-- ko if: ($data.output_type() == "regular_gpio" || $data.output_type() == "temp_hum_control" )  -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -263,7 +263,7 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output" ||  $data.output_type() == "ledstrip") -->
+    <!-- ko if: ($data.output_type() == "regular_gpio" || $data.output_type() == "gcode_output" ||  $data.output_type() == "shell_output" ||  $data.output_type() == "ledstrip") -->
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
@@ -293,7 +293,7 @@
         <select data-bind="options: $root.settings_temperature_sensors, optionsText: 'label',
                       optionsValue: 'index_id', value: $data.linked_temp_sensor">
         </select>
-        <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+        <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
       </div>
     </div>
     <!-- /ko -->
@@ -304,7 +304,7 @@
         <select data-bind="options: $root.settings_hum_sensors, optionsText: 'label',
                       optionsValue: 'index_id', value: $data.linked_temp_sensor">
         </select>
-        <span class="help-inline">Temperature sensor responsible for geting the value to be used. Configured on the input side of the plugin.</span>
+        <span class="help-inline">Temperature sensor responsible for getting the value to be used. Configured on the input side of the plugin.</span>
       </div>
     </div>
     <!-- /ko -->
@@ -315,15 +315,15 @@
       <label class="control-label">{{ _('Temp Control Type') }}</label>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="heater" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Heater') }}</label>
+          <input type="radio" value="heater" name="apt_temp_radio" data-bind="checked: temp_ctr_type"> {{ _('Heater') }}</label>
       </div>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="cooler" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
+          <input type="radio" value="cooler" name="apt_temp_radio" data-bind="checked: temp_ctr_type"> {{ _('Cooler') }}</label>
       </div>
       <div class="controls">
         <label class="radio">
-          <input type="radio" value="dehumidifier" name="optradio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
+          <input type="radio" value="dehumidifier" name="apt_temp_radio" data-bind="checked: temp_ctr_type"> {{ _('Dehumidifier') }}</label>
       </div>
     </div>
 
@@ -350,7 +350,7 @@
       <label class="control-label">{{ _('Maximum Temperature') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: temp_ctr_max_temp">
-        <span class="help-inline">Maximun temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
+        <span class="help-inline">Maximum temperature that the enclosure should reach, if this temperature is hit, the heater will be disabled until
           it's set temperature is set again.</span>
       </div>
     </div>
@@ -435,7 +435,7 @@
     <!-- /ko -->
     <!-- ko if: ($data.output_type() == "neopixel_indirect" || $data.output_type() == "neopixel_direct")  -->
     <div class="control-group">
-      <label class="control-label">{{ _('Number of LEDS') }}</label>
+      <label class="control-label">{{ _('Number of LED's') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: neopixel_count">
         <span class="help-inline">Number of led's on strip</span>
@@ -646,14 +646,14 @@
           <span class="help-inline">
             <span class="label label-info">Info:</span> PRINTER actions when a condition is met, that can be a filament sensor, button, etc. Actions can
             be Pause \ Resume \ Cancel a printer_control job, change the filament or disable Temperature Control. You can
-            use the "change filament" action and set up the input GPIO acording to your sensor, for example, if your filament
+            use the "change filament" action and set up the input GPIO according to your sensor, for example, if your filament
             sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect
             the event on the falling edge.</span>
           <!-- /ko -->
           <!-- ko if: ($data.action_type() == "output_control")  -->
           <span class="help-inline">
             <span class="label label-info">Info:</span> Action will control GPIO outputs when a condition is met, for example detect a press of a button.
-            You can use this to control any previous configured OUTPUTS, basically beeing able to control your lights / fan
+            You can use this to control any previous configured OUTPUTS, basically being able to control your lights / fan
             / printer using mechanical buttons buttons instead of the octoprint interface. You can only control REGULAR outputs.
           </span>
           <!-- /ko -->
@@ -676,8 +676,8 @@
         <label class="control-label">Input Pull Resistor</label>
         <div class="controls">
           <select data-bind="value: input_pull_resistor">
-            <option value="input_pull_up">Input Pullup</option>
-            <option value="input_pull_down">Input Pulldown</option>
+            <option value="input_pull_up">Input Pull-up</option>
+            <option value="input_pull_down">Input Pull-down</option>
           </select>
           <span class="help-inline">Choose what type of pull resistors that you want on the output. If you signal is active low, that means it should
             run the action when receive a low signal (ground), you should choose PULL UP resistors.</span>
@@ -690,7 +690,7 @@
             <option value="rise">Rise</option>
             <option value="fall">Fall</option>
           </select>
-          <span class="help-inline">Do you want thrigger the event on the rise or falling edge? If you signal is active low, that means it should run
+          <span class="help-inline">Do you want trigger the event on the rise or falling edge? If you signal is active low, that means it should run
             the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
         </div>
       </div>

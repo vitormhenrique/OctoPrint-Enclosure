@@ -274,7 +274,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_outputs(self):
         outputs = []
         for rpi_output in self.rpi_outputs:
-            if rpi_output['output_type'] == 'regular':
+            if rpi_output['output_type'] == 'regular_gpio':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
                 pin = self.to_int(rpi_output['gpio_pin'])          
@@ -517,7 +517,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_output_status_old(self):
         gpio_status = []
         for rpi_output in self.rpi_outputs:
-            if rpi_output['output_type'] == 'regular':
+            if rpi_output['output_type'] == 'regular_gpio':
                 pin = self.to_int(rpi_output['gpio_pin'])
                 ActiveLow = rpi_output['active_low']
                 val = PinState_Boolean(pin, ActiveLow)
@@ -719,7 +719,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             gpio_pin = self.to_int(output['gpio_pin'])
             index_id = self.to_int(output['index_id'])
 
-            if output['output_type'] == 'regular':
+            if output['output_type'] == 'regular_gpio':
                 if first_run:
                     current_value = False
                 else:
@@ -809,7 +809,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 startup = output['auto_startup']
                 shutdown = output['auto_shutdown']
 
-                if output['output_type'] == 'regular':
+                if output['output_type'] == 'regular_gpio':
                     val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
                     regular_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
@@ -1202,7 +1202,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             set_mode = GPIO.BOARD if self._settings.get(["use_board_pin_number"]) else GPIO.BCM
             if current_mode is None:
                 outputs = list(filter(
-                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                    lambda item: item['output_type'] == 'regular_gpio' or item['output_type'] == 'pwm' or item[
                         'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
                     self.rpi_outputs))
                 inputs = list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs))
@@ -1227,7 +1227,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
 
             for gpio_out in list(filter(
-                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                    lambda item: item['output_type'] == 'regular_gpio' or item['output_type'] == 'pwm' or item[
                         'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
                     self.rpi_outputs)):
                 gpio_pin = self.to_int(gpio_out['gpio_pin'])
@@ -1260,7 +1260,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
 
             for gpio_out in list(
-                    filter(lambda item: item['output_type'] == 'regular' or item['output_type'] == 'temp_hum_control',
+                    filter(lambda item: item['output_type'] == 'regular_gpio' or item['output_type'] == 'temp_hum_control',
                            self.rpi_outputs)):
                 initial_value = GPIO.HIGH if gpio_out['active_low'] else GPIO.LOW
                 pin = self.to_int(gpio_out['gpio_pin'])
@@ -1386,7 +1386,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
                     rpi_output = [r_out for r_out in self.rpi_outputs if
                                   self.to_int(r_out['index_id']) == controlled_io].pop()
-                    if rpi_output['output_type'] == 'regular':
+                    if rpi_output['output_type'] == 'regular_gpio':
                         val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
                         self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         except Exception as ex:
@@ -1414,7 +1414,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if (rpi_input['edge'] == 'fall') ^ GPIO.input(gpio_pin):
                     rpi_output = [r_out for r_out in self.rpi_outputs if
                                   self.to_int(r_out['index_id']) == controlled_io].pop()
-                    if rpi_output['output_type'] == 'regular':
+                    if rpi_output['output_type'] == 'regular_gpio':
                         if rpi_input['controlled_io_set_value'] == 'toggle':
                             val = GPIO.LOW if GPIO.input(
                                 self.to_int(rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
@@ -1535,7 +1535,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_output_list(self):
         result = []
         for rpi_output in self.rpi_outputs:
-            if rpi_output['output_type'] == 'regular':
+            if rpi_output['output_type'] == 'regular_gpio':
                 result.append(self.to_int(rpi_output['gpio_pin']))
         return result
 
@@ -1596,7 +1596,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     delay_seconds = self.get_startup_delay_from_output(rpi_output)
                     self.schedule_auto_startup_outputs(rpi_output, delay_seconds)
                 if rpi_output['toggle_timer']:
-                    if rpi_output['output_type'] == 'regular' or rpi_output['output_type'] == 'pwm':
+                    if rpi_output['output_type'] == 'regular_gpio' or rpi_output['output_type'] == 'pwm':
                         self.toggle_output(rpi_output['index_id'], True)
                 if self.is_hour(rpi_output['shutdown_time']):
                     shutdown_delay_seconds = self.get_shutdown_delay_from_output(rpi_output)
@@ -1649,7 +1649,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     def schedule_auto_shutdown_outputs(self, rpi_output, shutdown_delay_seconds):
         sufix = 'auto_shutdown'
-        if rpi_output['output_type'] == 'regular':
+        if rpi_output['output_type'] == 'regular_gpio':
             value = True if rpi_output['active_low'] else False
             self.add_regular_output_to_queue(shutdown_delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
@@ -1683,7 +1683,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_output in self.rpi_outputs:
             if rpi_output['startup_with_server']:
                 gpio = self.to_int(rpi_output['gpio_pin'])
-                if rpi_output['output_type'] == 'regular':
+                if rpi_output['output_type'] == 'regular_gpio':
                     value = False if rpi_output['active_low'] else True
                     self.write_gpio(gpio, value)
                 if rpi_output['output_type'] == 'ledstrip':
@@ -1705,7 +1705,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     def schedule_auto_startup_outputs(self, rpi_output, delay_seconds):
         sufix = 'auto_startup'
-        if rpi_output['output_type'] == 'regular':
+        if rpi_output['output_type'] == 'regular_gpio':
             value = False if rpi_output['active_low'] else True
             self.add_regular_output_to_queue(delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
@@ -1786,7 +1786,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def add_regular_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
         queue_id = '{0!s}_{1!s}'.format(rpi_output['index_id'], sufix)
 
-        self._logger.debug("Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
+        self._logger.debug("Scheduling regular_gpio output id %s on %s delay_seconds", queue_id, delay_seconds)
 
         thread = threading.Timer(delay_seconds, self.write_gpio,
                                  args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
@@ -1899,7 +1899,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._logger.debug("Gcode queuing: %s", cmd)
             index_id = self.to_int(self.get_gcode_value(cmd, 'O'))
             for output in [item for item in self.rpi_outputs if item['index_id'] == index_id]:
-                if output['output_type'] == 'regular':
+                if output['output_type'] == 'regular_gpio':
                     set_value = self.to_int(self.get_gcode_value(cmd, 'S'))
                     set_value = self.constrain(set_value, 0, 1)
                     value = True if set_value == 1 else False

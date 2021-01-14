@@ -42,9 +42,11 @@
                     {% include "input_folder/output_action.jinja2" %}
                 </div>
 
+                 <!-- ko if: ($data.input_type() == "temperature_sensor")  -->
                 <div id="settings_inputs_edit_dialog_temperature_sensor" class="tab-pane">
                     {% include "input_folder/temperature_sensor.jinja2" %}
                 </div>
+                <!-- /ko -->
 
             </div>
         </div>

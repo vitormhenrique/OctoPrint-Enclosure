@@ -6,7 +6,7 @@
 <ul class="dropdown-menu" data-bind="foreach: $root.rpi_outputs()">
     <!-- ko if: ($data.show_on_navbar())  -->
 
-    <!-- ko if: ($data.output_type() == "regular")  -->
+    <!-- ko if: ($data.output_type() == "regular_gpio")  -->
     <li>
         <a href="javascript:void(0)" data-bind="click: $root.handleIO">
             <span data-bind="html: label"> </span>

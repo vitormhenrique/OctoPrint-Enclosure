@@ -1,5 +1,39 @@
 <form class="form-horizontal">
-  
 
-  
+    <div class="control-group">
+        <label class="control-label" for="settings-enclosure-io1">{{ _('Input IO Number') }}</label>
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: gpio_pin">
+            <span class="help-inline">Input GPIO that will detect the event that should trigger the action. For example
+                if you have a filament sensor
+                you put the GPIO pin that the sensor is connected. This can also be a press of a button or any other
+                signal that
+                you want to detect.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Input Pull Resistor</label>
+        <div class="controls">
+            <select data-bind="value: input_pull_resistor">
+                <option value="input_pull_up">Input Pull-up</option>
+                <option value="input_pull_down">Input Pull-down</option>
+            </select>
+            <span class="help-inline">Choose what type of pull resistors that you want on the output. If you signal is
+                active low, that means it should
+                run the action when receive a low signal (ground), you should choose PULL UP resistors.</span>
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">Event Trigger</label>
+        <div class="controls">
+            <select data-bind="value: edge">
+                <option value="rise">Rise</option>
+                <option value="fall">Fall</option>
+            </select>
+            <span class="help-inline">Do you want trigger the event on the rise or falling edge? If you signal is active
+                low, that means it should run
+                the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
+        </div>
+    </div>
+
 </form>

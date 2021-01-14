@@ -10,7 +10,7 @@ $(function () {
       label: "",
       input_type: "",
       gpio: {
-        pin_name: "",
+        pin_name: "regular_gpio",
         pull_resistor: "input_pull_up",
         linked_action: "output_control",
         edge_detection: "fall",
@@ -36,7 +36,7 @@ $(function () {
     return {
       index_id: index_id,
       label: "",
-      output_type: "regular",
+      output_type: "regular_gpio",
       gpio: {
         pin_name: "",
         active_low: false,
@@ -127,7 +127,7 @@ $(function () {
 
     self.validInput = ko.pureComputed(function () {
 
-      if (self.input_type() == "regular") {
+      if (self.input_type() == "regular_gpio") {
         if (self.label() != "") {
           return true;
         }
@@ -268,7 +268,7 @@ $(function () {
 
     self.validOutput = ko.pureComputed(function () {
 
-      if (self.output_type() == "regular") {
+      if (self.output_type() == "regular_gpio") {
         if (self.label() != "" && self.gpio_pin() != "" && isInteger(self.gpio_pin())) {
           return true;
         }
@@ -580,7 +580,6 @@ $(function () {
     construct: EnclosureViewModel,
     // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
     dependencies: ["settingsViewModel", "connectionViewModel", "printerStateViewModel"],
-    // Elements to bind to, e.g. #settings_plugin_tasmota-mqtt, #tab_plugin_tasmota-mqtt, ...
     elements: ["#settings_plugin_enclosure"]
   });
 

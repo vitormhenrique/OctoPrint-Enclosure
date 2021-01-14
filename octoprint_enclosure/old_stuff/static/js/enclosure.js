@@ -15,13 +15,13 @@ $(function () {
 
     self.settings_outputs_regular = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
-        return (item.output_type() === "regular" && !item.toggle_timer());
+        return (item.output_type() === "regular_gpio" && !item.toggle_timer());
       });
     });
     
     self.settings_possible_outputs = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
-        return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output" || item.output_type() === "shell_output");
+        return ((item.output_type() === "regular_gpio" && !item.toggle_timer()) || item.output_type() === "gcode_output" || item.output_type() === "shell_output");
       });
     });
 
@@ -66,7 +66,7 @@ $(function () {
       return_value = false;
       if (typeof index_id != 'undefined'){
         self.settingsViewModel.settings.plugins.enclosure.rpi_outputs().forEach(function (output) {
-          if (output.index_id() == index_id && output.output_type() == "regular") {
+          if (output.index_id() == index_id && output.output_type() == "regular_gpio") {
             return_value = true;
             return false;
           }
@@ -106,7 +106,7 @@ $(function () {
     self.hasAnyNavbarOutput = function(){
       return_value = false;
       self.rpi_outputs().forEach(function (output) {
-        if ((output.output_type()=="regular" || output.output_type()=="gcode_output") && output.show_on_navbar()) {
+        if ((output.output_type()=="regular_gpio" || output.output_type()=="gcode_output") && output.show_on_navbar()) {
           return_value = true;
           return false;
         }
@@ -324,7 +324,7 @@ $(function () {
 
     self.getRegularOutputs = function () {
       return self.rpi_outputs().filter(function (rpi_outputs) {
-        return rpi_outputs.output_type == 'regular';
+        return rpi_outputs.output_type == 'regular_gpio';
       });
     };
 
@@ -374,7 +374,7 @@ $(function () {
       self.settingsViewModel.settings.plugins.enclosure.rpi_outputs.push({
         index_id: ko.observable(nextIndex),
         label: ko.observable("Ouput " + nextIndex),
-        output_type: ko.observable("regular"),
+        output_type: ko.observable("regular_gpio"),
         shell_script: ko.observable(""),
         gpio_pin: ko.observable(0),
         gpio_status: ko.observable(false),
