@@ -3,3 +3,12 @@
 {% include "output_table.jinja2" %}
 
 {% include "output_editor/main_screen.jinja2" %}
+
+<h4>{{ _('Raspberry Pi Inputs') }}</h4>
+
+{% include "input_table.jinja2" %}
+
+{% include "input_editor/main_screen.jinja2" %}
+
+
+<button class="btn pull-right" data-bind="click: function() { $root.print_data(); }">Test</button>
