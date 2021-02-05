@@ -137,7 +137,7 @@ $(function () {
 
     });
 
-    self.fromInputData = function (data) {
+    self.fromOutputData = function (data) {
 
       self.isNew(data === undefined);
 
