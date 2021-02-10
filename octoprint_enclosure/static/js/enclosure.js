@@ -106,7 +106,7 @@ $(function () {
     self.hasAnyNavbarOutput = function(){
       return_value = false;
       self.rpi_outputs().forEach(function (output) {
-        if ((output.output_type()=="regular" || output.output_type()=="gcode_output") && output.show_on_navbar()) {
+        if ((output.output_type()=="regular" || output.output_type()=="gcode_output" || output.output_type()=="dotstar" ) && output.show_on_navbar()) {
           return_value = true;
           return false;
         }
@@ -219,6 +219,21 @@ $(function () {
           }).pop();
           if (linked_output) {
             linked_output.neopixel_color(output['color'])
+            linked_output.auto_shutdown(output['auto_shutdown'])
+            linked_output.auto_startup(output['auto_startup'])
+          }
+        })
+      }
+
+      if (data.hasOwnProperty("rpi_output_dotstar")) {
+        data.rpi_output_dotstar.forEach(function (output) {
+          var linked_output = ko.utils.arrayFilter(self.rpi_outputs(), function (item) {
+            return (output['index_id'] == item.index_id());
+          }).pop();
+          if (linked_output) {
+            linked_output.dotstar_color(output['color'])
+            linked_output.dotstar_active(output['active'])
+            linked_output.dotstar_brightness(output['brightness'])
             linked_output.auto_shutdown(output['auto_shutdown'])
             linked_output.auto_startup(output['auto_startup'])
           }
@@ -414,6 +429,18 @@ $(function () {
         new_neopixel_color: ko.observable(""),
         neopixel_count: ko.observable(0),
         neopixel_brightness: ko.observable(255),
+        dotstar_color: ko.observable("rgb(0,0,0)"),
+        default_dotstar_color: ko.observable(""),
+        new_dotstar_color: ko.observable(""),
+        new_dotstar_brightness: ko.observable(""),
+        dotstar_count: ko.observable(0),
+        dotstar_brightness: ko.observable(1),
+        default_dotstar_brightness: ko.observable(""),
+        dotstar_use_spi: ko.observable(true),
+        dotstar_gpio_clk: ko.observable(""),
+        dotstar_gpio_dat: ko.observable(""),
+        dotstar_brightness: ko.observable(""),
+        dotstar_active: ko.observable(false),
         ledstrip_color: ko.observable("rgb(0,0,0)"),
         default_ledstrip_color: ko.observable(""),
         new_ledstrip_color: ko.observable(""),
@@ -656,6 +683,73 @@ $(function () {
         });
       }
     };
+
+    self.handleDotstarColor = function (item) {
+      self.handleDotstar(item, item.new_dotstar_color(), item.dotstar_brightness())
+    }
+
+    self.handleDotstarBrightness = function (item) {
+      self.handleDotstar(item, item.dotstar_color(), item.new_dotstar_brightness())
+    }
+
+    self.handleDotstar = function (item, color, brightness) {
+
+      var index = item.index_id() ;
+      //var or_tempStr = item.new_dotstar_color();
+      var tempStr = color.replace("rgb(", "");
+
+      var r = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var g = parseInt(tempStr.substring(0, tempStr.indexOf(",")));
+      tempStr = tempStr.slice(tempStr.indexOf(",") + 1);
+      var b = parseInt(tempStr.substring(0, tempStr.indexOf(")")));
+
+      if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || isNaN(r) || isNaN(g) || isNaN(b)) {
+        new PNotify({
+          title: "Enclosure",
+          text: "Color needs to follow the format rgb(value_red,value_green,value_blue)!",
+          type: "error"
+        });
+      } else {
+        $.ajax({
+          type: "GET",
+          dataType: "json",
+          data: {
+            "index_id": index,
+            "action": "setColor",
+            "red": r,
+            "green": g,
+            "blue": b,
+            "brightness": brightness
+          },
+          url: self.buildPluginUrl("/setDotstar"),
+          success: function (data) {
+            item.new_dotstar_color("");
+            self.getUpdateUI();
+          }
+        });
+      }
+    };
+
+    self.handleDotstarPower = function (item, form) {
+
+      var request = {
+        "status": !item.dotstar_active(),
+        "index_id": item.index_id(),
+        "action": "setPower"
+      };
+
+      $.ajax({
+        type: "GET",
+        dataType: "json",
+        data: request,
+        url: self.buildPluginUrl("/setDotstar"),
+        success: function (data) {
+          self.getUpdateUI();
+        }
+      });
+    };
+
 
     self.handleLedstripColor = function (item) {
       var index = item.index_id() ;
