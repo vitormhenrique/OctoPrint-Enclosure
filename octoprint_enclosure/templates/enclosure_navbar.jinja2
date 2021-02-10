@@ -20,6 +20,20 @@
     </li>
     <!-- /ko -->
 
+    <!-- ko if: ($data.output_type() == "dotstar")  -->
+    <li>
+        <a href="javascript:void(0)" data-bind="click: $root.handleDotstarPower">
+            <span data-bind="html: label"> </span>
+            <!-- ko if: ($data.dotstar_active())  -->
+            <span class="badge badge-success help-inline">on</span>
+            <!-- /ko -->
+            <!-- ko ifnot: ($data.dotstar_active())  -->
+            <span class="badge badge-important help-inline">off</span>
+            <!-- /ko -->
+        </a>
+    </li>
+    <!-- /ko -->
+
     <!-- ko if: ($data.output_type() == "gcode_output")  -->
     <!-- ko if: ($root.isOperational())  -->
     <li>
