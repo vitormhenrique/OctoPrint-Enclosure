@@ -148,7 +148,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 6
+        return 7
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -157,14 +157,25 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
         if current >= 4 and target == 6:
-            self._logger.warn("######### migrating settings to v6 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
+            old_inputs = self._settings.get(["rpi_inputs"])
+            self._logger.warn("######### migrating settings to v6+ #########")
             for rpi_output in old_outputs:
                 if 'shutdown_on_failed' not in rpi_output:
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
+
+            if target >= 7:
+                self._logger.warn("######### migrating settings to v7+ #########")
+                for rpi_input in old_inputs:
+                    if 'show_graph_temp' not in rpi_input:
+                        rpi_input['show_graph_temp'] = False
+                    if 'show_graph_humidity' not in rpi_input:
+                        rpi_input['show_graph_humidity'] = False
+
             self._settings.set(["rpi_outputs"], old_outputs)
+            self._settings.set(["rpi_inputs"], old_inputs)
         else:
             self._logger.warn("######### settings not compatible #########")
             self._settings.set(["rpi_outputs"], [])
@@ -1944,6 +1955,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     comm_instance._log("Setting TEMP/HUM control output %s to value %s" % (index_id, set_value))
                     return
 
+    def get_graph_data(self, comm, parsed_temps):
+        for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
+            if sensor["show_graph_temp"]:
+                parsed_temps[str(sensor["label"])] = (sensor['temp_sensor_temp'], None)
+            if sensor["show_graph_humidity"]:
+                parsed_temps[str(sensor["label"])+" Humidity"] = (sensor['temp_sensor_humidity'], None)
+
+        return parsed_temps
+
 
 __plugin_name__ = "Enclosure Plugin"
 __plugin_pythoncompat__ = ">=2.7,<4"
@@ -1956,5 +1976,6 @@ def __plugin_load__():
     global __plugin_hooks__
     __plugin_hooks__ = {
         "octoprint.comm.protocol.gcode.queuing"       : __plugin_implementation__.hook_gcode_queuing,
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+        "octoprint.comm.protocol.temperatures.received": (__plugin_implementation__.get_graph_data, 1)
     }

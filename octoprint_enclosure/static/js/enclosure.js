@@ -456,7 +456,9 @@ $(function () {
         temp_sensor_navbar: ko.observable(true),
         filament_sensor_timeout: ko.observable(120),
         filament_sensor_enabled: ko.observable(true),
-        temp_sensor_i2cbus: ko.observable(1)
+        temp_sensor_i2cbus: ko.observable(1),
+        show_graph_temp: ko.observable(false),
+        show_graph_humidity: ko.observable(false)
       });
     };
 
