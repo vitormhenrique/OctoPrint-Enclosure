@@ -22,13 +22,16 @@ import threading
 import json
 import copy
 
+## Import modifications for Hardware PWM using PiGPIO
+import pigpio
+##
 
 #Function that returns Boolean output state of the GPIO inputs / outputs
 def PinState_Boolean(pin, ActiveLow) :
     try:
         state = GPIO.input(pin)
         if ActiveLow and not state: return True
-        if not ActiveLow and state: return True 
+        if not ActiveLow and state: return True
         return False
     except:
         return "ERROR: Unable to read pin"
@@ -38,7 +41,7 @@ def PinState_Human(pin, ActiveLow):
     PinState = PinState_Boolean(pin, ActiveLow)
     if PinState == True :
         return " ON "
-    elif PinState == False:		
+    elif PinState == False:
         return " OFF "
     else:
         return PinState
@@ -51,7 +54,7 @@ def CheckInputActiveLow(Input_Pull_Resistor):
         return True
     else:
         return False
-        
+
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
@@ -69,6 +72,38 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     development_mode = False
     dummy_value = 30.0
     dummy_delta = 0.5
+
+## New stuff, Init borrowed from HardwarePWM
+    def __init__(self):
+        self.IOpin = 13
+        self.Freq = 25000
+        self.dutyCycle = 0
+        self.HWGPIO = pigpio.pi()
+
+    def startHWPWM(self, pin, hz, percCycle):
+        cycle=int(percCycle*10000)
+        if (self.HWGPIO.connected):
+            if (pin==12 or pin==13 or pin==18 or pin==19):
+                self.HWGPIO.set_mode(pin, pigpio.ALT5)
+                self.HWGPIO.hardware_PWM(pin, hz, cycle)
+            else:
+                self._logger.error(str(pin)+" is not a hardware PWM pin.")
+        else:
+            self._logger.error("Not connected to PIGPIO")
+    def write_hwpwm(self,gpio,pwm_value):
+        for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
+            pwm_frequency = self.to_int(gpio_out_pwm['pwm_frequency'])
+        for pwm in self.pwm_instances:
+            if gpio in pwm:
+                pwm_object=pwm[gpio]
+                old_pwm_value = pwm['duty_cycle'] if 'duty_cycle' in pwm else -1
+                if not self.to_int(old_pwm_value) == self.to_int(pwm_value):
+                    pwm['duty_cycle'] = pwm_value
+                    self.startHWPWM(gpio, pwm_frequency, pwm_value) ## Figure out what to use instead of hardcoded freq
+                    self._logger.info("Writing PWM on pigpio: %s value %s and frequency %s", gpio, pwm_value, pwm_frequency)
+                self.update_ui()
+
+##
 
     def start_timer(self):
         """
@@ -277,7 +312,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                pin = self.to_int(rpi_output['gpio_pin'])          
+                pin = self.to_int(rpi_output['gpio_pin'])
                 ActiveLow = rpi_output['active_low']
                 val = PinState_Human(pin,ActiveLow)
                 outputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, State=val))
@@ -1108,7 +1143,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 else:
                     calculated_duty = 0
 
-                self.write_pwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
+                self.write_hwpwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
 
         except Exception as ex:
             self.log_error(ex)
