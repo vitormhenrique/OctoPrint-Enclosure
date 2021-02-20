@@ -21,7 +21,7 @@ import inspect
 import threading
 import json
 import copy
-
+from .getPiTemp import PiTemp
 
 #Function that returns Boolean output state of the GPIO inputs / outputs
 def PinState_Boolean(pin, ActiveLow) :
@@ -865,6 +865,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "am2320":
                     temp, hum = self.read_am2320_temp() # sensor has fixed address
+                elif sensor['temp_sensor_type'] == "rpi":
+                    temp = self.read_rpi_temp() # rpi CPU Temp
+                    hum = 0
                 elif sensor['temp_sensor_type'] == "si7021":
                     temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'], sensor['temp_sensor_i2cbus'])
                 elif sensor['temp_sensor_type'] == "tmp102":
@@ -998,6 +1001,19 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
+            
+    def read_rpi_temp(self):
+        try:
+            pitemp = PiTemp()
+            temp = pitemp.getTemp()
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Pi CPU result: %s", temp)
+            return temp
+        except Exception as ex:
+            self._logger.info(
+                "Failed to get pi cpu temperature")
+            self.log_error(ex)
+            return 0   
 
     def read_si7021_temp(self, address, i2cbus):
         try:
