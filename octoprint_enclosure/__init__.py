@@ -156,7 +156,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 6:
+        if current >= 4 and target >= 6:
             old_outputs = self._settings.get(["rpi_outputs"])
             old_inputs = self._settings.get(["rpi_inputs"])
             self._logger.warn("######### migrating settings to v6+ #########")
