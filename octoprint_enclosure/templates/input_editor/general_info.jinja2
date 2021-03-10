@@ -19,37 +19,25 @@
   <div class="control-group">
     <label class="control-label">{{ _('Input Type') }}</label>
     <div class="controls">
-      <input type="radio" value="regular_gpio" data-bind="checked: inputEditor.input_type"> {{ _('GPIO Input') }}
+      <input type="radio" name="input_type_radio"  value="regular_gpio" data-bind="checked: inputEditor.input_type"> {{ _('GPIO Input') }}
     </div>
     <div class="controls">
-      <input type="radio" value="temperature_sensor" data-bind="checked: inputEditor.input_type"> {{ _('Temperature Sensor') }}
+      <input type="radio" name="input_type_radio"  value="temperature_sensor" data-bind="checked: inputEditor.input_type"> {{ _('Temp Sensor') }}
     </div>
     <div class="control-group">
       <div class="controls">
-        <!-- kocomment if: (inputEditor.input_type() == "regular_gpio")  -->
+        <!-- ko if: (inputEditor.input_type() == "regular_gpio")  -->
         <span class="help-inline">
           <span class="label label-info">Info:</span> GPIO will input status of the pin (HIGH or LOW) to trigger actions on configured outputs or printer events</span>
-        <!-- /kocomment -->
-        <!-- kocomment if: (inputEditor.input_type() == "temperature_sensor")  -->
+        <!-- /ko -->
+        <!-- ko if: (inputEditor.input_type() == "temperature_sensor")  -->
         <span class="help-inline">
           <span class="label label-info">Info:</span> Temperature Sensors will input temperature and humidity data.
         </span>
-        <!-- /kocomment -->
+        <!-- /ko -->
       </div>
     </div>
   </div>
 
-
-  <!-- kocomment if: (inputEditor.input_type() == "regular_gpio")  -->
-  <div class="control-group">
-    <label class="control-label">{{ _('Action Type') }}</label>
-    <div class="controls">
-      <input type="radio" value="output_control" data-bind="checked: inputEditor.action_type"> {{ _('Output Control') }}
-    </div>
-    <div class="controls">
-      <input type="radio" value="printer_control" data-bind="checked: inputEditor.action_type"> {{ _('Printer') }}
-    </div>
-  </div>
-  <!-- /kocomment -->
 
 </form>

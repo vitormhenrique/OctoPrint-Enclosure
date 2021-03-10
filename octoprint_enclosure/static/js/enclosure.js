@@ -8,9 +8,10 @@ $(function () {
     return {
       index_id: index_id,
       label: "",
-      input_type: "",
+      input_type: "regular_gpio",
+      action_type: "output_control",
       gpio: {
-        pin_name: "regular_gpio",
+        pin_name: "",
         pull_resistor: "input_pull_up",
         linked_action: "output_control",
         edge_detection: "fall",
@@ -25,9 +26,9 @@ $(function () {
         output_set_value: "low",
       },
       temperature_sensor: {
-        type: "DS18B20",
+        type: "si7021",
         address: "",
-        unit: "C",
+        unit: "celsius",
       }
     }
   };
@@ -106,6 +107,7 @@ $(function () {
     self.index_id = ko.observable();
     self.label = ko.observable();
     self.input_type = ko.observable();
+    self.action_type = ko.observable();
     // gpio output
     self.gpio_pin = ko.observable();
     self.pull_resistor = ko.observable();
@@ -115,7 +117,7 @@ $(function () {
     self.controlled_output = ko.observable();
     self.controlled_output_set_value = ko.observable();
     // printer action on linked action
-    self.printed_action = ko.observable();
+    self.printer_action = ko.observable();
     self.filament_sensor_enabled = ko.observable();
     self.filament_sensor_timeout = ko.observable();
     // temperature sensor
@@ -154,6 +156,7 @@ $(function () {
       self.index_id(data.index_id);
       self.label(data.label);
       self.input_type(data.input_type);
+      self.action_type(data.action_type);
       // gpio output
       self.gpio_pin(data.gpio.pin_name);
       self.pull_resistor(data.gpio.pull_resistor);
@@ -163,7 +166,7 @@ $(function () {
       self.controlled_output(data.linked_output_action.output_index_id);
       self.controlled_output_set_value(data.linked_output_action.output_set_value);
       // printer action on linked action
-      self.printed_action(data.linked_printer_action.action);
+      self.printer_action(data.linked_printer_action.action);
       self.filament_sensor_enabled(data.linked_printer_action.filament_sensor_enabled);
       self.filament_sensor_timeout(data.linked_printer_action.filament_sensor_timeout);
       // temperature sensor
@@ -178,6 +181,7 @@ $(function () {
         index_id: self.index_id(),
         label: self.label(),
         input_type: self.input_type(),
+        action_type: self.action_type(),
         gpio: {
           pin_name: self.gpio_pin(),
           pull_resistor: self.pull_resistor(),
@@ -185,7 +189,7 @@ $(function () {
           edge_detection: self.edge_detection(),
         },
         linked_printer_action: {
-          action: self.printed_action(),
+          action: self.printer_action(),
           filament_sensor_enabled: self.filament_sensor_enabled(),
           filament_sensor_timeout: self.filament_sensor_timeout(),
         },

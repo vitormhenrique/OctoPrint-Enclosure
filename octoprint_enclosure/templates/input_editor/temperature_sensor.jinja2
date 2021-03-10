@@ -5,7 +5,6 @@
         <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
             <select data-bind="value: inputEditor.temperature_sensor_type">
-                <option value="">Select Sensor</option>
                 <option value="11">DHT11</option>
                 <option value="22">DHT22</option>
                 <option value="2302">AM2302</option>
@@ -75,7 +74,7 @@
     <div class="control-group">
         <label class="control-label">{{ _('Temperature Unit') }}</label>
         <div class="controls">
-            <select data-bind="value: temperature_sensor_type">
+            <select data-bind="value: inputEditor.temperature_sensor_unit">
                 <option value="celsius">Celsius</option>
                 <option value="fahrenheit">Fahrenheit</option>
                 <option value="romer">Rømer</option>

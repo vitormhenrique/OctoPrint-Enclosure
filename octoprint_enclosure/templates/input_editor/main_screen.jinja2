@@ -11,16 +11,19 @@
                 <li class="active"><a href="#settings_inputs_edit_dialog_general"
                         data-toggle="tab">{{ _('General') }}</a></li>
 
+                <!-- ko if: (inputEditor.input_type() == "regular_gpio")  -->
                 <li><a href="#settings_inputs_edit_dialog_io" data-toggle="tab">{{ _('IO Settings') }}</a></li>
+                <!-- /ko -->
 
-                <li><a href="#settings_inputs_edit_dialog_printer_action"
-                        data-toggle="tab">{{ _('Printer Action') }}</a></li>
+                 <!-- ko if: (inputEditor.input_type() == "regular_gpio")  -->
+                <li><a href="#settings_inputs_edit_dialog_action"
+                        data-toggle="tab">{{ _('Action') }}</a></li>
+                <!-- /ko -->
 
-                <li><a href="#settings_inputs_edit_dialog_output_action" data-toggle="tab">{{ _('Output Action') }}</a>
-                </li>
-
+                <!-- ko if: (inputEditor.input_type() == "temperature_sensor")  -->
                 <li><a href="#settings_inputs_edit_dialog_temperature_sensor"
-                        data-toggle="tab">{{ _('Temperature Sensor') }}</a></li>
+                        data-toggle="tab">{{ _('Sensor') }}</a></li>
+                <!-- /ko -->
             </ul>
 
             <div class="tab-content">
@@ -32,19 +35,13 @@
                     {% include "input_editor/io_output.jinja2" %}
                 </div>
 
-                <div id="settings_inputs_edit_dialog_printer_action" class="tab-pane">
-                    {% include "input_editor/printer_action.jinja2" %}
+                <div id="settings_inputs_edit_dialog_action" class="tab-pane">
+                    {% include "input_editor/action.jinja2" %}
                 </div>
 
-                <div id="settings_inputs_edit_dialog_output_action" class="tab-pane">
-                    {% include "input_editor/output_action.jinja2" %}
-                </div>
-
-                <!-- ko if: (inputEditor.input_type() == "temperature_sensor")  -->
                 <div id="settings_inputs_edit_dialog_temperature_sensor" class="tab-pane">
                     {% include "input_editor/temperature_sensor.jinja2" %}
                 </div>
-                <!-- /ko -->
 
 
             </div>
