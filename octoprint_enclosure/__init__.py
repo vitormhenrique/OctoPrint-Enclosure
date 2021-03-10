@@ -5,17 +5,16 @@ import octoprint.plugin
 import octoprint.util
 
 
-
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
-    
 
     # ~~ TemplatePlugin
     def get_template_configs(self):
         return [
-            dict(type="settings", template="enclosure_settings.jinja2", custom_bindings=True)
-            ]
+            dict(type="settings", template="enclosure_settings.jinja2",
+                 custom_bindings=True)
+        ]
 
     # ~~ AssetPlugin mixin
     def get_assets(self):
@@ -23,25 +22,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
             css=["css/bootstrap-colorpicker.css", "css/enclosure.css"])
 
-    # ~~ SettingsPlugin 
+    # ~~ SettingsPlugin
     def get_settings_defaults(self):
-        return dict(enclosureOutputs=[])
+        return dict(enclosureOutputs=[], enclosureInputs=[])
 
     # ~~ SettingsPlugin mixin
     def on_settings_save(self, data):
         enclosureOutputs = self._settings.get(["enclosureOutputs"])
+        enclosureInputs = self._settings.get(["enclosureInputs"])
         print(data)
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     # ~~ Softwareupdate hook
     def get_update_information(self):
         return dict(enclosure=dict(displayName="Enclosure Plugin", displayVersion=self._plugin_version,
-            # version check: github repository
-            type="github_release", user="vitormhenrique", repo="OctoPrint-Enclosure", current=self._plugin_version,
-            # update method: pip
-            pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"))
-
-   
+                                   # version check: github repository
+                                   type="github_release", user="vitormhenrique", repo="OctoPrint-Enclosure", current=self._plugin_version,
+                                   # update method: pip
+                                   pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"))
 
 
 __plugin_name__ = "Enclosure Plugin"

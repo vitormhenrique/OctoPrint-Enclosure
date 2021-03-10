@@ -16,8 +16,7 @@
     <div class="control-group">
         <label class="control-label"> Controlled IO</label>
         <div class="controls">
-            <select data-bind="options: $root.settings_possible_outputs, optionsText: 'label',
-                      optionsValue: 'index_id', value: $data.controlled_io">
+            <select >
             </select>
             <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
         </div>
@@ -26,7 +25,7 @@
     <div class="control-group">
         <label class="control-label">Set Controlled IO Value</label>
         <div class="controls">
-            <select data-bind="value: controlled_io_set_value">
+            <select data-bind="value: inputEditor.controlled_io_set_value">
                 <option value="low">Low</option>
                 <option value="high">High</option>
                 <option value="toggle">Toggle</option>

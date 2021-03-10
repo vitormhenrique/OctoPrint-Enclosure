@@ -11,7 +11,7 @@ $(function () {
     self.rpi_outputs = ko.observableArray();
     self.rpi_inputs = ko.observableArray();
 
-    self.settingsOpen = false;
+    self.settingsOpen = ko.observable(false);
 
     self.settings_outputs_regular = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {

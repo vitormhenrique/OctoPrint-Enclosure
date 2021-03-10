@@ -3,7 +3,7 @@
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-io1">{{ _('Input IO Number') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: gpio_pin">
+            <input type="text" class="input-block-level" data-bind="value: inputEditor.gpio_pin">
             <span class="help-inline">Input GPIO that will detect the event that should trigger the action. For example
                 if you have a filament sensor
                 you put the GPIO pin that the sensor is connected. This can also be a press of a button or any other
@@ -14,7 +14,7 @@
     <div class="control-group">
         <label class="control-label">Input Pull Resistor</label>
         <div class="controls">
-            <select data-bind="value: input_pull_resistor">
+            <select data-bind="value: inputEditor.input_pull_resistor">
                 <option value="input_pull_up">Input Pull-up</option>
                 <option value="input_pull_down">Input Pull-down</option>
             </select>
@@ -26,7 +26,7 @@
     <div class="control-group">
         <label class="control-label">Event Trigger</label>
         <div class="controls">
-            <select data-bind="value: edge">
+            <select data-bind="value: inputEditor.edge">
                 <option value="rise">Rise</option>
                 <option value="fall">Fall</option>
             </select>

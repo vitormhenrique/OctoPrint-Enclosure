@@ -4,7 +4,7 @@
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtModel">{{ _('Sensor Type') }}</label>
         <div class="controls">
-            <select data-bind="value: outputEditor.temperature_sensor_type">
+            <select data-bind="value: inputEditor.temperature_sensor_type">
                 <option value="">Select Sensor</option>
                 <option value="11">DHT11</option>
                 <option value="22">DHT22</option>
@@ -21,11 +21,11 @@
     </div>
 
 
-    <!-- ko ifnot: (outputEditor.temperature_sensor_type() == "si7021") || (outputEditor.temperature_sensor_type() == "bme280") || (outputEditor.temperature_sensor_type() == "tmp102") || (outputEditor.temperature_sensor_type() == "mcp9808") -->
+    <!-- ko ifnot: (inputEditor.temperature_sensor_type() == "si7021") || (inputEditor.temperature_sensor_type() == "bme280") || (inputEditor.temperature_sensor_type() == "tmp102") || (inputEditor.temperature_sensor_type() == "mcp9808") -->
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: outputEditor.gpio_pin" value="4">
+            <input type="text" class="input-block-level" data-bind="value: inputEditor.gpio_pin" value="4">
             <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 has default
                 support to pin #4 (BCM)</span>
         </div>
@@ -34,11 +34,11 @@
 
 
 
-    <!-- ko if: (outputEditor.temperature_sensor_type() == "18b20")  -->
+    <!-- ko if: (inputEditor.temperature_sensor_type() == "18b20")  -->
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('DS18B20 Serial') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_sensor_address"
+            <input type="text" class="input-block-level" data-bind="value: inputEditor.temperature_sensor_address"
                 value="">
             <span class="help-inline">DS18B20 serial value, needs to be used to have support for multiple sensors,
                 read documentation on github page
@@ -47,18 +47,18 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: (outputEditor.temperature_sensor_type() == "si7021") || (outputEditor.temperature_sensor_type() == "bme280") || (outputEditor.temperature_sensor_type() == "tmp102") || (outputEditor.temperature_sensor_type() == "mcp9808") -->
+    <!-- ko if: (inputEditor.temperature_sensor_type() == "si7021") || (inputEditor.temperature_sensor_type() == "bme280") || (inputEditor.temperature_sensor_type() == "tmp102") || (inputEditor.temperature_sensor_type() == "mcp9808") -->
     <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Address') }}</label>
         <div class="controls">
-            <input type="text" class="input-block-level" data-bind="value: outputEditor.temperature_sensor_address">
+            <input type="text" class="input-block-level" data-bind="value: inputEditor.temperature_sensor_address">
             <span class="help-inline">Sensor address in HEX value, you can find it by running
                 <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
         </div>
     </div>
     <!-- /ko -->
 
-    <!-- ko if: (outputEditor.temperature_sensor_type() == "max31855") -->
+    <!-- ko if: (inputEditor.temperature_sensor_type() == "max31855") -->
     <!-- <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">

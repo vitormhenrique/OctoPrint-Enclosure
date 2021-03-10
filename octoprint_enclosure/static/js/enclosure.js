@@ -137,17 +137,17 @@ $(function () {
 
     });
 
-    self.fromOutputData = function (data) {
+    self.fromInputEnclosureData = function (data) {
 
       self.isNew(data === undefined);
 
       if (data === undefined) {
         var arrRelaysLength = self.enclosureInputs().length;
-        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureInputs()[arrRelaysLength - 1].index_id + 1;
+        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureInputs()[arrRelaysLength - 1].index_id() + 1;
         data = cleanInput(nextIndex);
       } else {
         objIndex = self.enclosureInputs().findIndex((obj => obj.index_id == data.index_id));
-        data = self.enclosureInputs()[objIndex];
+        data = ko.mapping.toJS(self.enclosureInputs()[objIndex]);
       }
 
       // general info
@@ -173,7 +173,7 @@ $(function () {
 
     };
 
-    self.toOutputData = function (data) {
+    self.toInputEnclosureData = function (data) {
       var output_data = {
         index_id: self.index_id(),
         label: self.label(),
@@ -276,17 +276,17 @@ $(function () {
       return false;
     });
 
-    self.fromOutputData = function (data) {
+    self.fromOutputEnclosureData = function (data) {
 
       self.isNew(data === undefined);
 
       if (data === undefined) {
         var arrRelaysLength = self.enclosureOutputs().length;
-        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureOutputs()[arrRelaysLength - 1].index_id + 1;
+        var nextIndex = arrRelaysLength == 0 ? 1 : self.enclosureOutputs()[arrRelaysLength - 1].index_id() + 1;
         data = cleanOutput(nextIndex);
       } else {
         objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == data.index_id));
-        data = self.enclosureOutputs()[objIndex];
+        data = ko.mapping.toJS(self.enclosureOutputs()[objIndex]);
       }
 
       // general info
@@ -347,7 +347,7 @@ $(function () {
 
     };
 
-    self.toOutputData = function () {
+    self.toOutputEnclosureData = function () {
       var output_data = {
         index_id: self.index_id(),
         label: self.label(),
@@ -427,16 +427,29 @@ $(function () {
     self.enclosureOutputs = ko.observableArray();
     self.enclosureInputs = ko.observableArray();
 
+    self.settings_unsaved = ko.observable(false);
+
     self.onBeforeBinding = function () {
-      self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
+      self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs())
+      self.enclosureInputs(self.settingsViewModel.settings.plugins.enclosure.enclosureInputs())
+      // self.settings_unsaved(false);
     };
 
-    self.onEventSettingsUpdated = function () {
+    self.onSettingsBeforeSave = function () {
       // self.enclosureOutputs(self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs());
     };
 
-    self.syncSettings = function () {
+    self.onEventSettingsUpdated = function () {
       self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs(self.enclosureOutputs());
+      self.settingsViewModel.settings.plugins.enclosure.enclosureInputs(self.enclosureInputs());
+      self.settings_unsaved(false);
+    };
+
+
+    self.syncSettings = function () {
+      // self.settingsViewModel.settings.plugins.enclosure.enclosureOutputs(self.enclosureOutputs());
+      // self.settingsViewModel.settings.plugins.enclosure.enclosureInputs(self.enclosureInputs());
+      // self.settings_unsaved(false);
     };
 
     self.createOutputEditor = function (data) {
@@ -458,17 +471,17 @@ $(function () {
 
     self.removeOutput = function (data) {
       self.enclosureOutputs.remove(data);
-      self.syncSettings();
+      self.settings_unsaved(true);
     };
 
     self.removeInput = function(data){
       self.enclosureInputs.remove(data);
-      self.syncSettings();
+      self.settings_unsaved(true);
     }
 
     self.showOutputEditorDialog = function (data) {
 
-      self.outputEditor.fromOutputData(data);
+      self.outputEditor.fromOutputEnclosureData(data);
 
       var editDialog = $("#settings_outputs_edit_dialog");
 
@@ -487,7 +500,7 @@ $(function () {
 
     self.showInputEditorDialog = function (data) {
 
-      self.inputEditor.fromOutputData(data);
+      self.inputEditor.fromInputEnclosureData(data);
 
       var editDialog = $("#settings_inputs_edit_dialog");
 
@@ -513,7 +526,7 @@ $(function () {
 
         self.addOutputs(callback);
 
-        self.syncSettings();
+        // self.syncSettings();
       }
     };
 
@@ -526,7 +539,7 @@ $(function () {
 
         self.addInputs(callback);
 
-        self.syncSettings();
+        // self.syncSettings();
       }
     };
 
@@ -534,12 +547,14 @@ $(function () {
     self.addOutputs = function (callback) {
       var isNew = self.outputEditor.isNew();
 
-      var output = self.outputEditor.toOutputData();
+      self.settings_unsaved(true);
+
+      var output = ko.mapping.fromJS(self.outputEditor.toOutputEnclosureData());
 
       if (isNew) {
         self.enclosureOutputs.push(output);
       } else {
-        objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id == output.index_id));
+        objIndex = self.enclosureOutputs().findIndex((obj => obj.index_id() == output.index_id()));
         var _old_output = self.enclosureOutputs()[objIndex];
         self.enclosureOutputs.replace(_old_output, output);
       }
@@ -552,12 +567,14 @@ $(function () {
     self.addInputs = function (callback) {
       var isNew = self.inputEditor.isNew();
 
-      var input = self.inputEditor.toOutputData();
+      self.settings_unsaved(true);
+
+      var input = ko.mapping.fromJS(self.inputEditor.toInputEnclosureData());
 
       if (isNew) {
         self.enclosureInputs.push(input);
       } else {
-        objIndex = self.enclosureInputs().findIndex((obj => obj.index_id == input.index_id));
+        objIndex = self.enclosureInputs().findIndex((obj => obj.index_id() == input.index_id()));
         var _old_input = self.enclosureInputs()[objIndex];
         self.enclosureInputs.replace(_old_input, input);
       }
