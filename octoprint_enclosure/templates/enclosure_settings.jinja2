@@ -250,6 +250,16 @@
       </div>
     </div>
     <!-- /ko -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output") -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: shutdown_on_error"> {{ _('Auto Shutdown on Error') }}
+        </label>
+        <span class="help-inline">Choose if output should turn off automatomatically when an error or disconnect was detected.</span>
+      </div>
+    </div>
+    <!-- /ko -->
     <!-- /ko -->
 
     <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control" )  -->

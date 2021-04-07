@@ -148,7 +148,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 7
+        return 8
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -165,6 +165,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
+                if target >= 8:
+                    if 'shutdown_on_error' not in rpi_output:
+                        rpi_output['shutdown_on_error'] = False
 
             if target >= 7:
                 self._logger.warn("######### migrating settings to v7+ #########")
@@ -173,6 +176,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                         rpi_input['show_graph_temp'] = False
                     if 'show_graph_humidity' not in rpi_input:
                         rpi_input['show_graph_humidity'] = False
+
 
             self._settings.set(["rpi_outputs"], old_outputs)
             self._settings.set(["rpi_inputs"], old_inputs)
@@ -1588,6 +1592,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     # ~~ EventPlugin mixin
     def on_event(self, event, payload):
+        self._logger.info("Event Logging Test: %s", event)
         if event == Events.CONNECTED:
             self.update_ui()
 
@@ -1653,6 +1658,23 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     msg = "Print job finished: " + file_name + "finished printing in " + file_name, elapsed_time
                     self.send_notification(msg)
 
+        if event in (Events.ERROR, Events.DISCONNECTED):
+            self._logger.info("Detected Error or Disconnect in %s will call listeners for shutdown_on_error!", event)
+            for rpi_output in self.rpi_outputs:
+                if rpi_output['shutdown_on_error']:
+                    self._logger.debug("Schedule shutdown for: %s", rpi_output["index_id"])
+                    self.schedule_auto_shutdown_outputs(rpi_output, 0)
+            self.run_tasks()
+        
+        if event == Events.PRINTER_STATE_CHANGED:
+            if "error" in payload["state_string"].lower():
+                self._logger.info("Detected Error in %s id: %s state: %s  will call listeners for shutdown_on_error!", event, payload["state_id"], payload["state_string"])
+                for rpi_output in self.rpi_outputs:
+                    if rpi_output['shutdown_on_error']:
+                        self._logger.debug("Schedule shutdown for: %s", rpi_output["index_id"])
+                        self.schedule_auto_shutdown_outputs(rpi_output, 0)
+                self.run_tasks()
+
     def run_tasks(self):
         for task in self.event_queue:
             if not task['thread'].is_alive():
@@ -1661,6 +1683,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def schedule_auto_shutdown_outputs(self, rpi_output, shutdown_delay_seconds):
         sufix = 'auto_shutdown'
         if rpi_output['output_type'] == 'regular':
+            self._logger.debug("schedule_auto_shutdown_outputs output is of type regular")
             value = True if rpi_output['active_low'] else False
             self.add_regular_output_to_queue(shutdown_delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
