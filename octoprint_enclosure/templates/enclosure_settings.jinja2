@@ -91,7 +91,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip") -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip" || ($data.output_type() == "regular" && $data.gpio_i2c_enabled)) -->
     <div class="control-group">
       <label class="control-label">{{ _('IO Number') }}</label>
       <div class="controls">
@@ -259,6 +259,69 @@
           <input type="checkbox" data-bind="checked: active_low"> {{ _('Active Low') }}
         </label>
         <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "regular" || $data.output_type() == "temp_hum_control" )  -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: gpio_i2c_enabled"> {{ _('GPIO over I2C') }}
+        </label>
+        <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: $data.gpio_i2c_enabled  -->
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-bus">{{ _('I2C Bus') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_bus" id="settings-enclosure-gpio-i2c-bus">
+        <span class="help-inline">This value should remain 1 unless you've used dtoverlay=i2c-gpio or you are using another bus.
+        </span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-addr">{{ _('I2C Address') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_address" id="settings-enclosure-gpio-i2c-addr">
+        <span class="help-inline">I2C address in HEX value, you can find it by running
+          <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-reg">{{ _('I2C Register') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_register" id="settings-enclosure-gpio-i2c-reg">
+        <span class="help-inline">I2C register in HEX value</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-data-on">{{ _('I2C ON data') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_data_on" id="settings-enclosure-gpio-i2c-data-on">
+        <span class="help-inline">I2C data to write in HEX value when ON</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-data-off">{{ _('I2C OFF data') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_data_off" id="settings-enclosure-gpio-i2c-data-off">
+        <span class="help-inline">I2C data to write in HEX value when OFF</span>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label class="control-label" for="settings-enclosure-gpio-i2c-reg-read">{{ _('I2C Register (read status)') }}</label>
+      <div class="controls">
+        <input type="text" class="input-block-level" data-bind="value: gpio_i2c_register_status" id="settings-enclosure-gpio-i2c-reg-read">
+        <span class="help-inline">I2C register for reading gpio state in HEX value</span>
       </div>
     </div>
     <!-- /ko -->
@@ -540,6 +603,8 @@
             <option value="tmp102">TMP102</option>
             <option value="max31855">MAX31855</option>
             <option value="mcp9808">MCP9808</option>
+            <option value="temp_raw_i2c">Raw I2C Temperature</option>
+            <option value="hum_raw_i2c">Raw I2C Humidity</option>
           </select>
           <span class="help-inline">
             <span class="label label-important">Attention</span> You need to install and configure the necessary libraries for the temperature sensor, check
@@ -547,6 +612,35 @@
             <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page</span>
         </div>
       </div>
+
+      <!-- ko if: ($data.temp_sensor_type() == "temp_raw_i2c") || ($data.temp_sensor_type() == "hum_raw_i2c")  -->
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-temp-i2c-bus">{{ _('I2C Bus') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_i2c_bus" id="settings-enclosure-temp-i2c-bus">
+          <span class="help-inline">This value should remain 1 unless you've used dtoverlay=i2c-gpio or you are using another bus.
+          </span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-temp-i2c-addr">{{ _('I2C Address') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_i2c_address" id="settings-enclosure-temp-i2c-addr">
+          <span class="help-inline">I2C address in HEX value, you can find it by running
+            <code>i2cdetect -y 1</code> on your Raspberry Pi</span>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label class="control-label" for="settings-enclosure-temp-i2c-reg">{{ _('I2C Register') }}</label>
+        <div class="controls">
+          <input type="text" class="input-block-level" data-bind="value: temp_i2c_register" id="settings-enclosure-temp-i2c-reg">
+          <span class="help-inline">I2C register in HEX value</span>
+        </div>
+      </div>
+      <!-- /ko -->
+
       <!-- ko if: ($data.temp_sensor_type() == "18b20")  -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
@@ -614,7 +708,7 @@
       </div>
       
       <!-- /ko -->
-      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") -->
+      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") || ($data.temp_sensor_type() == "temp_raw_i2c")  || ($data.temp_sensor_type() == "hum_raw_i2c") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">

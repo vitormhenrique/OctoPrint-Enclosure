@@ -21,8 +21,39 @@ import inspect
 import threading
 import json
 import copy
+from smbus2 import SMBus
+import struct
 
 
+#Function that returns Boolean output state of the GPIO inputs / outputs
+def PinState_Boolean(pin, ActiveLow) :
+    try:
+        state = GPIO.input(pin)
+        if ActiveLow and not state: return True
+        if not ActiveLow and state: return True 
+        return False
+    except:
+        return "ERROR: Unable to read pin"
+
+#Function that returns human-readable output state of the GPIO inputs / outputs
+def PinState_Human(pin, ActiveLow):
+    PinState = PinState_Boolean(pin, ActiveLow)
+    if PinState == True :
+        return " ON "
+    elif PinState == False:		
+        return " OFF "
+    else:
+        return PinState
+
+#Translates the Pull-Up/Pull-Down GPIO resistor setting to ActiveLow/ActiveHigh boolean
+def CheckInputActiveLow(Input_Pull_Resistor):
+    #input_pull_up
+    #input_pull_down
+    if Input_Pull_Resistor == "input_pull_up":
+        return True
+    else:
+        return False
+        
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
@@ -52,10 +83,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     @staticmethod
     def to_float(value):
         """Converts value to flow
-
         Arguments:
             value {any} -- value to be
-
         Returns:
             float -- value converted
         """
@@ -121,7 +150,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 6
+        return 8
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -129,20 +158,82 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 6:
-            self._logger.warn("######### migrating settings to v6 #########")
+        if current >= 4 and target == 8:
+            self._logger.warn("######### migrating settings to v8 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             for rpi_output in old_outputs:
                 if 'shutdown_on_failed' not in rpi_output:
                     rpi_output['shutdown_on_failed'] = False
                 if 'shell_script' not in rpi_output:
                     rpi_output['shell_script'] = ""
+                if 'gpio_i2c_enabled' not in rpi_output:
+                    rpi_output['gpio_i2c_enabled'] = False
+                if 'gpio_i2c_bus' not in rpi_output:
+                    rpi_output['gpio_i2c_bus'] = 1
+                if 'gpio_i2c_address' not in rpi_output:
+                    rpi_output['gpio_i2c_address'] = 1
+                if 'gpio_i2c_register' not in rpi_output:
+                    rpi_output['gpio_i2c_register'] = 1
+                if 'gpio_i2c_data_on' not in rpi_output:
+                    rpi_output['gpio_i2c_data_on'] = 1
+                if 'gpio_i2c_data_off' not in rpi_output:
+                    rpi_output['gpio_i2c_data_off'] = 0
+                if 'gpio_i2c_register_status' not in rpi_output:
+                    rpi_output['gpio_i2c_register_status'] = 1
             self._settings.set(["rpi_outputs"], old_outputs)
+
+            old_inputs = self._settings.get(["rpi_inputs"])
+            for rpi_input in old_inputs:
+                if 'temp_i2c_bus' not in rpi_input:
+                    rpi_input['temp_i2c_bus'] = 1
+                if 'temp_i2c_address' not in rpi_input:
+                    rpi_input['temp_i2c_address'] = 1
+                if 'temp_i2c_register' not in rpi_input:
+                    rpi_input['temp_i2c_register'] = 1
+            self._settings.set(["rpi_inputs"], old_inputs)
         else:
             self._logger.warn("######### settings not compatible #########")
             self._settings.set(["rpi_outputs"], [])
             self._settings.set(["rpi_inputs"], [])
             self.rpi_inputs = self._settings.get(["rpi_inputs"])
+
+    #Scan all configured inputs and outputs and return the pin value
+    @octoprint.plugin.BlueprintPlugin.route("/ReadPin/<int:identifier>", methods=["GET"])
+    def ReadSinglePin(self, identifier):
+        Resp = []
+        MatchFound = False
+        for rpi_input in self.rpi_inputs:
+            if identifier == self.to_int(rpi_input['gpio_pin']):
+                MatchFound = True
+                ConfiguredAs = "Input"
+                ActiveLow = CheckInputActiveLow(rpi_input['input_pull_resistor'])
+                pin = self.to_int(rpi_input['gpio_pin'])
+                val = PinState_Human(pin,ActiveLow)
+                label = rpi_input['label']
+                Resp.append(dict(Configured_As=ConfiguredAs, label=label, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        for rpi_output in self.rpi_outputs:
+            if identifier == self.to_int(rpi_output['gpio_pin']):
+                MatchFound = True
+                ConfiguredAs = "Output"
+                ActiveLow = CheckInputActiveLow(rpi_output['active_low'])
+                pin = self.to_int(rpi_output['gpio_pin'])
+                if rpi_output['gpio_i2c_enabled']:
+                    b = self.gpio_i2c_input(rpi_output, ActiveLow)
+                    val = " ON " if b else " OFF "
+                else:
+                    val = PinState_Human(pin,ActiveLow)
+                label = rpi_output['label']
+                Resp.append(dict(Configured_As=ConfiguredAs, label=label, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        if MatchFound == False:
+            pin = int(identifier)
+            ConfiguredAs = "Unknown"
+            ActiveLow = "Unknown"
+            try:
+                val = GPIO.input(pin)
+            except:
+                val = "GPIO pin not initialized."
+            Resp.append(dict(Configured_As=ConfiguredAs, GPIO_Pin=pin, Active_Low=ActiveLow, State=val))
+        return Response(json.dumps(Resp), mimetype='application/json')
 
     # ~~ Blueprintplugin mixin
     @octoprint.plugin.BlueprintPlugin.route("/inputs", methods=["GET"])
@@ -151,9 +242,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_input in self.rpi_inputs:
             index = self.to_int(rpi_input['index_id'])
             label = rpi_input['label']
-            inputs.append(dict(index_id=index, label=label))
+            ActiveLow = CheckInputActiveLow(rpi_input['input_pull_resistor'])
+            pin = self.to_int(rpi_input['gpio_pin'])
+            val = PinState_Human(pin,ActiveLow)
+            inputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, State=val))
         return Response(json.dumps(inputs), mimetype='application/json')
-
 
     @octoprint.plugin.BlueprintPlugin.route("/inputs/<int:identifier>", methods=["GET"])
     def get_input_status(self, identifier):
@@ -207,7 +300,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._settings.set(["rpi_inputs"], self.rpi_inputs)
         return make_response('', 204)
 
-
     @octoprint.plugin.BlueprintPlugin.route("/outputs", methods=["GET"])
     def get_outputs(self):
         outputs = []
@@ -215,7 +307,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                outputs.append(dict(index_id=index, label=label))
+                pin = self.to_int(rpi_output['gpio_pin'])          
+                ActiveLow = rpi_output['active_low']
+                if rpi_output['gpio_i2c_enabled']:
+                    b = self.gpio_i2c_input(rpi_output, ActiveLow)
+                    val = " ON " if b else " OFF "
+                else:
+                    val = PinState_Human(pin,ActiveLow)
+                outputs.append(dict(index_id=index, label=label, GPIO_Pin=pin, State=val))
         return Response(json.dumps(outputs), mimetype='application/json')
 
 
@@ -225,7 +324,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if identifier == self.to_int(rpi_output['index_id']):
                 out = copy.deepcopy(rpi_output)
                 pin = self.to_int(rpi_output['gpio_pin'])
-                out['current_value'] = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                if rpi_output['gpio_i2c_enabled']:
+                    out['current_value'] = self.gpio_i2c_input(rpi_output, rpi_output['active_low'])
+                else:
+                    out['current_value'] = PinState_Boolean(pin, rpi_output['active_low'] )
                 return Response(json.dumps(out), mimetype='application/json')
         return make_response('', 404)
 
@@ -248,7 +350,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_output in self.rpi_outputs:
             if identifier == self.to_int(rpi_output['index_id']):
                 val = (not value) if rpi_output['active_low'] else value
-                self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+                if rpi_output['gpio_i2c_enabled']:
+                    self.gpio_i2c_write(rpi_output, val)
+                else:
+                    self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         return make_response('', 204)
 
 
@@ -454,9 +559,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_output in self.rpi_outputs:
             if rpi_output['output_type'] == 'regular':
                 pin = self.to_int(rpi_output['gpio_pin'])
-                val = GPIO.input(pin) if not rpi_output['active_low'] else (not GPIO.input(pin))
+                ActiveLow = rpi_output['active_low']
+                if rpi_output['gpio_i2c_enabled']:
+                    val = self.gpio_i2c_input(rpi_output, rpi_output['active_low'])
+                else:
+                    val = PinState_Boolean(pin, ActiveLow)
+                val2 = PinState_Human(pin, ActiveLow)
                 index = self.to_int(rpi_output['index_id'])
-                gpio_status.append(dict(index_id=index, status=val))
+                gpio_status.append(dict(index_id=index, status=val, State=val2))
         return Response(json.dumps(gpio_status), mimetype='application/json')
 
     @octoprint.plugin.BlueprintPlugin.route("/setIO", methods=["GET"])
@@ -466,7 +576,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         for rpi_output in self.rpi_outputs:
             if self.to_int(index) == self.to_int(rpi_output['index_id']):
                 val = (not value) if rpi_output['active_low'] else value
-                self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+                if rpi_output['gpio_i2c_enabled']:
+                    self.gpio_i2c_write(rpi_output, val)
+                else:
+                    self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         return jsonify(success=True)
 
     @octoprint.plugin.BlueprintPlugin.route("/sendShellCommand", methods=["GET"])
@@ -575,13 +688,67 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     # DEPREACTION END
 
 
+    # GPIO over i2c
 
+    def gpio_i2c_input(self, output, active_low=None):
+        state = False
+        try:
+            i2cbus = self.to_int(output['gpio_i2c_bus'])
+            i2caddr = self.to_int(output['gpio_i2c_address'])
+            i2creg = self.to_int(output['gpio_i2c_register_status'])
+            data_on = self.to_int(output['gpio_i2c_data_on'])
+
+            with SMBus(i2cbus) as bus:
+                data = bus.read_i2c_block_data(i2caddr, i2creg, 1)
+                if data[0] == data_on:
+                    state = True
+
+            self._logger.debug("gpio_i2c_input(i2cbus=%s, i2caddr=%s, i2creg=%s, data_on=%s) data == %s",
+                                i2cbus, i2caddr, i2creg, data_on, data)
+
+            if active_low is None and state: return state
+
+        except Exception as ex:
+            self.log_error(ex)
+
+        if active_low and not state: return True
+        if not active_low and state: return True
+        return False
+
+    def gpio_i2c_write(self, output, state, queue_id=None):
+        try:
+            i2cbus = self.to_int(output['gpio_i2c_bus'])
+            i2caddr = self.to_int(output['gpio_i2c_address'])
+            i2creg = self.to_int(output['gpio_i2c_register'])
+            data_on = self.to_int(output['gpio_i2c_data_on'])
+            data_off = self.to_int(output['gpio_i2c_data_off'])
+
+            with SMBus(i2cbus) as bus:
+                data = []
+                if state:
+                    data.append(data_on)
+                else:
+                    data.append(data_off)
+
+                bus.write_i2c_block_data(i2caddr, i2creg, data)
+
+            if queue_id is not None:
+                self._logger.debug("Running scheduled queue id %s", queue_id)
+            self._logger.debug("Writing on GPIO (i2c): %s/%s value %s", output['gpio_i2c_address'], output['gpio_i2c_register'], state)
+            self.update_ui()
+            if queue_id is not None:
+                self.stop_queue_item(queue_id)
+
+        except Exception as ex:
+            template = "An exception of type {0} occurred on {1} when writing on i2c address {2}, reg {3}. Arguments:\n{4!r}"
+            message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, output['gpio_i2c_address'], output['gpio_i2c_register'], ex.args)
+            self._logger.warn(message)
+            pass
 
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
                               index_id, queue_id=None):
         """Send neopixel command
-
         Arguments:
             led_pin {int} -- GPIO number
             ledCount {int} -- number of LEDS
@@ -654,10 +821,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             index_id = self.to_int(output['index_id'])
 
             if output['output_type'] == 'regular':
-                if first_run:
-                    current_value = False
+                if output['gpio_i2c_enabled']:
+                    current_value = self.gpio_i2c_input(output)
                 else:
-                    current_value = (not GPIO.input(gpio_pin)) if output['active_low'] else GPIO.input(gpio_pin)
+                    if first_run:
+                        current_value = False
+                    else:
+                        current_value = (not GPIO.input(gpio_pin)) if output['active_low'] else GPIO.input(gpio_pin)
 
                 if current_value:
                     time_delay = self.to_int(output['toggle_timer_off'])
@@ -665,12 +835,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     time_delay = self.to_int(output['toggle_timer_on'])
 
                 if not self.print_complete:
-                    self.write_gpio(gpio_pin, not current_value)
+                    if output['gpio_i2c_enabled']:
+                        self.gpio_i2c_write(output, not current_value)
+                    else:
+                        self.write_gpio(gpio_pin, not current_value)
                     thread = threading.Timer(time_delay, self.toggle_output, args=[index_id])
                     thread.start()
                 else:
                     off_value = True if output['active_low'] else False
-                    self.write_gpio(gpio_pin, off_value)
+                    if output['gpio_i2c_enabled']:
+                        self.gpio_i2c_write(output, off_value)
+                    else:
+                        self.write_gpio(gpio_pin, off_value)
                 self.update_ui_outputs()
                 return
 
@@ -744,11 +920,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 shutdown = output['auto_shutdown']
 
                 if output['output_type'] == 'regular':
-                    val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
+                    if output['gpio_i2c_enabled']:
+                        val = self.gpio_i2c_input(output)
+                    else:
+                        val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
                     regular_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'temp_hum_control':
-                    val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
+                    if output['gpio_i2c_enabled']:
+                        val = self.gpio_i2c_input(output)
+                    else:
+                        val = GPIO.input(pin) if not output['active_low'] else (not GPIO.input(pin))
                     temp_control_status.append(
                         dict(index_id=index, status=val, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'neopixel_indirect' or output['output_type'] == 'neopixel_direct':
@@ -810,6 +992,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 elif sensor['temp_sensor_type'] == "mcp9808":
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
+                elif sensor['temp_sensor_type'] == "temp_raw_i2c":
+                    temp = self.read_raw_i2c_temp(sensor)
+                    hum = 0
+                elif sensor['temp_sensor_type'] == "hum_raw_i2c":
+                    temp = 0
+                    hum = self.read_raw_i2c_temp(sensor)
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
@@ -835,8 +1023,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 for rpi_controlled_output in self.rpi_outputs:
                     if self.to_int(temperature_alarm['controlled_io']) == self.to_int(
                             rpi_controlled_output['index_id']):
-                        val = GPIO.LOW if temperature_alarm['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                        self.write_gpio(self.to_int(rpi_controlled_output['gpio_pin']), val)
+                        if rpi_controlled_output['gpio_i2c_enabled']:
+                            val = False if temperature_alarm['controlled_io_set_value'] == 'low' else True
+                            self.gpio_i2c_write(rpi_controlled_output, val)
+                        else:
+                            val = GPIO.LOW if temperature_alarm['controlled_io_set_value'] == 'low' else GPIO.HIGH
+                            self.write_gpio(self.to_int(rpi_controlled_output['gpio_pin']), val)
                         for notification in self.notifications:
                             if notification['temperatureAction']:
                                 msg = ("Temperature action: enclosure temperature exceed " + temperature_alarm[
@@ -854,6 +1046,28 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         return return_value, return_value
 
+    def read_raw_i2c_temp(self, sensor):
+        try:
+            i2cbus = self.to_int(sensor['temp_i2c_bus'])
+            i2caddr = self.to_int(sensor['temp_i2c_address'])
+            i2creg = self.to_int(sensor['temp_i2c_register'])
+
+            with SMBus(i2cbus) as bus:
+                data = bus.read_i2c_block_data(i2caddr, i2creg, 4)
+                val = struct.unpack('f', bytearray(data))
+                fval = val[0]
+
+                self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s)",
+                                    i2cbus, i2caddr, i2creg, data, fval)
+
+                return str(fval)
+
+        except Exception as ex:
+            template = "An exception of type {0} occurred on {1} when reading on i2c address {2}, reg {3}. Arguments:\n{4!r}"
+            message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, i2caddr, i2creg, ex.args)
+            self._logger.warn(message)
+            return str(-1)
+
     def read_mcp_temp(self, address):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/mcp9808.py"
@@ -864,7 +1078,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("MCP9808 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
@@ -883,7 +1097,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Dht result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -904,7 +1118,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("BME280 result: %s", stdout)
-            temp, hum = stdout.split(b"|")
+
+            temp, hum = stdout.decode("utf-8").split("|")
+            
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -925,7 +1141,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("AM2320 result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -946,7 +1162,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("SI7021 result: %s", stdout)
-            temp, hum = stdout.split("|")
+            temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
             self._logger.info(
@@ -990,7 +1206,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("TMP102 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
@@ -1006,7 +1222,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout, _ = proc.communicate()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("MAX31855 result: %s", stdout)
-            return self.to_float(stdout.strip())
+            return self.to_float(stdout.decode("utf-8").strip())
         except Exception as ex:
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
@@ -1107,7 +1323,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     if current_status:
                         self._logger.info("Turning gpio to control temperature on.")
                         val = False if temp_hum_control['active_low'] else True
-                        self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
+                        if temp_hum_control['gpio_i2c_enabled']:
+                            self.gpio_i2c_write(temp_hum_control, val)
+                        else:
+                            self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
                     else:
                         index_id = temp_hum_control['index_id']
                         if index_id in self.waiting_temperature:
@@ -1118,7 +1337,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
                         self._logger.info("Turning gpio to control temperature off.")
                         val = True if temp_hum_control['active_low'] else False
-                        self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
+                        if temp_hum_control['gpio_i2c_enabled']:
+                            self.gpio_i2c_write(temp_hum_control, val)
+                        else:
+                            self.write_gpio(self.to_int(temp_hum_control['gpio_pin']), val)
                     for control_status in self.temp_hum_control_status:
                         if control_status['index_id'] == temp_hum_control['index_id']:
                             control_status['status'] = current_status
@@ -1136,8 +1358,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             set_mode = GPIO.BOARD if self._settings.get(["use_board_pin_number"]) else GPIO.BCM
             if current_mode is None:
                 outputs = list(filter(
-                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
-                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
+                    lambda item: (item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct') and
+                        item['gpio_i2c_enabled'] == False,
                     self.rpi_outputs))
                 inputs = list(filter(lambda item: item['input_type'] == 'gpio', self.rpi_inputs))
                 gpios = outputs + inputs
@@ -1161,8 +1384,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
 
             for gpio_out in list(filter(
-                    lambda item: item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
-                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct',
+                    lambda item: (item['output_type'] == 'regular' or item['output_type'] == 'pwm' or item[
+                        'output_type'] == 'temp_hum_control' or item['output_type'] == 'neopixel_direct') and
+                        item['gpio_i2c_enabled'] == False,
                     self.rpi_outputs)):
                 gpio_pin = self.to_int(gpio_out['gpio_pin'])
                 if gpio_pin not in self.rpi_outputs_not_changed:
@@ -1194,7 +1418,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
 
             for gpio_out in list(
-                    filter(lambda item: item['output_type'] == 'regular' or item['output_type'] == 'temp_hum_control',
+                    filter(lambda item: (item['output_type'] == 'regular' or item['output_type'] == 'temp_hum_control') and
+                            item['gpio_i2c_enabled'] == False,
                            self.rpi_outputs)):
                 initial_value = GPIO.HIGH if gpio_out['active_low'] else GPIO.LOW
                 pin = self.to_int(gpio_out['gpio_pin'])
@@ -1321,8 +1546,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     rpi_output = [r_out for r_out in self.rpi_outputs if
                                   self.to_int(r_out['index_id']) == controlled_io].pop()
                     if rpi_output['output_type'] == 'regular':
-                        val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                        self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+                        if rpi_output['gpio_i2c_enabled']:
+                            val = False if rpi_input['controlled_io_set_value'] == 'low' else True
+                            self.gpio_i2c_write(rpi_output, val)    
+                        else:
+                            val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
+                            self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
         except Exception as ex:
             self.log_error(ex)
             pass
@@ -1354,7 +1583,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                                 self.to_int(rpi_output['gpio_pin'])) == GPIO.HIGH else GPIO.HIGH
                         else:
                             val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
-                        self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
+                        if rpi_output['gpio_i2c_enabled']:
+                            self.gpio_i2c_write(rpi_output, val)
+                        else:
+                            self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
                         for notification in self.notifications:
                             if notification['gpioAction']:
                                 msg = "GPIO control action caused by input " + str(
@@ -1619,7 +1851,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 gpio = self.to_int(rpi_output['gpio_pin'])
                 if rpi_output['output_type'] == 'regular':
                     value = False if rpi_output['active_low'] else True
-                    self.write_gpio(gpio, value)
+                    if rpi_output['gpio_i2c_enabled']:
+                        self.gpio_i2c_write(rpi_output, value)
+                    else:
+                        self.write_gpio(gpio, value)
                 if rpi_output['output_type'] == 'ledstrip':
                     self.ledstrip_set_rgb(rpi_output)
                 if rpi_output['output_type'] == 'pwm' and not rpi_output['pwm_temperature_linked']:
@@ -1722,8 +1957,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         self._logger.debug("Scheduling regular output id %s on %s delay_seconds", queue_id, delay_seconds)
 
-        thread = threading.Timer(delay_seconds, self.write_gpio,
-                                 args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
+        if rpi_output['gpio_i2c_enabled']:
+            thread = threading.Timer(delay_seconds, self.gpio_i2c_write,
+                                     args=[rpi_output, value, queue_id])
+        else:
+            thread = threading.Timer(delay_seconds, self.write_gpio,
+                                     args=[self.to_int(rpi_output['gpio_pin']), value, queue_id])
 
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
@@ -1838,7 +2077,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     set_value = self.constrain(set_value, 0, 1)
                     value = True if set_value == 1 else False
                     value = (not value) if output['active_low'] else value
-                    self.write_gpio(self.to_int(output['gpio_pin']), value)
+                    if output['gpio_i2c_enabled']:
+                        self.gpio_i2c_write(output, value)
+                    else:
+                        self.write_gpio(self.to_int(output['gpio_pin']), value)
                     comm_instance._log("Setting REGULAR output %s to value %s" % (index_id, value))
                     return
                 if output['output_type'] == 'pwm':
