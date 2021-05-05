@@ -1054,9 +1054,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 data = bus.read_i2c_block_data(i2caddr, i2creg, 8)
                 val = struct.unpack('f', bytearray(data[0:4]))
                 fval1 = val[0]
+                if fval1 != fval1:
+                    fval1 = 0
                 val = struct.unpack('f', bytearray(data[4:8]))
                 fval2 = val[0]
-
+                if fval2 != fval2:
+                    fval2 = 0
+                
                 self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s, %s)",
                                     i2cbus, i2caddr, i2creg, data, fval1, fval2)
 
