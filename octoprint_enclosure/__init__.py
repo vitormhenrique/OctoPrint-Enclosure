@@ -92,6 +92,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 self._logger.error(str(pin)+" is not a hardware PWM pin.")
         else:
             self._logger.error("Not connected to PIGPIO")
+
     def write_hwpwm(self,gpio,pwm_value):
         for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
             pwm_frequency = self.to_int(gpio_out_pwm['pwm_frequency'])
