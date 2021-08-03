@@ -144,7 +144,7 @@ Error Responses:
 
 Endpoint: **PATCH** `/outputs/<id>`
 
-*Note: id needs to be int (index_id)*
+*Note: id needs to be int (index_id), one-based index in octoprint settings' enclosure section's `rpi_outputs` list*
 
 Body (Content-Type: `application/json`):
 ```
