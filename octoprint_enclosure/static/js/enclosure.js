@@ -18,7 +18,7 @@ $(function () {
         return (item.output_type() === "regular" && !item.toggle_timer());
       });
     });
-    
+
     self.settings_possible_outputs = ko.pureComputed(function () {
       return ko.utils.arrayFilter(self.settingsViewModel.settings.plugins.enclosure.rpi_outputs(), function (item) {
         return ((item.output_type() === "regular" && !item.toggle_timer()) || item.output_type() === "gcode_output" || item.output_type() === "shell_output");
@@ -56,7 +56,7 @@ $(function () {
     self.notifications = ko.observableArray([]);
 
     self.humidityCapableSensor = function(sensor){
-      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021'].indexOf(sensor) >= 0){
+      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021', 'AHT10'].indexOf(sensor) >= 0){
         return true;
       }
       return false;
@@ -72,7 +72,7 @@ $(function () {
           }
         });
       }
-      return return_value;     
+      return return_value;
     };
 
     self.linkedTemperatureControl = function(sensor_index){
@@ -99,7 +99,7 @@ $(function () {
           return_value = true;
           return false;
         }
-      });      
+      });
       return return_value;
     };
 
@@ -110,7 +110,7 @@ $(function () {
           return_value = true;
           return false;
         }
-      });      
+      });
       return return_value;
     };
 
@@ -121,7 +121,7 @@ $(function () {
           return_value = true;
           return false;
         }
-      });      
+      });
       return return_value;
     };
 
@@ -131,7 +131,7 @@ $(function () {
         if (output.output_type()=="temp_hum_control") {
           return_value = true
           return false;
-        } 
+        }
       });
       return return_value;
     };
@@ -273,7 +273,7 @@ $(function () {
       return temp;
     }
 
-    self.getDutyCycle = function (duty_cycle) {    
+    self.getDutyCycle = function (duty_cycle) {
       if (duty_cycle === undefined || isNaN(parseFloat(duty_cycle))) return "-";
       if (parseInt(duty_cycle) == 0) return String("off");
       return duty_cycle;
@@ -343,10 +343,10 @@ $(function () {
           type: "GET",
           dataType: "json",
           data: request,
-          success: function (data) {         
+          success: function (data) {
             item.temp_ctr_new_set_value("");
             item.temp_ctr_set_value(newSetTemperature);
-            self.getUpdateUI();  
+            self.getUpdateUI();
           },
           error: function (textStatus, errorThrown) {
             new PNotify({
@@ -362,7 +362,7 @@ $(function () {
           text: "Invalid set temperature",
           type: "error"
         });
-      } 
+      }
     };
 
     self.addRpiOutput = function () {
@@ -482,7 +482,7 @@ $(function () {
         dataType: "json",
         data: request,
         success: function (data) {
-          self.getUpdateUI();  
+          self.getUpdateUI();
         }
       });
     };

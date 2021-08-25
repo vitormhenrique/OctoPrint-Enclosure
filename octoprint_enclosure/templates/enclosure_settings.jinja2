@@ -101,7 +101,7 @@
         <!-- /ko -->
         <!-- ko if: ($data.output_type() == "neopixel_indirect")  -->
         <span class="help-inline">
-          <span class="label label-danger">Attention</span> Neopixel requires a microcontroller (ex: arduino) 
+          <span class="label label-danger">Attention</span> Neopixel requires a microcontroller (ex: arduino)
             connected to I2C bus. This is the pin on the
           microcontroller that is connected to the Neopixel.
         </span>
@@ -601,6 +601,7 @@
             <option value="bme280">BME280</option>
             <option value="am2320">AM2320</option>
             <option value="tmp102">TMP102</option>
+            <option value="tmp102">AHT10</option>
             <option value="max31855">MAX31855</option>
             <option value="mcp9808">MCP9808</option>
             <option value="temp_raw_i2c">Raw I2C Temperature</option>
@@ -658,7 +659,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") -->
+      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") || ($data.temp_sensor_type() == "AHT10") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
@@ -706,9 +707,9 @@
           <span class="help-inline">CE select: CE0 on GPIO 8 or CE1 on GPIO 7</span>
         </div>
       </div>
-      
+
       <!-- /ko -->
-      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") || ($data.temp_sensor_type() == "temp_raw_i2c")  || ($data.temp_sensor_type() == "hum_raw_i2c") -->
+      <!-- ko ifnot: ($data.temp_sensor_type() == "18b20") || ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "max31855") || ($data.temp_sensor_type() == "mcp9808") || ($data.temp_sensor_type() == "AHT10") || ($data.temp_sensor_type() == "temp_raw_i2c")  || ($data.temp_sensor_type() == "hum_raw_i2c") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">

@@ -30,7 +30,7 @@ def PinState_Boolean(pin, ActiveLow) :
     try:
         state = GPIO.input(pin)
         if ActiveLow and not state: return True
-        if not ActiveLow and state: return True 
+        if not ActiveLow and state: return True
         return False
     except:
         return "ERROR: Unable to read pin"
@@ -40,7 +40,7 @@ def PinState_Human(pin, ActiveLow):
     PinState = PinState_Boolean(pin, ActiveLow)
     if PinState == True :
         return " ON "
-    elif PinState == False:		
+    elif PinState == False:
         return " OFF "
     else:
         return PinState
@@ -53,7 +53,7 @@ def CheckInputActiveLow(Input_Pull_Resistor):
         return True
     else:
         return False
-        
+
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
@@ -307,7 +307,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                pin = self.to_int(rpi_output['gpio_pin'])          
+                pin = self.to_int(rpi_output['gpio_pin'])
                 ActiveLow = rpi_output['active_low']
                 if rpi_output['gpio_i2c_enabled']:
                     b = self.gpio_i2c_input(rpi_output, ActiveLow)
@@ -992,6 +992,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 elif sensor['temp_sensor_type'] == "mcp9808":
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
+                elif sensor['temp_sensor_type'] == "AHT10":
+                    temp, hum = self.read_AHT10_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "temp_raw_i2c":
                     temp = self.read_raw_i2c_temp(sensor)
                     hum = 0
@@ -1118,6 +1120,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("BME280 result: %s", stdout)
+            temp, hum = stdout.decode("utf-8").split("|")
+            return (self.to_float(temp.strip()), self.to_float(hum.strip()))
+        except Exception as ex:
+            self._logger.info(
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self.log_error(ex)
+            return (0, 0)
+
+    def read_AHT10_temp(self, address):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/AHT10.py "
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(address)
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Temperature AHT10 cmd: %s", cmd)
+            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("AHT10 result: %s", stdout)
             temp, hum = stdout.decode("utf-8").split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
         except Exception as ex:
@@ -1546,7 +1569,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     if rpi_output['output_type'] == 'regular':
                         if rpi_output['gpio_i2c_enabled']:
                             val = False if rpi_input['controlled_io_set_value'] == 'low' else True
-                            self.gpio_i2c_write(rpi_output, val)    
+                            self.gpio_i2c_write(rpi_output, val)
                         else:
                             val = GPIO.LOW if rpi_input['controlled_io_set_value'] == 'low' else GPIO.HIGH
                             self.write_gpio(self.to_int(rpi_output['gpio_pin']), val)
