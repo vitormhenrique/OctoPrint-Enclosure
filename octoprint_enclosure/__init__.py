@@ -1348,7 +1348,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def log_error(self, ex):
         template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
         message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
-        self._logger.warn(message)
+        self._logger.warn(message, exc_info = True)
 
     def setup_gpio(self):
         try:
@@ -1461,6 +1461,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if (rpi_input['action_type'] == 'printer_control' and rpi_input['printer_action'] != 'filament'):
                     GPIO.add_event_detect(gpio_pin, edge, callback=self.handle_printer_action, bouncetime=200)
                     self._logger.info("Adding PRINTER CONTROL event detect on pin %s with edge: %s", gpio_pin, edge)
+            
+            for rpi_input in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
+                gpio_pin = self.to_int(rpi_input['gpio_pin'])
+                if rpi_input['input_pull_resistor'] == 'input_pull_up':
+                    pull_resistor = GPIO.PUD_UP
+                elif rpi_input['input_pull_resistor'] == 'input_pull_down':
+                    pull_resistor = GPIO.PUD_DOWN
+                else:
+                    pull_resistor = GPIO.PUD_OFF
+                GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=pull_resistor)
         except Exception as ex:
             self.log_error(ex)
 
