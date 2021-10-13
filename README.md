@@ -1,3 +1,6 @@
+# QUICK NOTE: I suffered an injury last Sunday (06/20/20) and broke both bones on my left forearm, it will be impossible to work on on this plugin in the near future, I'm struggling to make it work with a full time job + masters in computers science. This plugin is not abandoned but it is on vacation mode.
+
+
 Find the plugin useful? Buy me a coffee
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
@@ -32,7 +35,7 @@ Check pictures on thingiverse: http://www.thingiverse.com/thing:2245493
 
 Install the plugin using the Plugin Manager bundled with OctoPrint, you can search for the Enclosure plugin or just use the url: https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/master.zip.
 
-To control the enclosure temperature or get temperature triggered events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302, DS18B20, SI7021, BME280 and TMP102 temperature sensors.
+To control the encosure temperature or get temperature trigged events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302, DS18B20, SI7021, BME280 and TMP102 temperature sensors.
 
 * For the DHT11, DHT22 and AM2302 follow this steps:
 
@@ -170,7 +173,7 @@ Outputs can be set to the following types:
 
 * Regular GPIO
 * PWM GPIO
-* Neopixel Control via Microcontroller
+* Neopixel Control via Microcontroler
 * Neopixel Control directly from raspberry pi
 * Temperature and Humidity Control
 * Temperature Alarm
@@ -191,7 +194,7 @@ Temperature Sensors will be used to input temperature and humidity data, they ca
 
 GPIO inputs will trigger events for the plugin, this feature can be used to add buttons to the enclosure and cause pressing those buttons to act on the printer or other pre-configured outputs.
 
-After selecting GPIO for the input type, and selecting output control on the action type, the button will be able to turn on / off or toggle linked regular outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface. You can also use buttons to send g-code commands.
+After selecting GPIO for the input type, and selecting output control on the action type, the button will be able to turn on / off or toggle linked regular_gpio outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface. You can also use buttons to send g-code commands.
 
 Selecting print control on the action type will trigger printer actions when the configured GPIO receives a signal. The actions can be Resume and Pause a print job or Change Filament. You can use the "change filament" action and set up the input GPIO according to your filament sensor, for example, if your filament sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the event on the falling edge.
 You can also add mechanical buttons to pause, resume and change filaments near your printer for convenience.
