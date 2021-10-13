@@ -1760,7 +1760,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     # ~~ EventPlugin mixin
     def on_event(self, event, payload):
-        self._logger.info("Event Logging Test: %s", event)
         if event == Events.CONNECTED:
             self.update_ui()
 
@@ -1851,7 +1850,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def schedule_auto_shutdown_outputs(self, rpi_output, shutdown_delay_seconds):
         sufix = 'auto_shutdown'
         if rpi_output['output_type'] == 'regular':
-            self._logger.debug("schedule_auto_shutdown_outputs output is of type regular")
             value = True if rpi_output['active_low'] else False
             self.add_regular_output_to_queue(shutdown_delay_seconds, rpi_output, value, sufix)
         if rpi_output['output_type'] == 'ledstrip':
