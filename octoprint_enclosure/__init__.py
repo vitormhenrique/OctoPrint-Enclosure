@@ -150,7 +150,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 8
+        return 9
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -158,8 +158,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 8:
-            self._logger.warn("######### migrating settings to v8 #########")
+        if current >= 4 and target == 9:
+            self._logger.warn("######### migrating settings to v9 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             old_inputs = self._settings.get(["rpi_inputs"])
             for rpi_output in old_outputs:
