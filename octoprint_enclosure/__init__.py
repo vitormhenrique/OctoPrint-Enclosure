@@ -993,11 +993,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
                 elif sensor['temp_sensor_type'] == "temp_raw_i2c":
-                    temp = self.read_raw_i2c_temp(sensor)
-                    hum = 0
+                    temp, hum = self.read_raw_i2c_temp(sensor)
                 elif sensor['temp_sensor_type'] == "hum_raw_i2c":
-                    temp = 0
-                    hum = self.read_raw_i2c_temp(sensor)
+                    hum, temp = self.read_raw_i2c_temp(sensor)
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
@@ -1053,14 +1051,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             i2creg = self.to_int(sensor['temp_i2c_register'])
 
             with SMBus(i2cbus) as bus:
-                data = bus.read_i2c_block_data(i2caddr, i2creg, 4)
-                val = struct.unpack('f', bytearray(data))
-                fval = val[0]
+                data = bus.read_i2c_block_data(i2caddr, i2creg, 8)
+                fval1 = struct.unpack('f', bytearray(data[0:4]))[0]
+                if fval1 != fval1:
+                    fval1 = 0
+                fval2 = struct.unpack('f', bytearray(data[4:8]))[0]
+                if fval2 != fval2:
+                    fval2 = 0
+                
+                self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s, %s)",
+                                    i2cbus, i2caddr, i2creg, data, fval1, fval2)
 
-                self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s)",
-                                    i2cbus, i2caddr, i2creg, data, fval)
-
-                return str(fval)
+                return (fval1, fval2)
 
         except Exception as ex:
             template = "An exception of type {0} occurred on {1} when reading on i2c address {2}, reg {3}. Arguments:\n{4!r}"
