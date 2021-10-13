@@ -1,10 +1,10 @@
 <h4>{{ _('Raspberry Pi Outputs') }}</h4>
 <p>
   Configure all
-  <strong>outputs</strong>. Outputs can be everything that do actions based on UI button presses or automatic events or alarms.
+  <strong>outputs</strong>. Outputs can be everything that performs actions based on UI button presses, or automatic events or alarms.
 </p>
 <p>
-  Example of possible outputs are gpio pins, neopixel LED's, temperature control or sending gcode to the printer.
+  Example of possible outputs are GPIO pins, neopixel LED's, temperature control or sending gcode to the printer.
 </p>
 <form class="form-horizontal">
   <div data-bind="foreach: settingsViewModel.settings.plugins.enclosure.rpi_outputs">
@@ -783,7 +783,7 @@
             <option value="input_pull_up">Input Pullup</option>
             <option value="input_pull_down">Input Pulldown</option>
           </select>
-          <span class="help-inline">Choose what type of pull resistors that you want on the output. If you signal is active low, that means it should
+          <span class="help-inline">Choose what type of pull resistors that you want on the output. If your signal is active low, that means it should
             run the action when receive a low signal (ground), you should choose PULL UP resistors.</span>
         </div>
       </div>
@@ -794,8 +794,8 @@
             <option value="rise">Rise</option>
             <option value="fall">Fall</option>
           </select>
-          <span class="help-inline">Do you want thrigger the event on the rise or falling edge? If you signal is active low, that means it should run
-            the action when receive a low signal (ground), you should choose FALLING EDGE.</span>
+          <span class="help-inline">Do you want to trigger the event on the rise or falling edge? If you signal is active low, that means it should run
+            the action when it receives a low signal (ground), you should choose FALLING EDGE.</span>
         </div>
       </div>
     </div>
@@ -806,7 +806,7 @@
         <select data-bind="options: $root.settings_possible_outputs, optionsText: 'label',
                 optionsValue: 'index_id', value: $data.controlled_io">
         </select>
-        <span class="help-inline">When the event happen, you want control which OUTPUT?</span>
+        <span class="help-inline">When the event happens, do you want control of which OUTPUT?</span>
       </div>
     </div>
     <!-- ko if: ($root.isRegularOutput($data.controlled_io()))  -->
@@ -818,7 +818,8 @@
           <option value="high">High</option>
           <option value="toggle">Toggle</option>
         </select>
-        <span class="help-inline">When the event happen, you want to turn the controlled IO HIGH or LOW?</span>
+        <span class="help-inline">When the event happens, do you want to turn the controlled IO HIGH or LOW?</span>
+
       </div>
     </div>
     <!-- /ko -->
@@ -957,7 +958,7 @@
         <div class="controls">
           <textarea rows="4" class="block" data-bind="value: settingsViewModel.settings.plugins.enclosure.filament_sensor_gcode"></textarea>
           <span class="help-inline">GCODE that will be sent to the printer to pause and allow filament to be changed. You should add
-            <code>ENTER</code> on the end of every line sent to the printer</span>
+            <code>ENTER</code> to the end of every line sent to the printer</span>
         </div>
       </div>
 
