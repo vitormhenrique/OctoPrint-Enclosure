@@ -870,6 +870,24 @@
         </label>
         <span class="help-inline">Enable and disable temperature on navbar</span>
       </div>
+      <div class="controls">
+		    <label class="checkbox">
+				  <input type="checkbox" data-bind="checked: show_graph_temp"> {{ _('Show temperature in graph') }}
+			  </label>
+			  <span class="help-inline">Enable to show temperature in temperature graph, when a printer is connected.
+        <!-- ko if: ($data.show_graph_temp())  -->
+        <p><i><strong>Note:</strong>This feature currently requires a custom graph plugin like <a href="https://github.com/jneilliii/OctoPrint-PlotlyTempGraph" target="_blank">PlotlyTempGraph</a></i></span></p>
+        <!-- /ko -->
+		  </div>
+      <div class="controls">
+        <label class="checkbox">
+          <input type="checkbox" data-bind="checked: show_graph_humidity"> {{ _('Show humidity in graph') }}
+        </label>
+        <span class="help-inline">Enable to show humidity in temperature graph, when a printer is connected.
+        <!-- ko if: ($data.show_graph_humidity())  -->
+        <p><i><strong>Note:</strong>This feature currently requires a custom graph plugin like <a href="https://github.com/jneilliii/OctoPrint-PlotlyTempGraph" target="_blank">PlotlyTempGraph</a></i></span></p>
+        <!-- /ko -->
+      </div>
     </div>
     <!-- /ko -->
     <div class="control-group">

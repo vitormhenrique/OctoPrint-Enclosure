@@ -466,7 +466,9 @@ $(function () {
         temp_sensor_i2cbus: ko.observable(1),
         temp_i2c_bus: ko.observable(1),
         temp_i2c_address: ko.observable(1),
-        temp_i2c_register: ko.observable(1)
+        temp_i2c_register: ko.observable(1),
+        show_graph_temp: ko.observable(false),
+        show_graph_humidity: ko.observable(false)
       });
     };
 
