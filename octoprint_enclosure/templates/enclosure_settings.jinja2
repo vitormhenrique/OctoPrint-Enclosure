@@ -649,6 +649,16 @@
           <span class="help-inline">GPIO pin for temperature sensor, recommended to use 4 as DS18B20 has default support to pin #4 (BCM)</span>
         </div>
       </div>
+      <div class"control-group">
+        <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Input Pull Resistor') }}</label>
+        <div class="controls">
+          <select data-bind="value: input_pull_resistor">
+            <option value="" selected="selected">None</option>
+            <option value="input_pull_up">Input Pullup</option>
+          </select>
+          <span class="help-inline">Whether to enable the built-in pullup for this temperature sensor. If set, then no external pullup is needed.</span>
+        </div>
+      </div>
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('DS18B20 Serial') }}</label>
         <div class="controls">
