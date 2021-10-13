@@ -421,7 +421,14 @@ $(function () {
         ledstrip_gpio_dat: ko.observable(""),
         microcontroller_address: ko.observable(0),
         gcode: ko.observable(""),
-        show_on_navbar: ko.observable(false)
+        show_on_navbar: ko.observable(false),
+        gpio_i2c_enabled: ko.observable(false),
+        gpio_i2c_bus: ko.observable(1),
+        gpio_i2c_address: ko.observable(1),
+        gpio_i2c_register: ko.observable(1),
+        gpio_i2c_data_on: ko.observable(1),
+        gpio_i2c_data_off: ko.observable(0),
+        gpio_i2c_register_status: ko.observable(1)
       });
 
     };
@@ -457,6 +464,9 @@ $(function () {
         filament_sensor_timeout: ko.observable(120),
         filament_sensor_enabled: ko.observable(true),
         temp_sensor_i2cbus: ko.observable(1),
+        temp_i2c_bus: ko.observable(1),
+        temp_i2c_address: ko.observable(1),
+        temp_i2c_register: ko.observable(1),
         show_graph_temp: ko.observable(false),
         show_graph_humidity: ko.observable(false)
       });
