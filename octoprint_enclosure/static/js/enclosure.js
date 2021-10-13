@@ -56,7 +56,7 @@ $(function () {
     self.notifications = ko.observableArray([]);
 
     self.humidityCapableSensor = function(sensor){
-      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021'].indexOf(sensor) >= 0){
+      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021', 'hum_raw_i2c', 'temp_raw_i2c'].indexOf(sensor) >= 0){
         return true;
       }
       return false;

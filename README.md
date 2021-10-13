@@ -1,6 +1,3 @@
-# QUICK NOTE: I suffered an injury last Sunday (06/20/20) and broke both bones on my left forearm, it will be impossible to work on on this plugin in the near future, I'm struggling to make it work with a full time job + masters in computers science. This plugin is not abandoned but it is on vacation mode.
-
-
 Find the plugin useful? Buy me a coffee
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
@@ -65,7 +62,7 @@ Note that the first argument is the temperature sensor (11, 22, or 2302), and th
 
 * For the DS18B20 sensor:
 
-Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, you need to use 4.7K to 10K resistor from the data pin to VCC, DS18B20 only works on GPIO pin number 4 by default. You also need to add OneWire support for your raspberry pi.
+Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, DS18B20 only works on GPIO pin number 4 by default. You also need to add OneWire support for your raspberry pi.
 
 Start by adding the following line to /boot/config.txt
 
@@ -75,6 +72,16 @@ After rebooting, you can check if the OneWire device was found properly with
 <pre><code>dmesg | grep w1-gpio</code></pre>
 You should see something like
 <pre><code>[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0</code></pre>
+
+If you're using the internal pullup resistor, you'll need to enable it manually by running these Python commands. Or, you can simply configure the sensor inside of the Enclosure plugin, which will do this for you.
+
+```python
+import RPi.GPIO as GPIO
+
+PIN=4
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+```
 
 You should be able to test your sensor by rebooting your system with sudo reboot. When the Pi is back up and you're logged in again, type the commands you see below into a terminal window. When you are in the 'devices' directory, the directory starting '28-' may have a different name, so cd to the name of whatever directory is there.
 
@@ -88,6 +95,8 @@ cat w1_slave</code></pre>
 The response will either have YES or NO at the end of the first line. If it is yes, then the temperature will be at the end of the second line, in 1/000 degrees C.
 
 Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the 28-, for example 28-0000069834ff.
+
+The DS18B20 needs a pullup resistor on the data pin. On modern Pi models, you can use a resistor built into the Pi, configured in software. To do this, set the "Input Pull Resistor" option to "Input Pullup". If this doesn't work, you need to use a 4.7K to 10K resistor from the data pin to VCC.
 
 * For the SI7021, BME280, TMP102 and MCP9808 sensors
 

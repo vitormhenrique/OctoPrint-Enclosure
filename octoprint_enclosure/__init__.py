@@ -1000,11 +1000,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
                 elif sensor['temp_sensor_type'] == "temp_raw_i2c":
-                    temp = self.read_raw_i2c_temp(sensor)
-                    hum = 0
+                    temp, hum = self.read_raw_i2c_temp(sensor)
                 elif sensor['temp_sensor_type'] == "hum_raw_i2c":
-                    temp = 0
-                    hum = self.read_raw_i2c_temp(sensor)
+                    hum, temp = self.read_raw_i2c_temp(sensor)
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
@@ -1060,14 +1058,18 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             i2creg = self.to_int(sensor['temp_i2c_register'])
 
             with SMBus(i2cbus) as bus:
-                data = bus.read_i2c_block_data(i2caddr, i2creg, 4)
-                val = struct.unpack('f', bytearray(data))
-                fval = val[0]
+                data = bus.read_i2c_block_data(i2caddr, i2creg, 8)
+                fval1 = struct.unpack('f', bytearray(data[0:4]))[0]
+                if fval1 != fval1:
+                    fval1 = 0
+                fval2 = struct.unpack('f', bytearray(data[4:8]))[0]
+                if fval2 != fval2:
+                    fval2 = 0
+                
+                self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s, %s)",
+                                    i2cbus, i2caddr, i2creg, data, fval1, fval2)
 
-                self._logger.debug("read_raw_i2c_temp(i2cbus=%s, i2caddr=%s, i2creg=%s) data == %s (%s)",
-                                    i2cbus, i2caddr, i2creg, data, fval)
-
-                return str(fval)
+                return (fval1, fval2)
 
         except Exception as ex:
             template = "An exception of type {0} occurred on {1} when reading on i2c address {2}, reg {3}. Arguments:\n{4!r}"
@@ -1098,7 +1100,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 sudo_str = "sudo "
             else:
                 sudo_str = ""
-            cmd = sudo_str + "python " + script + str(sensor) + " " + str(pin)
+            cmd = sudo_str + "python3 " + script + str(sensor) + " " + str(pin)
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
@@ -1355,7 +1357,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def log_error(self, ex):
         template = "An exception of type {0} occurred on {1}. Arguments:\n{2!r}"
         message = template.format(type(ex).__name__, inspect.currentframe().f_code.co_name, ex.args)
-        self._logger.warn(message)
+        self._logger.warn(message, exc_info = True)
 
     def setup_gpio(self):
         try:
@@ -1468,6 +1470,16 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if (rpi_input['action_type'] == 'printer_control' and rpi_input['printer_action'] != 'filament'):
                     GPIO.add_event_detect(gpio_pin, edge, callback=self.handle_printer_action, bouncetime=200)
                     self._logger.info("Adding PRINTER CONTROL event detect on pin %s with edge: %s", gpio_pin, edge)
+            
+            for rpi_input in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
+                gpio_pin = self.to_int(rpi_input['gpio_pin'])
+                if rpi_input['input_pull_resistor'] == 'input_pull_up':
+                    pull_resistor = GPIO.PUD_UP
+                elif rpi_input['input_pull_resistor'] == 'input_pull_down':
+                    pull_resistor = GPIO.PUD_DOWN
+                else:
+                    pull_resistor = GPIO.PUD_OFF
+                GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=pull_resistor)
         except Exception as ex:
             self.log_error(ex)
 
@@ -1808,7 +1820,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         if event == Events.PRINT_DONE:
             for notification in self.notifications:
                 if notification['printFinish']:
-                    file_name = os.path.basename(payload["file"])
+                    file_name = os.path.basename(payload["path"])
                     elapsed_time_in_seconds = payload["time"]
                     elapsed_time = octoprint.util.get_formatted_timedelta(timedelta(seconds=elapsed_time_in_seconds))
                     msg = "Print job finished: " + file_name + "finished printing in " + file_name, elapsed_time
