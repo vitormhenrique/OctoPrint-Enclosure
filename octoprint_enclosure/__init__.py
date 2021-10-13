@@ -1800,7 +1800,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         if event == Events.PRINT_DONE:
             for notification in self.notifications:
                 if notification['printFinish']:
-                    file_name = os.path.basename(payload["file"])
+                    file_name = os.path.basename(payload["path"])
                     elapsed_time_in_seconds = payload["time"]
                     elapsed_time = octoprint.util.get_formatted_timedelta(timedelta(seconds=elapsed_time_in_seconds))
                     msg = "Print job finished: " + file_name + "finished printing in " + file_name, elapsed_time
