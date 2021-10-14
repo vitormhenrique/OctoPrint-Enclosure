@@ -150,7 +150,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 9
+        return 10
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -158,8 +158,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 9:
-            self._logger.warn("######### migrating settings to v9 #########")
+        if current >= 4 and target == 10:
+            self._logger.warn("######### migrating settings to v10 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             old_inputs = self._settings.get(["rpi_inputs"])
             for rpi_output in old_outputs:
@@ -181,6 +181,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     rpi_output['gpio_i2c_data_off'] = 0
                 if 'gpio_i2c_register_status' not in rpi_output:
                     rpi_output['gpio_i2c_register_status'] = 1
+                if 'shutdown_on_error' not in rpi_output:
+                        rpi_output['shutdown_on_error'] = False
             self._settings.set(["rpi_outputs"], old_outputs)
 
             old_inputs = self._settings.get(["rpi_inputs"])
@@ -1822,6 +1824,23 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     elapsed_time = octoprint.util.get_formatted_timedelta(timedelta(seconds=elapsed_time_in_seconds))
                     msg = "Print job finished: " + file_name + "finished printing in " + file_name, elapsed_time
                     self.send_notification(msg)
+
+        if event in (Events.ERROR, Events.DISCONNECTED):
+            self._logger.info("Detected Error or Disconnect in %s will call listeners for shutdown_on_error!", event)
+            for rpi_output in self.rpi_outputs:
+                if rpi_output['shutdown_on_error']:
+                    self._logger.debug("Schedule shutdown for: %s", rpi_output["index_id"])
+                    self.schedule_auto_shutdown_outputs(rpi_output, 0)
+            self.run_tasks()
+        
+        if event == Events.PRINTER_STATE_CHANGED:
+            if "error" in payload["state_string"].lower():
+                self._logger.info("Detected Error in %s id: %s state: %s  will call listeners for shutdown_on_error!", event, payload["state_id"], payload["state_string"])
+                for rpi_output in self.rpi_outputs:
+                    if rpi_output['shutdown_on_error']:
+                        self._logger.debug("Schedule shutdown for: %s", rpi_output["index_id"])
+                        self.schedule_auto_shutdown_outputs(rpi_output, 0)
+                self.run_tasks()
 
     def run_tasks(self):
         for task in self.event_queue:
