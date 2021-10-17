@@ -91,7 +91,7 @@
       </div>
     </div>
     <!-- /ko -->
-    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip" || ($data.output_type() == "regular" && $data.gpio_i2c_enabled)) -->
+    <!-- ko ifnot: ($data.output_type() == "gcode_output" || $data.output_type() == "temperature_alarm" || $data.output_type() == "shell_output" || $data.output_type() == "ledstrip" || ($data.output_type() == "regular" && $data.gpio_i2c_enabled())) -->
     <div class="control-group">
       <label class="control-label">{{ _('IO Number') }}</label>
       <div class="controls">
@@ -284,7 +284,7 @@
     </div>
     <!-- /ko -->
 
-    <!-- ko if: $data.gpio_i2c_enabled  -->
+    <!-- ko if: $data.gpio_i2c_enabled()  -->
     <div class="control-group">
       <label class="control-label" for="settings-enclosure-gpio-i2c-bus">{{ _('I2C Bus') }}</label>
       <div class="controls">
