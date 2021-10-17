@@ -42,6 +42,7 @@ Here are detailled instructions on how to setup them.
 
 To control the enclosure temperature or get temperature triggered events, you need to install and configure a temperature sensor. This plugin can support DHT11, DHT22, AM2302, DS18B20, SI7021, BME280 and TMP102 temperature sensors.
 
+
 #### DHT11, DHT22 and AM2302 sensors
 
 Wire the sensor following the wiring diagram on the pictures on thingiverse, you can use any GPIO pin.
@@ -73,7 +74,7 @@ Note that the first argument is the temperature sensor (11, 22, or 2302), and th
 
 #### DS18B20 sensor
 
-Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, you need to use 4.7K to 10K resistor from the data pin to VCC, DS18B20 only works on GPIO pin number 4 by default. You also need to add OneWire support for your raspberry pi.
+Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, DS18B20 only works on GPIO pin number 4 by default. You also need to add OneWire support for your raspberry pi.
 
 Start by adding the following line to `/boot/config.txt`
 
@@ -91,6 +92,8 @@ You should see something like
 [    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0
 ```
 
+If you're using the internal pullup resistor, you'll need to enable it manually by running these Python commands. Or, you can simply configure the sensor inside of the Enclosure plugin, which will do this for you.
+
 You should be able to test your sensor by rebooting your system with `sudo reboot`. When the Pi is back up and you're logged in again, type the commands you see below into a terminal window. When you are in the 'devices' directory, the directory starting '28-' may have a different name, so `cd` to the name of whatever directory is there.
 
 ```
@@ -105,6 +108,8 @@ cat w1_slave
 The response will either have `YES` or `NO` at the end of the first line. If it is `YES`, then the temperature will be at the end of the second line, in 1/000 degrees C.
 
 Copy the serial number, you will need to configure the plugin.  Note that for the serial number includes the `28-`, for example `28-0000069834ff`.
+
+The DS18B20 needs a pullup resistor on the data pin. On modern Pi models, you can use a resistor built into the Pi, configured in software. To do this, set the "Input Pull Resistor" option to "Input Pullup". If this doesn't work, you need to use a 4.7K to 10K resistor from the data pin to VCC.
 
 #### SI7021, BME280, TMP102 and MCP9808 sensors
 
@@ -191,7 +196,7 @@ Outputs can be set to the following types:
 
 * Regular GPIO
 * PWM GPIO
-* Neopixel Control via Microcontroller
+* Neopixel Control via Microcontroler
 * Neopixel Control directly from raspberry pi
 * Temperature and Humidity Control
 * Temperature Alarm
@@ -212,7 +217,7 @@ Temperature Sensors will be used to input temperature and humidity data, they ca
 
 GPIO inputs will trigger events for the plugin, this feature can be used to add buttons to the enclosure and cause pressing those buttons to act on the printer or other pre-configured outputs.
 
-After selecting GPIO for the input type, and selecting output control on the action type, the button will be able to turn on / off or toggle linked regular outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface. You can also use buttons to send g-code commands.
+After selecting GPIO for the input type, and selecting output control on the action type, the button will be able to turn on / off or toggle linked regular_gpio outputs, basically being able to control your lights / fan using mechanical buttons instead of the octoprint interface. You can also use buttons to send g-code commands.
 
 Selecting print control on the action type will trigger printer actions when the configured GPIO receives a signal. The actions can be Resume and Pause a print job or Change Filament. You can use the "change filament" action and set up the input GPIO according to your filament sensor, for example, if your filament sensor connects to ground when detects the end of the filament, you should choose PULL UP resistors and detect the event on the falling edge.
 You can also add mechanical buttons to pause, resume and change filaments near your printer for convenience.
