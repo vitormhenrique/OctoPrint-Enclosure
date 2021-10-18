@@ -3,43 +3,115 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 import octoprint.util
+from abc import ABC
+from enum import Enum
+from uuid import UUID, uuid4
 
 
-class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
-                      octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
+class OutputType(Enum):
+    ACTION_BASED_INPUT = 0
+    STATE_BASED_INPUT  = 1
+
+class OutputPeripheral(ABC):
+    def __init__(self, id: UUID ,name:str, type:OutputType) -> None:
+        super().__init__()
+
+    def run_action(self):
+        """
+        Output peripheral can be action based when it's:
+        - GCODE command
+        - Shell script
+
+        Returns:
+            Bool: Success
+        """
+        pass
+
+    def set_state(self, state):
+        """
+        Output peripheral can be state based when it's:
+        - GPIO: it can be set to on / off / toggle
+        - Led Strip: it can be set to a color in RGB
+        - Neopixel
+        - PWM
+
+        Returns:
+            Bool: Success
+        """
+        pass
+
+
+class EnclosurePlugin(octoprint.plugin.StartupPlugin,
+                      octoprint.plugin.TemplatePlugin,
+                      octoprint.plugin.SettingsPlugin,
+                      octoprint.plugin.AssetPlugin,
+                      octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
+
+    def __init__(self):
+        super().__init__()
+        self._sub_plugins = dict()
 
     # ~~ TemplatePlugin
     def get_template_configs(self):
         return [
-            dict(type="settings", template="enclosure_settings.jinja2",
-                 custom_bindings=True)
+            dict(
+                type="settings",
+                template="enclosure_settings.jinja2",
+                custom_bindings=True
+            )
         ]
 
     # ~~ AssetPlugin mixin
     def get_assets(self):
         return dict(
-            js=["js/enclosure.js", "js/bootstrap-colorpicker.min.js"],
-            css=["css/bootstrap-colorpicker.css", "css/enclosure.css"])
+            js=["js/enclosure.js", ],
+            css=["css/enclosure.css"]
+        )
 
     # ~~ SettingsPlugin
     def get_settings_defaults(self):
-        return dict(enclosureOutputs=[], enclosureInputs=[])
+        return dict()
 
     # ~~ SettingsPlugin mixin
     def on_settings_save(self, data):
-        enclosureOutputs = self._settings.get(["enclosureOutputs"])
-        enclosureInputs = self._settings.get(["enclosureInputs"])
-        print(data)
+
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
 
     # ~~ Softwareupdate hook
     def get_update_information(self):
-        return dict(enclosure=dict(displayName="Enclosure Plugin", displayVersion=self._plugin_version,
-                                   # version check: github repository
-                                   type="github_release", user="vitormhenrique", repo="OctoPrint-Enclosure", current=self._plugin_version,
-                                   # update method: pip
-                                   pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"))
+        return dict(
+            enclosure=dict(
+                displayName="Enclosure Plugin",
+                displayVersion=self._plugin_version,
+                type="github_release",
+                user="vitormhenrique",
+                repo="OctoPrint-Enclosure",
+                current=self._plugin_version,
+                pip="https://github.com/vitormhenrique/OctoPrint-Enclosure/archive/{target_version}.zip"
+            )
+        )
+
+    def _get_plugin_key(self, implementation):
+        for k, v in self._plugin_manager.plugin_implementations.items():
+            if v == implementation:
+                return k
+
+
+    def register_plugin(self, implementation):
+        k = self._get_plugin_key(implementation)
+
+        self._logger.debug("Registering plugin - {}".format(k))
+
+        if k not in self._sub_plugins:
+            self._logger.info("Registered plugin - {}".format(k))
+            self._sub_plugins[k] = implementation
+
+    def output_peripheral_set_state(self):
+        pass
+
+    def register_output_peripheral(self):
+        pass
 
 
 __plugin_name__ = "Enclosure Plugin"
@@ -52,6 +124,12 @@ def __plugin_load__():
 
     global __plugin_hooks__
     __plugin_hooks__ = {
-        # "octoprint.comm.protocol.gcode.queuing"       : __plugin_implementation__.hook_gcode_queuing,
         "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
     }
+
+    global __plugin_helpers__
+    __plugin_helpers__ = dict(
+        output_peripheral_set_state = __plugin_implementation__.output_peripheral_set_state,
+        register_plugin = __plugin_implementation__.register_plugin,
+        register_output_peripheral = __plugin_implementation__.register_output_peripheral,
+    )
