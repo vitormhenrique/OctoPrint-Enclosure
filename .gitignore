@@ -1,2 +1,4 @@
 venv
 .vscode
+*egg-info*
+*.pyc
