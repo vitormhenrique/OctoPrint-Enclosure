@@ -6,6 +6,9 @@ import octoprint.util
 from abc import ABC
 from enum import Enum
 from uuid import UUID, uuid4
+import json 
+from flask import jsonify, request, make_response, Response
+
 
 
 class OutputType(Enum):
@@ -51,6 +54,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def __init__(self):
         super().__init__()
         self._sub_plugins = dict()
+        self._ids = []
+
+
+    @octoprint.plugin.BlueprintPlugin.route("/available_id", methods=["GET"])
+    def get_available_id(self):
+        return Response(json.dumps(str(uuid4())), mimetype='application/json')
 
     # ~~ TemplatePlugin
     def get_template_configs(self):
@@ -113,6 +122,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
     def register_output_peripheral(self):
         pass
 
+    def register_input_peripheral(self):
+        pass
+
+    # def get_id(self):
+    #     return uuid4()
+
 
 __plugin_name__ = "Enclosure Plugin"
 __plugin_pythoncompat__ = ">=3,<4"
@@ -129,7 +144,9 @@ def __plugin_load__():
 
     global __plugin_helpers__
     __plugin_helpers__ = dict(
+        # get_id = __plugin_implementation__.get_id,
         output_peripheral_set_state = __plugin_implementation__.output_peripheral_set_state,
         register_plugin = __plugin_implementation__.register_plugin,
         register_output_peripheral = __plugin_implementation__.register_output_peripheral,
+        register_input_peripheral = __plugin_implementation__.register_input_peripheral,
     )

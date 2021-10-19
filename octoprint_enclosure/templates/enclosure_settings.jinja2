@@ -1,33 +1,8 @@
 <form class="form-horizontal" onsubmit="return false;">
 
-    <!-- ko if: ($root.settings_unsaved())  -->
-    <div class="alert alert-block">
-        <strong>Note: </strong>You have unsaved data, canceling settings will revert all configurations made here.
-    </div>
-    <!-- /ko -->
 
-    <h4>{{ _('Raspberry Pi Outputs') }}</h4>
+    <h4>{{ _('Enclosure Plugin') }}</h4>
 
-
-    {% include "output_table.jinja2" %}
 
 </form>
 
-{% include "output_editor/main_screen.jinja2" %}
-
-<form class="form-horizontal" onsubmit="return false;">
-    <h4>{{ _('Raspberry Pi Inputs') }}</h4>
-
-    {% include "input_table.jinja2" %}
-</form>
-
-{% include "input_editor/main_screen.jinja2" %}
-
-<form class="form-horizontal" onsubmit="return false;">
-    <h4>{{ _('Debug') }}</h4>
-
-    <div class="control-group">
-        <button class="btn pull-right" data-bind="click: function() { $root.print_data(); }">Test</button>
-    </div>
-
-</form>
