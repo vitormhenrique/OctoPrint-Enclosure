@@ -56,7 +56,7 @@ $(function () {
     self.notifications = ko.observableArray([]);
 
     self.humidityCapableSensor = function(sensor){
-      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021', 'AHT10'].indexOf(sensor) >= 0){
+      if (['11', '22', '2302', 'bme280', 'am2320', 'si7021', 'AHT10', 'hum_raw_i2c', 'temp_raw_i2c'].indexOf(sensor) >= 0){
         return true;
       }
       return false;
@@ -428,7 +428,8 @@ $(function () {
         gpio_i2c_register: ko.observable(1),
         gpio_i2c_data_on: ko.observable(1),
         gpio_i2c_data_off: ko.observable(0),
-        gpio_i2c_register_status: ko.observable(1)
+        gpio_i2c_register_status: ko.observable(1),
+        shutdown_on_error:ko.observable(false),
       });
 
     };
@@ -466,7 +467,9 @@ $(function () {
         temp_sensor_i2cbus: ko.observable(1),
         temp_i2c_bus: ko.observable(1),
         temp_i2c_address: ko.observable(1),
-        temp_i2c_register: ko.observable(1)
+        temp_i2c_register: ko.observable(1),
+        show_graph_temp: ko.observable(false),
+        show_graph_humidity: ko.observable(false)
       });
     };
 
