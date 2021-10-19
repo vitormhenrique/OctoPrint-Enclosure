@@ -808,13 +808,13 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
             sensor_data = []
             for sensor in list(filter(lambda item: item['input_type'] == 'temperature_sensor', self.rpi_inputs)):
-                temp, hum = self.get_sensor_data(sensor)
+                temp, hum, airquality = self.get_sensor_data(sensor)
                 if  self._settings.get(["debug_temperature_log"]) is True:
-                    self._logger.debug("Sensor %s Temperature: %s humidity %s", sensor['label'], temp, hum)
-                if temp is not None and hum is not None:
+                    self._logger.debug("Sensor %s Temperature: %s humidity %s Airquality %s", sensor['label'], temp, hum, airquality)
+                if temp is not None and hum is not None and airquality is not None:
                     sensor["temp_sensor_temp"] = temp
                     sensor["temp_sensor_humidity"] = hum
-                    sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum))
+                    sensor_data.append(dict(index_id=sensor['index_id'], temperature=temp, humidity=hum, airquality=airquality))
                     self.temperature_sensor_data = sensor_data
                     self.handle_temp_hum_control()
                     self.handle_temperature_events()
@@ -978,45 +978,58 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def get_sensor_data(self, sensor):
         try:
             if self.development_mode:
-                temp, hum = self.read_dummy_temp()
+                temp, hum, airquality = self.read_dummy_temp()
             else:
                 if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
                     temp, hum = self.read_dht_temp(sensor['temp_sensor_type'], sensor['gpio_pin'])
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "bme280":
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
+					airquality = 0
+                elif sensor['temp_sensor_type'] == "bme680":
+                    temp, hum, airquality = self.read_bme680_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "am2320":
                     temp, hum = self.read_am2320_temp() # sensor has fixed address
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "rpi":
                     temp = self.read_rpi_temp() # rpi CPU Temp
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "si7021":
                     temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'], sensor['temp_sensor_i2cbus'])
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "tmp102":
                     temp = self.read_tmp102_temp(sensor['temp_sensor_address'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "max31855":
                     temp = self.read_max31855_temp(sensor['temp_sensor_address'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "mcp9808":
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "temp_raw_i2c":
                     temp, hum = self.read_raw_i2c_temp(sensor)
+					airquality = 0
                 elif sensor['temp_sensor_type'] == "hum_raw_i2c":
                     hum, temp = self.read_raw_i2c_temp(sensor)
+					airquality = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
                     hum = None
-            if temp != -1 and hum != -1:
+            if temp != -1 and hum != -1 and airquality != -1:
                 temp = round(self.to_float(temp), 1) if not sensor['use_fahrenheit'] else round(
                     self.to_float(temp) * 1.8 + 32, 1)
                 hum = round(self.to_float(hum), 1)
-                return temp, hum
-            return None, None
+				airquality = round(self.to_float(airquality), 1)
+                return temp, hum, airquality
+            return None, None, None
         except Exception as ex:
             self.log_error(ex)
 
@@ -1053,7 +1066,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         self.dummy_value = return_value
 
-        return return_value, return_value
+        return return_value, return_value, return_value
 
     def read_raw_i2c_temp(self, sensor):
         try:
@@ -1135,6 +1148,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             temp, hum = stdout.decode("utf-8").split("|")
             
             return (self.to_float(temp.strip()), self.to_float(hum.strip()))
+        except Exception as ex:
+            self._logger.info(
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self.log_error(ex)
+            return (0, 0)
+            
+    def read_bme680_temp(self, address):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/BME680.py "
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python " + script + str(address)
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Temperature BME680 cmd: %s", cmd)
+            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("BME680 result: %s", stdout)
+            temp, hum, airq = stdout.split("|")
+            return (self.to_float(temp.strip()), self.to_float(hum.strip()), self.to_float(airq.strip()))
         except Exception as ex:
             self._logger.info(
                 "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
