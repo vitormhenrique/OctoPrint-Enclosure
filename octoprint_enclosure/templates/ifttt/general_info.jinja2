@@ -1,0 +1,37 @@
+<form class="form-horizontal">
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Logic Id') }}</label>
+    <div class="controls">
+      <input type="text" data-bind="value: inputEditor.index_id" readonly>
+      <span class="help-inline">Auto generated ID for Input</span>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Trigger Type') }}</label>
+    <div class="controls">
+      <label class="radio">
+        <input type="radio" name="trigger_type_radio" value="printer_event"
+          data-bind="checked: inputEditor.trigger_type"> {{ _('Printer Event') }}
+      </label>
+      <label class="radio">
+        <input type="radio" name="trigger_type_radio" value="io_trigger" data-bind="checked: inputEditor.trigger_type">
+        {{ _('IO Trigger') }}
+      </label>
+    </div>
+  </div>
+
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Action Type') }}</label>
+    <div class="controls">
+      <label class="radio">
+      <input type="radio" name="action_type_radio" value="set_output_value"
+        data-bind="checked: inputEditor.action_type"> {{ _('Set Output Value') }}
+      </label>
+    </div>
+  </div>
+
+
+</form>

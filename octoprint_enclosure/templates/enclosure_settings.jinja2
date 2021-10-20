@@ -1,8 +1,30 @@
 <form class="form-horizontal" onsubmit="return false;">
 
 
-    <h4>{{ _('Enclosure Plugin') }}</h4>
+    <h4>{{ _('Enclosure Plugin Logic') }}</h4>
+
+
+    {% include "ifttt_logic_table.jinja2" %}
+
+
+    <!-- <table class="table table-striped table-hover table-condensed table-hover" id="settings_enclosure_bla" style="">
+        <thead>
+            <tr>
+                <th class="">Id</th>
+                <th class="">Label</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: $root.enclosureOutputs">
+            <tr data-bind="attr: {title: name}">
+                <td class="" data-bind="text: index_id"></td>
+                <td class="" data-bind="text: label"></td>
+            </tr>
+        </tbody>
+    </table> -->
+
 
 
 </form>
 
+
+{% include "ifttt/main_screen.jinja2" %}

@@ -1,47 +1,49 @@
 # coding=utf-8
 from __future__ import absolute_import
 
-import octoprint.plugin
-import octoprint.util
+import json
 from abc import ABC
 from enum import Enum
 from uuid import UUID, uuid4
-import json 
-from flask import jsonify, request, make_response, Response
+
+import flask
+import octoprint.plugin
+import octoprint.util
+from flask import Response, jsonify, make_response, request, abort
 
 
+# class OutputType(Enum):
+#     ACTION_BASED_INPUT = 0
+#     STATE_BASED_INPUT = 1
 
-class OutputType(Enum):
-    ACTION_BASED_INPUT = 0
-    STATE_BASED_INPUT  = 1
 
-class OutputPeripheral(ABC):
-    def __init__(self, id: UUID ,name:str, type:OutputType) -> None:
-        super().__init__()
+# class OutputPeripheral(ABC):
+#     def __init__(self, id: UUID, name: str, type: OutputType) -> None:
+#         super().__init__()
 
-    def run_action(self):
-        """
-        Output peripheral can be action based when it's:
-        - GCODE command
-        - Shell script
+#     def run_action(self):
+#         """
+#         Output peripheral can be action based when it's:
+#         - GCODE command
+#         - Shell script
 
-        Returns:
-            Bool: Success
-        """
-        pass
+#         Returns:
+#             Bool: Success
+#         """
+#         pass
 
-    def set_state(self, state):
-        """
-        Output peripheral can be state based when it's:
-        - GPIO: it can be set to on / off / toggle
-        - Led Strip: it can be set to a color in RGB
-        - Neopixel
-        - PWM
+#     def set_state(self, state):
+#         """
+#         Output peripheral can be state based when it's:
+#         - GPIO: it can be set to on / off / toggle
+#         - Led Strip: it can be set to a color in RGB
+#         - Neopixel
+#         - PWM
 
-        Returns:
-            Bool: Success
-        """
-        pass
+#         Returns:
+#             Bool: Success
+#         """
+#         pass
 
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin,
@@ -57,7 +59,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
         self._ids = []
 
 
-    @octoprint.plugin.BlueprintPlugin.route("/available_id", methods=["GET"])
+    @octoprint.plugin.BlueprintPlugin.route("/uuid", methods=["GET"])
     def get_available_id(self):
         return Response(json.dumps(str(uuid4())), mimetype='application/json')
 
@@ -106,7 +108,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin,
             if v == implementation:
                 return k
 
-
     def register_plugin(self, implementation):
         k = self._get_plugin_key(implementation)
 
@@ -145,8 +146,8 @@ def __plugin_load__():
     global __plugin_helpers__
     __plugin_helpers__ = dict(
         # get_id = __plugin_implementation__.get_id,
-        output_peripheral_set_state = __plugin_implementation__.output_peripheral_set_state,
-        register_plugin = __plugin_implementation__.register_plugin,
-        register_output_peripheral = __plugin_implementation__.register_output_peripheral,
-        register_input_peripheral = __plugin_implementation__.register_input_peripheral,
+        output_peripheral_set_state= __plugin_implementation__.output_peripheral_set_state,
+        register_plugin= __plugin_implementation__.register_plugin,
+        register_output_peripheral= __plugin_implementation__.register_output_peripheral,
+        register_input_peripheral= __plugin_implementation__.register_input_peripheral,
     )

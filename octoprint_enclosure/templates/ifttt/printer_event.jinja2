@@ -1,0 +1,21 @@
+<form class="form-horizontal">
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Printer Event') }}</label>
+    <div class="controls">
+      <label class="radio">
+        <input type="radio" name="action_type_radio" value="started_printing"
+          data-bind="checked: inputEditor.linked_input_id"> {{ _('Started Printing') }}
+      </label>
+      <label class="radio">
+        <input type="radio" name="action_type_radio" value="stopped_printing"
+          data-bind="checked: inputEditor.linked_input_id"> {{ _('Stopped Printing') }}
+      </label>
+      <label class="radio">
+        <input type="radio" name="action_type_radio" value="canceled_printing"
+          data-bind="checked: inputEditor.linked_input_id"> {{ _('Canceled Printing') }}
+      </label>
+    </div>
+  </div>
+
+</form>

@@ -1,0 +1,28 @@
+<form class="form-horizontal">
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Select IO') }}</label>
+        <div class="controls">
+            <label class="select">
+                <select data-bind="options: $root.enclosureOutputs, 
+                      optionsText: 'label',
+                      optionsValue: 'index_id', 
+                      value: $root.inputEditor.linked_output">
+                </select>
+                <span class="help-inline">Linked output that will be set</span>
+            </label>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label class="control-label">{{ _('Value') }}</label>
+
+        <div class="controls">
+            <input type="text" class="input-block-level" data-bind="value: inputEditor.output_set_value">
+            <span class="help-inline">values should be "on", "off" or "toggle" or anything that the linked output supports</span>
+        </div>
+
+
+    </div>
+
+</form>

@@ -1,0 +1,59 @@
+<form class="form-horizontal">
+
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Select IO') }}</label>
+    <div class="controls">
+      <label class="select">
+        <select data-bind="options: $root.enclosureInputs, 
+                    optionsText: 'label',
+                    optionsValue: 'index_id', 
+                    value: $root.inputEditor.linked_input_id">
+        </select>
+        <span class="help-inline">When the linked IO trigger an event...</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ko if: (inputEditor.linked_input)  -->
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Logic') }}</label>
+    <div class="controls">
+      <label class="select">
+        <select data-bind="value: inputEditor.input_logic">
+          
+          <!-- ko if: (inputEditor.linked_input().category() == 'sensor')  -->
+          <option value="lower_than">Lower Than</option>
+          <option value="equals_to">Equals To</option>
+          <option value="higher_than">Higher Than</option>
+          <!-- /ko -->
+
+          <!-- ko if: (inputEditor.linked_input().category()  == 'gpio')  -->
+          <option value="equals_to">Equals To</option>
+          <!-- /ko -->
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <label class="control-label">{{ _('Value') }}</label>
+    <div class="controls">
+      <!-- ko if: (inputEditor.linked_input().category() == 'sensor')  -->
+      <input type="text" class="input-block-level" data-bind="value: inputEditor.input_value">
+      <!-- /ko -->
+
+      <!-- ko if: (inputEditor.linked_input().category()  == 'gpio')  -->
+      <select data-bind="value: inputEditor.input_value">
+        <option value="rising">Rising</option>
+        <option value="falling">Falling</option>
+      </select>
+      <!-- /ko -->
+
+    </div>
+  </div>
+
+  <!-- /ko -->
+
+</form>

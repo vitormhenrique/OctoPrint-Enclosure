@@ -1,0 +1,62 @@
+<div id="settings_ifttt_edit_dialog" class="modal hide fade">
+    <div class="modal-header">
+        <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+        <h3 class="modal-title">Add / Edit Logic</h3>
+    </div>
+    <div class="modal-body">
+
+        <div class="full-sized-box">
+            <ul class="nav nav-pills">
+                <li class="active">
+                    <a href="#settings_ifttt_edit_dialog_general" data-toggle="tab">{{ _('General') }}</a>
+                </li>
+
+
+                <!-- ko if: (inputEditor.trigger_type() == "printer_event")  -->
+                <li>
+                    <a href="#settings_ifttt_edit_dialog_printer_event" data-toggle="tab">{{ _('Printer Trigger') }}</a>
+                </li>
+                <!-- /ko -->
+
+                <!-- ko if: (inputEditor.trigger_type() == "io_trigger")  -->
+                <li>
+                    <a href="#settings_ifttt_edit_dialog_io_trigger" data-toggle="tab">{{ _('IO Trigger') }}</a>
+                </li>
+                <!-- /ko -->
+
+                <!-- ko if: (inputEditor.action_type() == "set_output_value")  -->
+                <li>
+                    <a href="#settings_ifttt_edit_dialog_set_output_value" data-toggle="tab">{{ _('Set Output') }}</a>
+                </li>
+                <!-- /ko -->
+
+            </ul>
+
+            <div class="tab-content">
+                <div id="settings_ifttt_edit_dialog_general" class="tab-pane active">
+                    {% include "ifttt/general_info.jinja2" %}
+                </div>
+
+                <div id="settings_ifttt_edit_dialog_printer_event" class="tab-pane">
+                    {% include "ifttt/printer_event.jinja2" %}
+                </div>
+
+                <div id="settings_ifttt_edit_dialog_io_trigger" class="tab-pane">
+                    {% include "ifttt/io_trigger.jinja2" %}
+                </div>
+
+                <div id="settings_ifttt_edit_dialog_set_output_value" class="tab-pane">
+                    {% include "ifttt/set_output_value.jinja2" %}
+                </div>
+
+            </div>
+        </div>
+
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Abort') }}</button>
+        <button class="btn btn-primary btn-confirm"
+            data-bind="click: function() { $root.confirmEditLogic();}, css: {disabled: !inputEditor.validInput()}">{{ _('Save') }}</button>
+    </div>
+</div>
