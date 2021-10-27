@@ -2,16 +2,15 @@ import sys
 import smbus2
 import bme280
 
-# Rev 2 Pi, Pi 2 & Pi 3 uses bus 1
-# Rev 1 Pi uses bus 0
-port = 1
-bus = smbus2.SMBus(port)
-
 if len(sys.argv) == 2:
     DEVICE = int(sys.argv[1], 16)
 else:
     print('-1 | -1')
     sys.exit(1)
+
+# Rev 2 Pi, Pi 2 & Pi 3 & Pi 4 use bus 1
+# Rev 1 Pi uses bus 0
+bus = smbus2.SMBus(1)
 
 def main():
   try:
