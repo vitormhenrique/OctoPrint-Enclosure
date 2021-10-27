@@ -20,3 +20,6 @@ def main():
     print('{0:0.1f} | {1:0.1f}'.format(data.temperature, data.humidity))
   except:
      print('-1 | -1')
+
+if __name__== "__main__":
+   main()
