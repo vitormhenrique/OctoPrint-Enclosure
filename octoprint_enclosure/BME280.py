@@ -15,11 +15,8 @@ bus = smbus2.SMBus(1)
 def main():
   try:
     calibration_params = bme280.load_calibration_params(bus, DEVICE)
-
-    # the sample method will take a single reading and return a
-    # compensated_reading object
     data = bme280.sample(bus, DEVICE, calibration_params)
 
     print('{0:0.1f} | {1:0.1f}'.format(data.temperature, data.humidity))
-  except Exception:
+  except:
      print('-1 | -1')
