@@ -7,14 +7,6 @@ try:
 except IOError:
     sensor = bme680.BME680(bme680.I2C_ADDR_SECONDARY)
 
-# These calibration data can safely be commented
-# out, if desired.
-
-
-# These oversampling settings can be tweaked to
-# change the balance between accuracy and noise in
-# the data.
-
 hum_weighting = float(0.25)   # so hum effect is 25% of the total air quality score
 gas_weighting = float(0.75)   # so gas effect is 75% of the total air quality score
 
@@ -43,18 +35,8 @@ def GetGasReference(gas_reference):
       for i in range(1, readings):  # // read gas for 10 x 0.150mS = 1.5secs
         sensor.get_sensor_data()
         gas_reference = gas_reference + sensor.data.gas_resistance
-        # print(sensor.data.gas_resistance)
       gas_reference = gas_reference / readings
       return
-
-
-
-
-  # for i in range(1, readings):  # // read gas for 10 x 0.150mS = 1.5secs
-  #   gas_reference = gas_reference + sensor.data.gas_resistance
-  #   print(sensor.data.gas_resistance)
-  # gas_reference = gas_reference / readings
-
 
 def CalculateIAQ(score):
   IAQ_text = "Air quality is "
@@ -73,8 +55,6 @@ def CalculateIAQ(score):
     IAQ_text = IAQ_text + "Good"
   return IAQ_text
 
-
-
 #Calculate humidity contribution to IAQ index
 current_humidity = float(sensor.data.humidity)
 if (current_humidity >= 38 and current_humidity <= 42):
@@ -86,45 +66,21 @@ else:
   else:
     hum_score = ((-0.25/(100-hum_reference)*current_humidity)+0.416666)*100
 
-
 #Calculate gas contribution to IAQ index
 gas_lower_limit = float(5000)   # Bad air quality limit
 gas_upper_limit = float(50000)  # Good air quality limit
 
 if (gas_reference > gas_upper_limit):  
-  gas_reference = gas_upper_limit   #gas_reference = 250000 see above
+  gas_reference = gas_upper_limit
 if (gas_reference < gas_lower_limit): 
   gas_reference = gas_lower_limit
 
 gas_score = float((0.75/(gas_upper_limit-gas_lower_limit)*gas_reference -(gas_lower_limit*(0.75/(gas_upper_limit-gas_lower_limit))))*100)
 
-# print('gas_upper_limit--------')
-# print(gas_upper_limit)
-#
-# print('gas_lower_limit--------')
-# print(gas_lower_limit)
-#
-#
-# print('gas score---------')
-# print(gas_score)
 #Combine results for the final IAQ index value (0-100% where 100% is good quality air)
 air_quality_score = float(hum_score + gas_score)
 
-# print('Air Quality = {0:.2f} % derived from 25% of Humidity reading and 75% of Gas reading - 100% is good quality air'.format( air_quality_score))
-
-# print('Humidity element was : {0:.2f} of 0.25'.format( hum_score/100))
-# print('     Gas element was : {0:.2f} of 0.25'.format( gas_score/100))
-
-
-
-
-# if (sensor.data.gas_resistance < 120000):
-# 	print('Poor air qulity *****')
-
 GetGasReference(gas_reference)
 
-# print(CalculateIAQ(air_quality_score))
-# print("------------------------------------------------")
-# time.sleep(2)
 print('{0:0.1f}'.format(air_quality_score))
 
