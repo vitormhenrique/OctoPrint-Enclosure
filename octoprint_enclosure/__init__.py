@@ -1027,7 +1027,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 temp = round(self.to_float(temp), 1) if not sensor['use_fahrenheit'] else round(
                     self.to_float(temp) * 1.8 + 32, 1)
                 hum = round(self.to_float(hum), 1)
-				airquality = round(self.to_float(airquality), 1)
+                airquality = round(self.to_float(airquality), 1)
                 return temp, hum, airquality
             return None, None, None
         except Exception as ex:
