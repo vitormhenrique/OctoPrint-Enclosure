@@ -985,40 +985,40 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
-		    		airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "bme280":
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
-		    		airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "bme680":
                     temp, hum, airquality = self.read_bme680_temp(sensor['temp_sensor_address'])
                 elif sensor['temp_sensor_type'] == "am2320":
                     temp, hum = self.read_am2320_temp() # sensor has fixed address
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "rpi":
                     temp = self.read_rpi_temp() # rpi CPU Temp
                     hum = 0
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "si7021":
                     temp, hum = self.read_si7021_temp(sensor['temp_sensor_address'], sensor['temp_sensor_i2cbus'])
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "tmp102":
                     temp = self.read_tmp102_temp(sensor['temp_sensor_address'])
                     hum = 0
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "max31855":
                     temp = self.read_max31855_temp(sensor['temp_sensor_address'])
                     hum = 0
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "mcp9808":
                     temp = self.read_mcp_temp(sensor['temp_sensor_address'])
                     hum = 0
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "temp_raw_i2c":
                     temp, hum = self.read_raw_i2c_temp(sensor)
-					airquality = 0
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "hum_raw_i2c":
                     hum, temp = self.read_raw_i2c_temp(sensor)
-					airquality = 0
+                    airquality = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
