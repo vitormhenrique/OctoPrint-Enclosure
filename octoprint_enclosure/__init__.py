@@ -1160,17 +1160,21 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def read_bme680_temp(self, address):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/BME680.py "
+            cmd = [sys.executable, script, str(address)]
             if self._settings.get(["use_sudo"]):
-                sudo_str = "sudo "
-            else:
-                sudo_str = ""
-            cmd = sudo_str + "python " + script + str(address)
+                cmd.insert(0, "sudo")
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature BME680 cmd: %s", cmd)
-            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
+                
+            stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            output, errors = stdout.communicate()
+            
             if  self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.debug("BME680 result: %s", stdout)
-            temp, hum, airq = stdout.split("|")
+                if len(errors) > 0:
+                    self._logger.error("BME680 error: %s", errors)
+                else:
+                    self._logger.debug("BME680 result: %s", output)
+            temp, hum, airq = output.split("|")
             return (self.to_float(temp.strip()), self.to_float(hum.strip()), self.to_float(airq.strip()))
         except Exception as ex:
             self._logger.info(
