@@ -70,9 +70,9 @@ else:
 gas_lower_limit = float(5000)   # Bad air quality limit
 gas_upper_limit = float(50000)  # Good air quality limit
 
-if (gas_reference > gas_upper_limit):  
+if gas_reference > gas_upper_limit:  
     gas_reference = gas_upper_limit
-if (gas_reference < gas_lower_limit): 
+if gas_reference < gas_lower_limit: 
     gas_reference = gas_lower_limit
 
 gas_score = float((0.75/(gas_upper_limit-gas_lower_limit)*gas_reference -(gas_lower_limit*(0.75/(gas_upper_limit-gas_lower_limit))))*100)
