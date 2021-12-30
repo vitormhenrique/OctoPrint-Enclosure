@@ -982,6 +982,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
                     temp, hum = self.read_dht_temp(sensor['temp_sensor_type'], sensor['gpio_pin'])
+                    airquality = 0                    
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
