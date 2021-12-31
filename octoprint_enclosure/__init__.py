@@ -77,7 +77,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         # mqtt helper
         self.mqtt_publish = lambda *args, **kwargs: None
         # hardcoded
-        self.mqtt_root_topic = "Monolith/temperature/enclosure"
+        self.mqtt_root_topic = "octoprint/plugins/enclosure"
         self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + "enclosure"
         self.mqtt_message = "{\"temperature\": 0, \"humidity\": 0}"
   
