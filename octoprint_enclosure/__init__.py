@@ -74,10 +74,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     dummy_delta = 0.5
     
     def __init__(self):
-        # mqtt helpers
+        # mqtt helper
         self.mqtt_publish = lambda *args, **kwargs: None
-        self.mqtt_subscribe = lambda *args, **kwargs: None
-        self.mqtt_unsubscribe = lambda *args, **kwargs: None
         # hardcoded
         self.mqtt_root_topic = "Monolith/temperature/enclosure"
         self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + "enclosure"
@@ -150,15 +148,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         if helpers:
             if "mqtt_publish" in helpers:
                 self.mqtt_publish = helpers["mqtt_publish"]
-            if "mqtt_subscribe" in helpers:
-                self.mqtt_subscribe = helpers["mqtt_subscribe"]
-            if "mqtt_unsubscribe" in helpers:
-                self.mqtt_unsubscribe = helpers["mqtt_unsubscribe"]
         else:
-            self._logger.info("mqtt helpers not found. mqtt functions won't work")
-        
-        # Test MQTT
-        #self.mqtt_publish(self.mqtt_sensor_topic, self.mqtt_message)
+            self._logger.info("mqtt helpers not found. mqtt functions won't work")       
         
         self.pwm_instances = []
         self.event_queue = []
