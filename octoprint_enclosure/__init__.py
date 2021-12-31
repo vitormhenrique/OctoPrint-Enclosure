@@ -72,7 +72,17 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     development_mode = False
     dummy_value = 30.0
     dummy_delta = 0.5
-
+    
+    def __init__(self):
+        # mqtt helpers
+        self.mqtt_publish = lambda *args, **kwargs: None
+        self.mqtt_subscribe = lambda *args, **kwargs: None
+        self.mqtt_unsubscribe = lambda *args, **kwargs: None
+        # hardcoded
+        self.mqtt_root_topic = "Monolith/temperature/enclosure"
+        self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + "enclosure"
+        self.mqtt_message = "{\"temperature\": 0, \"humidity\": 0}"
+  
     def start_timer(self):
         """
         Function to start timer that checks enclosure temperature
@@ -134,7 +144,22 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         return -1
 
     # ~~ StartupPlugin mixin
-    def on_after_startup(self):
+    def on_after_startup(self):   
+        helpers = self._plugin_manager.get_helpers("mqtt", "mqtt_publish", "mqtt_subscribe", "mqtt_unsubscribe")
+        
+        if helpers:
+            if "mqtt_publish" in helpers:
+                self.mqtt_publish = helpers["mqtt_publish"]
+            if "mqtt_subscribe" in helpers:
+                self.mqtt_subscribe = helpers["mqtt_subscribe"]
+            if "mqtt_unsubscribe" in helpers:
+                self.mqtt_unsubscribe = helpers["mqtt_unsubscribe"]
+        else:
+            self._logger.info("mqtt helpers not found. mqtt functions won't work")
+        
+        # Test MQTT
+        #self.mqtt_publish(self.mqtt_sensor_topic, self.mqtt_message)
+        
         self.pwm_instances = []
         self.event_queue = []
         self.rpi_outputs_not_changed = []
@@ -820,6 +845,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     self.handle_temperature_events()
                     self.handle_pwm_linked_temperature()
                     self.update_ui()
+                    self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + sensor['label']
+                    self.mqtt_message = {"temperature":  temp, "humidity": hum}
+                    self.mqtt_publish(self.mqtt_sensor_topic, self.mqtt_message)
         except Exception as ex:
             self.log_error(ex)
 
