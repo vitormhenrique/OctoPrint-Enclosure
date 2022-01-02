@@ -72,7 +72,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     development_mode = False
     dummy_value = 30.0
     dummy_delta = 0.5
-
+    
+    def __init__(self):
+        # mqtt helper
+        self.mqtt_publish = lambda *args, **kwargs: None
+        # hardcoded
+        self.mqtt_root_topic = "octoprint/plugins/enclosure"
+        self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + "enclosure"
+        self.mqtt_message = "{\"temperature\": 0, \"humidity\": 0}"
+  
     def start_timer(self):
         """
         Function to start timer that checks enclosure temperature
@@ -134,7 +142,15 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         return -1
 
     # ~~ StartupPlugin mixin
-    def on_after_startup(self):
+    def on_after_startup(self):   
+        helpers = self._plugin_manager.get_helpers("mqtt", "mqtt_publish", "mqtt_subscribe", "mqtt_unsubscribe")
+        
+        if helpers:
+            if "mqtt_publish" in helpers:
+                self.mqtt_publish = helpers["mqtt_publish"]
+        else:
+            self._logger.info("mqtt helpers not found. mqtt functions won't work")       
+        
         self.pwm_instances = []
         self.event_queue = []
         self.rpi_outputs_not_changed = []
@@ -820,6 +836,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     self.handle_temperature_events()
                     self.handle_pwm_linked_temperature()
                     self.update_ui()
+                    self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + sensor['label']
+                    self.mqtt_message = {"temperature":  temp, "humidity": hum}
+                    self.mqtt_publish(self.mqtt_sensor_topic, self.mqtt_message)
         except Exception as ex:
             self.log_error(ex)
 
@@ -982,6 +1001,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 if sensor['temp_sensor_type'] in ["11", "22", "2302"]:
                     temp, hum = self.read_dht_temp(sensor['temp_sensor_type'], sensor['gpio_pin'])
+                    airquality = 0
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
