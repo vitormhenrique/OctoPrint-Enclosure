@@ -174,7 +174,7 @@
       <label class="control-label">{{ _('Off Time') }}</label>
       <div class="controls">
         <input type="text" class="input-block-level" data-bind="value: toggle_timer_off">
-        <span class="help-inline">Time in secconds that the GPIO will remain when OFF</span>
+        <span class="help-inline">Time in seconds that the GPIO will remain when OFF</span>
       </div>
     </div>
     <!-- /ko -->
@@ -240,7 +240,7 @@
         <label class="control-label">{{ _('Shutdown Delay / Hour') }}</label>
         <div class="controls">
           <input type="text" class="input-block-level" data-bind="value: shutdown_time">
-          <span class="help-inline">Time delay in secconds to turn on GPIO when print starts OR exact time that the event should happen, note that
+          <span class="help-inline">Time delay in seconds to turn off GPIO when print starts OR exact time that the event should happen, note that
             events will only be scheduled after a print starts, time should be formated as HH:MM on a 24 hours format, don't
             forget to check timezone of your raspberry pi.</span>
           <span class="label label-important">Attention</span>
@@ -256,7 +256,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: shutdown_on_error"> {{ _('Auto Shutdown on Serial Connection Error') }}
         </label>
-        <span class="help-inline">Choose if output should turn off automatically when an error or disconnect was detected.</span>
+        <span class="help-inline">Choose if output should turn off automatically when an error or disconnect was detected. Shutdown Delay will be ignored in this case</span>
       </div>
     </div>
     <!-- /ko -->
@@ -279,7 +279,7 @@
         <label class="checkbox">
           <input type="checkbox" data-bind="checked: gpio_i2c_enabled"> {{ _('GPIO over I2C') }}
         </label>
-        <span class="help-inline">Active low means that the GPIO will turn on when receive a low signal (ground) from Raspberry PI</span>
+        <span class="help-inline">Allows multiple devices to be connected to the same GPIO pins</span>
       </div>
     </div>
     <!-- /ko -->
