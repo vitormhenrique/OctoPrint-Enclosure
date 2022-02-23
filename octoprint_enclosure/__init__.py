@@ -1183,7 +1183,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
     def read_bme680_temp(self, address):
         try:
-            script = os.path.dirname(os.path.realpath(__file__)) + "/BME680.py "
+            script = os.path.dirname(os.path.realpath(__file__)) + "/BME680.py"
             cmd = [sys.executable, script, str(address)]
             if self._settings.get(["use_sudo"]):
                 cmd.insert(0, "sudo")
@@ -1204,7 +1204,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._logger.info(
                 "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
-            return (0, 0)
+            return (0, 0, 0)
 
     def read_am2320_temp(self):
         try:
