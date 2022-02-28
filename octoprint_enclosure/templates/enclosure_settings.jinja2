@@ -604,6 +604,7 @@
           <select data-bind="value: temp_sensor_type">
             <option value="">Select Sensor</option>
             <option value="11">DHT11</option>
+	    <option value="20">DHT20</option>
             <option value="22">DHT22</option>
             <option value="2302">AM2302</option>
             <option value="18b20">DS18B20</option>
@@ -681,7 +682,7 @@
         </div>
       </div>
       <!-- /ko -->
-      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "aht10") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") -->
+      <!-- ko if: ($data.temp_sensor_type() == "si7021") || ($data.temp_sensor_type() == "20") || ($data.temp_sensor_type() == "bme280") || ($data.temp_sensor_type() == "am2320") || ($data.temp_sensor_type() == "aht10") || ($data.temp_sensor_type() == "tmp102") || ($data.temp_sensor_type() == "mcp9808") -->
       <div class="control-group">
         <label class="control-label" for="settings-enclosure-dhtPin">{{ _('Sensor Pin') }}</label>
         <div class="controls">
