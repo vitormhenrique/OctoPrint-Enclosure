@@ -28,13 +28,12 @@ MCP9808_REG_CONFIG_ALERTMODE = 0x0001
 
 
 def main():
-	# get bus address if provided or use default address
+	# get i2c bus and bus address if provided or use defaults
 	address = MCP9808_I2CADDR_DEFAULT
-	if len(sys.argv) == 2:
-		address = int(sys.argv[1], 16)
-
-	# get I2C bus
 	bus = smbus.SMBus(1)
+	if len(sys.argv) > 1:
+		bus = smbus.SMBus(int(sys.argv[1]))
+		address = int(sys.argv[2], 16)
 
 	# MCP9808 address, default 0x18(24)
 	# configuration register, 0x01(1)
