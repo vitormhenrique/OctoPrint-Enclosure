@@ -114,6 +114,21 @@
     <div class="control-group">
       <div class="controls">
         <label class="checkbox">
+          <input type="checkbox" data-bind="checked: hw_pwm"> {{ _('Use Hardware PWM') }}
+        </label>
+        <span class="help-inline">
+            <span class="label label-important">Attention</span> You need to install and configure the rpi-hardware-pwm module to utilise the hardware PWM on the Pi, check
+            the documentation on the plugin 
+            <a href=" https://github.com/vitormhenrique/OctoPrint-Enclosure">github</a> page. Note: Hardware PWM is only available on GPIO 18 (PWM0) and GPIO 19 (PWM1).</span>
+        </span>
+      </div>
+    </div>
+    <!-- /ko -->
+
+    <!-- ko if: ($data.output_type() == "pwm" ) -->
+    <div class="control-group">
+      <div class="controls">
+        <label class="checkbox">
           <input type="checkbox" data-bind="checked: pwm_temperature_linked"> {{ _('Link PWM to Temperature') }}
         </label>
         <span class="help-inline">Link PWM ouput to temperature. PWM output will be interpolated between the point from duty A, temperature A -> duty

@@ -55,6 +55,17 @@ def CheckInputActiveLow(Input_Pull_Resistor):
     else:
         return False
 
+#Function that returns the hardware PWM channel or raises ValueError otherwise
+def Pwm_Channel(pin):
+    pwm0_pins = [12, 18]
+    pwm1_pins = [13, 19]
+    if pin in pwm0_pins:
+        return 0
+    elif pin in pwm1_pins:
+        return 1
+    else:
+        raise ValueError("Not a Hardware PWM pin")
+
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
                       octoprint.plugin.EventHandlerPlugin):
@@ -167,7 +178,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.print_complete = False
 
     def get_settings_version(self):
-        return 10
+        return 11
 
     def on_settings_migrate(self, target, current=None):
         self._logger.warn("######### current settings version %s target settings version %s #########", current, target)
@@ -175,8 +186,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self._logger.info("rpi_outputs: %s", self.rpi_outputs)
         self._logger.info("rpi_inputs: %s", self.rpi_inputs)
         self._logger.info("#########        End Current Settings        #########")
-        if current >= 4 and target == 10:
-            self._logger.warn("######### migrating settings to v10 #########")
+        if current >= 4 and target == 11:
+            self._logger.warn("######### migrating settings to v11 #########")
             old_outputs = self._settings.get(["rpi_outputs"])
             old_inputs = self._settings.get(["rpi_inputs"])
             for rpi_output in old_outputs:
@@ -199,7 +210,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 if 'gpio_i2c_register_status' not in rpi_output:
                     rpi_output['gpio_i2c_register_status'] = 1
                 if 'shutdown_on_error' not in rpi_output:
-                        rpi_output['shutdown_on_error'] = False
+                    rpi_output['shutdown_on_error'] = False
+                if 'hw_pwm' not in rpi_output:
+                        rpi_output['hw_pwm'] = False
             self._settings.set(["rpi_outputs"], old_outputs)
 
             old_inputs = self._settings.get(["rpi_inputs"])
@@ -1570,15 +1583,27 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     GPIO.setup(pin, GPIO.OUT, initial=initial_value)
             for gpio_out_pwm in list(filter(lambda item: item['output_type'] == 'pwm', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_pwm['gpio_pin'])
-                self._logger.info("Setting GPIO pin %s as PWM", pin)
+                pwm_freqency = self.to_int(gpio_out_pwm["pwm_frequency"])
                 for pwm in (pwm_dict for pwm_dict in self.pwm_instances if pin in pwm_dict):
                     self.pwm_instances.remove(pwm)
                 self.clear_channel(pin)
-                GPIO.setup(pin, GPIO.OUT)
-                pwm_instance = GPIO.PWM(pin, self.to_int(gpio_out_pwm['pwm_frequency']))
-                self._logger.info("starting PWM on pin %s", pin)
-                pwm_instance.start(0)
-                self.pwm_instances.append({pin: pwm_instance})
+                try:
+                    if "hw_pwm" in gpio_out_pwm and gpio_out_pwm["hw_pwm"] is True:
+                        from rpi_hardware_pwm import HardwarePWM
+                        pwm_channel_number = Pwm_Channel(pin)  # Raises valueError if not a hardware PWM pin
+                        self._logger.info("starting Hardware PWM on pin %i channel %i at %i Hz", pin, pwm_channel_number, pwm_freqency)
+                        # If RPi dtoverlay has not been configured this will throw rpi_hardware_pwm.HardwarePWMException with information on what to do.
+                        pwm_instance = HardwarePWM(pwm_channel=pwm_channel_number, hz=pwm_freqency)
+                    else:
+                        self._logger.info("starting PWM on pin %s at %i Hz", pin, pwm_freqency)
+                        GPIO.setup(pin, GPIO.OUT)
+                        pwm_instance = GPIO.PWM(pin, pwm_freqency)
+                    pwm_instance.start(0)
+                    self.pwm_instances.append({pin: pwm_instance})
+                except ImportError as error:
+                    self._logger.error("HardwarePWM module not installed. Install using pip install rpi-hardware-pwm")
+                except ValueError as error:
+                    self._logger.error("Invalid Hardware PMW pin. pwm0 is GPIO pin 18 is physical pin 12 and pwm1 is GPIO pin 19 is physical pin 13")
             for gpio_out_neopixel in list(
                     filter(lambda item: item['output_type'] == 'neopixel_direct', self.rpi_outputs)):
                 pin = self.to_int(gpio_out_neopixel['gpio_pin'])

@@ -39,7 +39,7 @@ Install the plugin using the Plugin Manager bundled with OctoPrint, you can sear
 
 This plugin support many hardware temperature sensors, led, relays, heater...
 
-Here are detailled instructions on how to setup them.
+Here are detailed instructions on how to setup them.
 
 ### Temperature sensors
 
@@ -139,7 +139,7 @@ If your setup does not have pip install pip:
 Install the required library:
 `sudo pip install rpi_ws281x`
 
-rpi_ws281x really needs sudo, and you need to setup up so your rpi does not ask for a password when runing a python script, so run:
+rpi_ws281x really needs sudo, and you need to setup up so your rpi does not ask for a password when running a python script, so run:
 
 `sudo visudo`
 
@@ -150,6 +150,20 @@ Also backlist the audio kernel:
 `sudo nano /etc/modprobe.d/snd-blacklist.conf`
 
 add the `blacklist snd_bcm2835` to the end of the file.
+
+### Hardware PWM
+
+Hardware PWM is required in order to drive higher frequency signals, such as the 25000 Hz needed by Noctua PWM fans. The rpi-hardware-pwm module is used as a lightweight alternative to pigpio. Install the required library: `sudo pip install rpi-hardware-pwm`
+
+Enable PWM0 (GPIO 18) by adding the following line to `/boot/config.txt`
+
+```
+dtoverlay=pwm
+```
+
+If you wish to use both PWM0 and PWM1 then use `dtoverlay=pwm-2chan` instead. If you wish to use the alternate PWM pin numbers, then read the [rpi-hardware-pwm module readme](https://github.com/Pioreactor/rpi_hardware_pwm) for how this can be configured.
+
+After editing `boot/config.text` reboot your Raspberry Pi.
 
 ### GPIO
 
@@ -189,8 +203,8 @@ Outputs are meant to control THINGS (temperature, lights, locker, extra enclosur
 Outputs can be set to the following types:
 
 * Regular GPIO
-* PWM GPIO
-* Neopixel Control via Microcontroler
+* PWM GPIO (Software or Hardware controlled PWM)
+* Neopixel Control via Microcontroller
 * Neopixel Control directly from raspberry pi
 * Temperature and Humidity Control
 * Temperature Alarm
