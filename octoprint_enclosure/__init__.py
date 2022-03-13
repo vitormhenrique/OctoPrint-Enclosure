@@ -457,6 +457,33 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self.write_pwm(gpio, set_value)
         return make_response('', 204)
 
+    @octoprint.plugin.BlueprintPlugin.route("/emc/<int:identifier>", methods=["PATCH"])
+    @restricted_access
+    def set_emc2101(self, identifier):
+        if "application/json" not in request.headers["Content-Type"]:
+            return make_response("expected json", 400)
+        try:
+            data = request.json
+        except BadRequest:
+            return make_response("malformed request", 400)
+        if 'duty_cycle' not in data:
+            return make_response("missing duty_cycle attribute", 406)
+        set_value = self.to_int(data['duty_cycle'])
+        script = os.path.dirname(os.path.realpath(__file__)) + "/SETEMC2101.py"
+        cmd = [sys.executable, script, str(set_value)]
+        if self._settings.get(["use_sudo"]):
+             cmd.insert(0, "sudo")
+        stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        output, errors = stdout.communicate()
+        if self._settings.get(["debug_temperature_log"]) is True:
+            if len(errors) > 0:
+                self._logger.error("EMC2101 error: %s", errors)
+            else:
+                self._logger.debug("EMC2101 result: %s", output)
+        self._logger.debug(output + " " + errors)
+        return make_response('', 204)
+
+    
     @octoprint.plugin.BlueprintPlugin.route("/rgb-led/<int:identifier>", methods=["PATCH"])
     @restricted_access
     def set_ledstrip_color(self, identifier):
@@ -835,6 +862,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     self.handle_temp_hum_control()
                     self.handle_temperature_events()
                     self.handle_pwm_linked_temperature()
+                    self.handle_emc_linked_temperature()
                     self.update_ui()
                     self.mqtt_sensor_topic = self.mqtt_root_topic + "/" + sensor['label']
                     self.mqtt_message = {"temperature":  temp, "humidity": hum}
@@ -1008,6 +1036,10 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 elif sensor['temp_sensor_type'] == "18b20":
                     temp = self.read_18b20_temp(sensor['ds18b20_serial'])
                     hum = 0
+                    airquality = 0
+                elif sensor['temp_sensor_type'] == "emc2101":
+                    temp, hum = self.read_emc2101_temp(sensor['temp_sensor_address'], sensor['temp_sensor_i2cbus'])
+                    hum =0
                     airquality = 0
                 elif sensor['temp_sensor_type'] == "bme280":
                     temp, hum = self.read_bme280_temp(sensor['temp_sensor_address'])
@@ -1250,6 +1282,31 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
             self.log_error(ex)
             return (0, 0)
+            
+    def read_emc2101_temp(self, address, i2cbus):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/EMC2101.py"
+            cmd = [sys.executable, script, str(address), str(i2cbus)]
+            if self._settings.get(["use_sudo"]):
+                 cmd.insert(0, "sudo")
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Temperature EMC2101 cmd: %s", cmd)
+            stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            output, errors = stdout.communicate()
+            if self._settings.get(["debug_temperature_log"]) is True:
+                if len(errors) > 0:
+                    self._logger.error("EMC2101 error: %s", errors)
+                else:
+                    self._logger.debug("EMC2101 result: %s", output)
+            temp, fanspeed = output.split("|")
+            print (temp + " , " + fanspeed )
+            return (self.to_float(temp.strip()), 0.0 )
+        except Exception as ex:
+            print(ex)
+            self._logger.info(
+                "Failed to execute python scripts, try disabling use SUDO on advanced section of the plugin.")
+            self.log_error(ex)
+            return (0, 0)
 
     def read_aht10_temp(self, address, i2cbus):
         try:
@@ -1369,6 +1426,55 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
+
+
+
+    def handle_emc_linked_temperature(self):
+        try:
+            for pwm_output in list(filter(lambda item: item['output_type'] == 'emc',
+                                          self.rpi_outputs)):
+                if self._printer.is_printing():
+                    index_id = self.to_int(pwm_output['index_id'])
+                    linked_id = self.to_int(pwm_output['linked_temp_sensor'])
+                    linked_data = self.get_linked_temp_sensor_data(linked_id)
+                    current_temp = self.to_float(linked_data['temperature'])
+
+                    duty_a = self.to_float(pwm_output['duty_a'])
+                    duty_b = self.to_float(pwm_output['duty_b'])
+                    temp_a = self.to_float(pwm_output['temperature_a'])
+                    temp_b = self.to_float(pwm_output['temperature_b'])
+
+                    try:
+                        calculated_duty = ((current_temp - temp_a) * (duty_b - duty_a) / (temp_b - temp_a)) + duty_a
+
+                        if current_temp < temp_a:
+                            calculated_duty = 0
+                    except:
+                        calculated_duty = 0
+
+                    self._logger.debug("Calculated duty for EMC %s is %s", index_id, calculated_duty)
+                elif self.print_complete:
+                    calculated_duty = self.to_int(pwm_output['default_duty_cycle'])
+                else:
+                    calculated_duty = self.to_int(pwm_output['default_duty_cycle'])
+            script = os.path.dirname(os.path.realpath(__file__)) + "/SETEMC2101.py"
+            cmd = [sys.executable, script, str(int(calculated_duty))]
+            if self._settings.get(["use_sudo"]):
+                cmd.insert(0, "sudo")
+            self._logger.info("Calculated fan speed is ", calculated_duty)
+            stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            output, errors = stdout.communicate()
+            if self._settings.get(["debug_temperature_log"]) is True:
+                if len(errors) > 0:
+                    self._logger.error("EMC2101 error: %s", errors)
+                else:
+                    self._logger.debug("EMC2101 result: %s", output)
+            self._logger.debug(output + " " + errors)
+        
+
+        except Exception as ex:
+            self.log_error(ex)
+
 
     def handle_pwm_linked_temperature(self):
         try:
