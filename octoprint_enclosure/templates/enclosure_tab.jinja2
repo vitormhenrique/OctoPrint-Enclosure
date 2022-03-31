@@ -226,6 +226,41 @@
 </div>
 <!-- /ko -->
 
+<!-- ko if: ($data.output_type() == "dotstar")  -->
+<h4>
+    <span data-bind="html: label"> </span>
+    <span class="badge">DotStar</span>
+    <!-- ko if: ($data.dotstar_active())  -->
+    <span class="badge badge-success help-inline">on</span>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.dotstar_active())  -->
+    <span class="badge badge-important help-inline">off</span>
+    <!-- /ko -->
+</h4>
+
+<div>
+    <!-- ko if: ($data.dotstar_active())  -->
+    <button data-bind="enable: $root.isUser(), click: $root.handleDotstarPower" class="btn">Turn off</button>
+    <!-- /ko -->
+    <!-- ko ifnot: ($data.dotstar_active())  -->
+    <button data-bind="enable: $root.isUser(), click: $root.handleDotstarPower" class="btn">Turn on</button>
+    <!-- /ko -->
+</div>
+<div class="input-append dotstar-div">
+        Color: <input type="text" class="input-block-level" data-bind="click: $root.showColorPicker(), value: new_dotstar_color, valueUpdate: 'input', attr: {placeholder:dotstar_color, name: 'colorpicker'}">
+        <button type="submit" class="btn btn-input-inc" title="Set Color" data-bind="enable: $root.isUser(), click: $root.handleDotstarColor">
+            <i class="fa fa-check"></i>
+        </button>
+</div>
+<div class="input-append dotstar-div">
+    Brightness: <input type="text" class="input-block-level" data-bind="value: new_dotstar_brightness, valueUpdate: 'input', attr: {placeholder:dotstar_brightness, name: 'brightness'}">
+    <button type="submit" class="btn btn-input-inc" title="Set Brightness" data-bind="enable: $root.isUser(), click: $root.handleDotstarBrightness">
+        <i class="fa fa-check"></i>
+    </button>
+</div>
+
+<!-- /ko -->
+
 <!-- ko if: ($data.output_type() == "temp_hum_control")  -->
 <h4>
     <span data-bind="html: label"> </span>

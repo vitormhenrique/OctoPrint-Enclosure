@@ -160,8 +160,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         self.generate_temp_hum_control_status()
         self.setup_gpio()
         self.configure_gpio()
-        self.update_ui()
         self.start_outpus_with_server()
+        self.update_ui()
         self.handle_initial_gpio_control()
         self.start_timer()
         self.print_complete = False
@@ -698,6 +698,48 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
 
         return jsonify(success=True)
 
+    @octoprint.plugin.BlueprintPlugin.route("/setDotstar", methods=["GET"])
+    def set_dotstar_old(self):
+        """ set_dotstar method get request from octoprint and send the command to dotstar"""
+        gpio_index = self.to_int(request.values["index_id"])
+        action = request.values["action"]
+
+        for rpi_output in self.rpi_outputs:
+            if gpio_index == self.to_int(rpi_output['index_id']):
+                #self._logger.info("DotStar Output Data: %s", rpi_output)
+                led_count = rpi_output['dotstar_count']
+                use_spi = rpi_output['dotstar_use_spi']
+                if use_spi == True:
+                    data_pin = 0
+                    clock_pin = 0
+                else:
+                    data_pin =self.to_int(rpi_output['dotstar_data_pin'])
+                    clock_pin = self.to_int(rpi_output['dotstar_clock_pin'])
+
+                if action == "setColor" :
+                    active = True
+                    red = request.values["red"]
+                    green = request.values["green"]
+                    blue = request.values["blue"]
+                    led_brightness = request.values["brightness"]
+                elif action == "setPower":
+                    led_brightness = rpi_output['dotstar_brightness']
+                    #self._logger.info("DotStar Requested Power: %s", request.values["status"])
+                    if request.values["status"] == "true":
+                        active = True
+                    else:
+                        active = False
+
+                    if rpi_output['dotstar_color'] is None:
+                        red, green, blue = self.get_color_from_rgb(rpi_output['default_dotstar_color'])
+                    else:
+                        red, green, blue = self.get_color_from_rgb(rpi_output['dotstar_color'])
+                            
+
+                self.send_dotstar_command(gpio_index, active, data_pin, clock_pin, led_count, led_brightness, red, green, blue)
+
+        return jsonify(success=True)
+
     @octoprint.plugin.BlueprintPlugin.route("/setLedstripColor", methods=["GET"])
     def set_ledstrip_color_old(self):
         """ set_ledstrip_color method get request from octoprint and send the command to Open-Smart RGB LED Strip"""
@@ -710,7 +752,6 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         return jsonify(success=True)
 
     # DEPREACTION END
-
 
     # GPIO over i2c
 
@@ -769,6 +810,44 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._logger.warn(message)
             pass
 
+
+    def send_dotstar_command(self, index_id, active, data_pin, clock_pin, led_count, led_brightness, red, green, blue, queue_id=None):
+        if queue_id is not None:
+            self._logger.debug("running scheduled queue id %s", queue_id)
+            self.stop_queue_item(queue_id)
+        
+        # Import here so we don't rely on this library when no dotstar strip is in use.
+        try:
+            import board
+            import adafruit_dotstar as dotstar
+
+            self._logger.info("DotStar Modules Imported")
+
+            # Assume SPI if clock or data pin is 0
+            if ((self.to_int(data_pin) == 0) or (self.to_int(clock_pin) == 0)):
+                clock_pin = board.SCK
+                data_pin = board.MOSI
+
+            dots = dotstar.DotStar(clock_pin, data_pin, self.to_int(led_count), brightness=self.to_float(led_brightness))
+            if active:
+                self._logger.info("Setting DotStar color and brightness")
+                dots.fill((self.to_int(red),self.to_int(green),self.to_int(blue)))
+
+                # Update color, brightness, and power with current values sent to the strip
+                for rpi_output in self.rpi_outputs:
+                    if self.to_int(index_id) == self.to_int(rpi_output['index_id']):
+                        rpi_output['dotstar_color'] = 'rgb({0!s},{1!s},{2!s})'.format(red, green, blue)
+                        rpi_output['dotstar_brightness'] = led_brightness
+                        rpi_output['dotstar_active'] = True
+            else:
+                self._logger.info("Turning off DotStar")
+                dots.fill(0)
+                for rpi_output in self.rpi_outputs:
+                    if self.to_int(index_id) == self.to_int(rpi_output['index_id']):
+                        rpi_output['dotstar_active'] = False
+            self.update_ui_outputs()
+        except Exception as ex:
+            self._logger.warn(ex)
 
     def send_neopixel_command(self, led_pin, led_count, led_brightness, red, green, blue, address, neopixel_dirrect,
                               index_id, queue_id=None):
@@ -939,6 +1018,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             regular_status = []
             pwm_status = []
             neopixel_status = []
+            dotstar_status = []
             temp_control_status = []
             for output in self.rpi_outputs:
                 index = self.to_int(output['index_id'])
@@ -964,6 +1044,12 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     val = output['neopixel_color']
                     neopixel_status.append(
                         dict(index_id=index, color=val, auto_startup=startup, auto_shutdown=shutdown))
+                if output['output_type'] == 'dotstar':
+                    col = output['dotstar_color']
+                    level = output['dotstar_brightness']
+                    pwr = output['dotstar_active']
+                    dotstar_status.append(
+                        dict(index_id=index, color=col, brightness=level, active=pwr, auto_startup=startup, auto_shutdown=shutdown))
                 if output['output_type'] == 'pwm':
                     for pwm in self.pwm_instances:
                         if pin in pwm:
@@ -977,6 +1063,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._plugin_manager.send_plugin_message(self._identifier,
                                                      dict(rpi_output_regular=regular_status, rpi_output_pwm=pwm_status,
                                                           rpi_output_neopixel=neopixel_status,
+                                                          rpi_output_dotstar=dotstar_status,
                                                           rpi_output_temp_hum_ctrl=temp_control_status))
         except Exception as ex:
             self.log_error(ex)
@@ -1996,6 +2083,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self.schedule_pwm_duty_on_queue(shutdown_delay_seconds, rpi_output, 0, sufix)
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
             self.add_neopixel_output_to_queue(rpi_output, shutdown_delay_seconds, 0, 0, 0, sufix)
+        if (rpi_output['output_type'] == 'dotstar'):
+            active = False
+            self.add_dotstar_output_to_queue(rpi_output, shutdown_delay_seconds, active, 0, 0, 0, 0, sufix)
         if rpi_output['output_type'] == 'temp_hum_control':
             value = 0
             self.add_temperature_output_temperature_queue(shutdown_delay_seconds, rpi_output, value, sufix)
@@ -2038,6 +2128,20 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                     neopixel_direct = rpi_output['output_type'] == 'neopixel_direct'
                     self.send_neopixel_command(self.to_int(rpi_output['gpio_pin']), led_count, led_brightness, red,
                                                green, blue, address, neopixel_direct, index_id)
+                if (rpi_output['output_type'] == 'dotstar'):
+                    index_id = self.to_int(rpi_output['index_id'])
+                    red, green, blue = self.get_color_from_rgb(rpi_output['default_dotstar_color'])
+                    brightness = rpi_output['default_dotstar_brightness']
+                    led_count = rpi_output['dotstar_count']
+                    use_spi = rpi_output['dotstar_use_spi']
+                    if use_spi == True:
+                        data_pin = 0
+                        clock_pin = 0
+                    else:
+                        data_pin =self.to_int(rpi_output['dotstar_data_pin'])
+                        clock_pin = self.to_int(rpi_output['dotstar_clock_pin'])
+                    active = True
+                    self.send_dotstar_command(index_id, active, data_pin, clock_pin, led_count, brightness, red, green, blue)
                 if rpi_output['output_type'] == 'temp_hum_control':
                     rpi_output['temp_ctr_set_value'] = rpi_output['temp_ctr_default_value']
 
@@ -2054,6 +2158,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         if (rpi_output['output_type'] == 'neopixel_indirect' or rpi_output['output_type'] == 'neopixel_direct'):
             red, green, blue = self.get_color_from_rgb(rpi_output['default_neopixel_color'])
             self.add_neopixel_output_to_queue(rpi_output, delay_seconds, red, green, blue, sufix)
+        if (rpi_output['output_type'] == 'dotstar'):
+            red, green, blue = self.get_color_from_rgb(rpi_output['default_dotstar_color'])
+            brightness = rpi_output['default_dotstar_brightness']
+            active = True
+            self.add_dotstar_output_to_queue(rpi_output, delay_seconds, active, red, green, blue, brightness, sufix)
         if rpi_output['output_type'] == 'temp_hum_control':
             value = rpi_output['temp_ctr_default_value']
             self.add_temperature_output_temperature_queue(delay_seconds, rpi_output, value, sufix)
@@ -2096,6 +2205,26 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                                  args=[gpio_pin, ledCount, ledBrightness, red, green, blue, address, neopixel_direct,
                                        index_id, queue_id])
 
+        self.event_queue.append(dict(queue_id=queue_id, thread=thread))
+
+    def add_dotstar_output_to_queue(self, rpi_output, delay_seconds, active, red, green, blue, brightness, sufix):
+        led_count = rpi_output['dotstar_count']
+        use_spi = rpi_output['dotstar_use_spi']
+        if use_spi == True:
+            data_pin = 0
+            clock_pin = 0
+        else:
+            data_pin =self.to_int(rpi_output['dotstar_data_pin'])
+            clock_pin = self.to_int(rpi_output['dotstar_clock_pin'])
+
+        index_id = self.to_int(rpi_output['index_id'])
+        queue_id = '{0!s}_{1!s}'.format(index_id, sufix)
+
+        self._logger.debug("Scheduling dotstar output id %s for on %s delay_seconds", queue_id, delay_seconds)
+
+        thread = threading.Timer(delay_seconds, self.send_dotstar_command,
+                                 args=[index_id, active, data_pin, clock_pin, led_count, brightness, red, green, blue, queue_id])
+        # (self, index_id, active, data_pin, clock_pin, led_count, led_brightness, red, green, blue
         self.event_queue.append(dict(queue_id=queue_id, thread=thread))
 
     def add_pwm_output_to_queue(self, delay_seconds, rpi_output, value, sufix):
