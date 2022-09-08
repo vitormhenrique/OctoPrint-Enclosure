@@ -70,20 +70,16 @@ You can test the library by using the sample code from https://learn.adafruit.co
 
 Follow the wiring diagram on the pictures on thingiverse. The DS18B20 uses "1-wire" communication protocol, DS18B20 only works on GPIO pin number 4 by default. You also need to add OneWire support for your raspberry pi.
 
-Start by adding the following line to `/boot/config.txt`
-
-```
-dtoverlay=w1-gpio
-```
+Start by enabling 1-wire support, [follow this tutorial](https://learn.adafruit.com/adafruits-raspberry-pi-lesson-11-ds18b20-temperature-sensing/ds18b20).
 
 After rebooting, you can check if the OneWire device was found properly with
 ```
-dmesg | grep w1-gpio
+dmesg | grep onewire
 ```
 
 You should see something like
 ```
-[    3.030368] w1-gpio onewire@0: gpio pin 4, external pullup pin -1, parasitic power 0
+[    5.216899] gpio-4 (onewire@0): enforced open drain please flag it properly in DT/ACPI DSDT/board file
 ```
 
 If you're using the internal pullup resistor, you'll need to enable it manually by running these Python commands. Or, you can simply configure the sensor inside of the Enclosure plugin, which will do this for you.
