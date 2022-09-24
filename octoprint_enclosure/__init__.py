@@ -1143,14 +1143,23 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def read_shtc3_temp(self, address, i2cbus):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/SHTC3.py"
-            args = ["python", script, str(i2cbus), str(address)]
+            cmd = [sys.executable, script, str(i2cbus), str(address)]
+            if self._settings.get(["use_sudo"]):
+                cmd.insert(0, "sudo")
+
             if self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(args))
-            proc = Popen(args, stdout=PIPE)
-            stdout, _ = proc.communicate()
-            if self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.debug("SHTC3 result: %s", stdout)
-            temp, hum = stdout.decode("utf-8").split("|")
+                self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(cmd))
+
+            stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+            output, errors = stdout.communicate()
+
+            if  self._settings.get(["debug_temperature_log"]) is True:
+                if len(errors) > 0:
+                    self._logger.error("SHTC3 error: %s", errors)
+                else:
+                    self._logger.debug("SHTC3 result: %s", output)
+
+            temp, hum = output.split("|")
             return self.to_float(temp.strip()), self.to_float(hum.strip())
 
         except Exception as ex:
