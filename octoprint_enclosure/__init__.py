@@ -1143,11 +1143,14 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def read_shtc3_temp(self, address, i2cbus):
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/SHTC3.py"
-            args = ["python", script, str(i2cbus), str(address)]
+            if self._settings.get(["use_sudo"]):
+                sudo_str = "sudo "
+            else:
+                sudo_str = ""
+            cmd = sudo_str + "python3 " + script + " " + str(i2cbus) + " " + str(address)
             if self._settings.get(["debug_temperature_log"]) is True:
-                self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(args))
-            proc = Popen(args, stdout=PIPE)
-            stdout, _ = proc.communicate()
+                self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(cmd))
+            stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
             if self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("SHTC3 result: %s", stdout)
             temp, hum = stdout.decode("utf-8").split("|")
