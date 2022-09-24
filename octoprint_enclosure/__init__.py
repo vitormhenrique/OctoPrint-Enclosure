@@ -1045,6 +1045,9 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 elif sensor['temp_sensor_type'] == "hum_raw_i2c":
                     hum, temp = self.read_raw_i2c_temp(sensor)
                     airquality = 0
+                elif sensor['temp_sensor_type'] == "shtc3":
+                    temp, hum = self.read_shtc3_temp(sensor['temp_sensor_address'], sensor['temp_sensor_i2cbus'])
+                    airquality = 0
                 else:
                     self._logger.info("temp_sensor_type no match")
                     temp = None
@@ -1136,6 +1139,24 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
             self.log_error(ex)
             return 0
+
+    def read_shtc3_temp(self, address, i2cbus):
+        try:
+            script = os.path.dirname(os.path.realpath(__file__)) + "/SHTC3.py"
+            args = ["python", script, str(i2cbus), str(address)]
+            if self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(args))
+            proc = Popen(args, stdout=PIPE)
+            stdout, _ = proc.communicate()
+            if self._settings.get(["debug_temperature_log"]) is True:
+                self._logger.debug("SHTC3 result: %s", stdout)
+            temp, hum = stdout.decode("utf-8").split("|")
+            return self.to_float(temp.strip()), self.to_float(hum.strip())
+
+        except Exception as ex:
+            self._logger.info("Failed to execute python scripts, try disabling use SUDO on advanced section.")
+            self.log_error(ex)
+            return 0, 0
 
     def read_dht_temp(self, sensor, pin):
         try:
