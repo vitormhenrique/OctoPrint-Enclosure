@@ -70,18 +70,7 @@ def write_then_read(bus, address, cmd, read_length):
 
 	bus.i2c_rdwr(write, read)
 
-	return bytearray(read)
-
-
-def process_crc(bytes_array):
-	"""Assume the last byte in the array is the CRC and check it matches the rest of the message.
-	Return just the message bytes."""
-	crc_byte = bytes_array[-1]
-	bytes_array = bytes_array[:-1]
-
-	if not crc_calculator.verify_checksum(bytes_array, crc_byte):
-		raise RuntimeError('Checksum failed')
-	return bytes_array
+	return bytes(read)
 
 
 def to_relative_humidity(raw_data):
@@ -102,22 +91,22 @@ def to_temperature(raw_data):
 
 def sample_temperature(bus, address):
 
-	send_command(bus, CMD_RESET)
+	send_command(bus, address, CMD_RESET)
 	time.sleep(0.001)
-	send_command(bus, CMD_WAKE)
+	send_command(bus, address, CMD_WAKE)
 	time.sleep(0.001)
 
 	try:
 		result = write_then_read(bus, address, CMD_NORMAL_STRETCH_T, 3)
-		raw_temp, crc = struct.unpack(">HI", result)
 
-		if not crc_calculator.verify_checksum(result[:-1], crc):
+		if not crc_calculator.verify_checksum(result[0:2], result[2]):
 			raise SHTC3ReadError('CRC Mismatch')
 
+		raw_temp, crc = struct.unpack(">HB", result)
 		return to_temperature(raw_temp)
 
 	finally:
-		send_command(bus, CMD_SLEEP)
+		send_command(bus, address, CMD_SLEEP)
 
 
 def sample_humidity(bus, address):
@@ -128,11 +117,11 @@ def sample_humidity(bus, address):
 
 	try:
 		result = write_then_read(bus, address, CMD_NORMAL_STRETCH_RH, 3)
-		raw_rh, crc = struct.unpack(">HI", result)
 
-		if not crc_calculator.verify_checksum(result[:-1], crc):
+		if not crc_calculator.verify_checksum(result[0:2], result[2]):
 			raise SHTC3ReadError('CRC Mismatch')
 
+		raw_rh, crc = struct.unpack(">HB", result)
 		return to_relative_humidity(raw_rh)
 
 	finally:
@@ -148,14 +137,13 @@ def sample_both(bus, address):
 	try:
 		result = write_then_read(bus, address, CMD_NORMAL_STRETCH_T, 6)
 
-		raw_temp, crc_temp, raw_rh, crc_rh = struct.unpack(">HI>HI", result)
-
-		if not crc_calculator.verify_checksum(result[0:2], crc_temp):
+		if not crc_calculator.verify_checksum(result[0:2], result[2]):
 			raise SHTC3ReadError('CRC Mismatch')
 
-		if not crc_calculator.verify_checksum(result[3:5], raw_rh):
+		if not crc_calculator.verify_checksum(result[3:5], result[5]):
 			raise SHTC3ReadError('CRC Mismatch')
 
+		raw_temp, crc_temp, raw_rh, crc_rh = struct.unpack(">HBHB", result)
 		temperature = to_temperature(raw_temp)
 		humidity = to_relative_humidity(raw_rh)
 
@@ -177,6 +165,7 @@ def main():
 	try:
 		temperature, humidity = sample_both(bus, address)
 		print('{0:0.1f} | {1:0.1f}'.format(temperature, humidity))
+
 	except Exception:
 		print('-1 | -1')
 
