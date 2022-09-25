@@ -1144,8 +1144,8 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
         try:
             script = os.path.dirname(os.path.realpath(__file__)) + "/SHTC3.py"
             cmd = [sys.executable, script, str(i2cbus), str(address)]
-            if self._settings.get(["use_sudo"]):
-                cmd.insert(0, "sudo")
+            # if self._settings.get(["use_sudo"]):
+            #     cmd.insert(0, "sudo")
 
             if self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature SHTC3 cmd: %s", " ".join(cmd))
