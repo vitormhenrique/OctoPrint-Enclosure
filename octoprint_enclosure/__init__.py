@@ -1153,11 +1153,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             stdout = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             output, errors = stdout.communicate()
 
-            if  self._settings.get(["debug_temperature_log"]) is True:
+            if True or self._settings.get(["debug_temperature_log"]) is True:
                 if len(errors) > 0:
                     self._logger.error("SHTC3 error: %s", errors)
                 else:
-                    self._logger.debug("SHTC3 result: %s", output)
+                    self._logger.info("SHTC3 result: %s", output)
 
             temp, hum = output.split("|")
             return self.to_float(temp.strip()), self.to_float(hum.strip())
