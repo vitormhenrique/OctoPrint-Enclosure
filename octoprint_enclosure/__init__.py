@@ -25,9 +25,6 @@ from smbus2 import SMBus
 from .getPiTemp import PiTemp
 import struct
 
-## Import modifications for Hardware PWM using PiGPIO
-import pigpio
-##
 
 #Function that returns Boolean output state of the GPIO inputs / outputs
 def PinState_Boolean(pin, ActiveLow) :
@@ -45,7 +42,6 @@ def PinState_Human(pin, ActiveLow):
     if PinState == True :
         return " ON "
     elif PinState == False:
-    elif PinState == False:
         return " OFF "
     else:
         return PinState
@@ -58,7 +54,6 @@ def CheckInputActiveLow(Input_Pull_Resistor):
         return True
     else:
         return False
-
 
 class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.SettingsPlugin,
                       octoprint.plugin.AssetPlugin, octoprint.plugin.BlueprintPlugin,
@@ -336,7 +331,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             if rpi_output['output_type'] == 'regular':
                 index = self.to_int(rpi_output['index_id'])
                 label = rpi_output['label']
-                pin = self.to_int(rpi_output['gpio_pin'])
+                pin = self.to_int(rpi_output['gpio_pin'])          
                 ActiveLow = rpi_output['active_low']
                 if rpi_output['gpio_i2c_enabled']:
                     b = self.gpio_i2c_input(rpi_output, ActiveLow)
@@ -1405,7 +1400,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 else:
                     calculated_duty = 0
 
-                self.write_hwpwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
+                self.write_pwm(gpio_pin, self.constrain(calculated_duty, 0, 100))
 
         except Exception as ex:
             self.log_error(ex)
