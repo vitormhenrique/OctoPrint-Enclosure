@@ -1,3 +1,7 @@
+Personal overhauling the plugin
+
+
+
 Find the plugin useful? Buy me a coffee
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/VitorHenrique/2)
 
