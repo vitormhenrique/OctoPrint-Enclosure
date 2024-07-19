@@ -134,6 +134,12 @@ Find the address of the sensor:
 ```
 i2cdetect -y 1
 ```
+#### NOVUS 1040 Controller sensor
+
+Connect via USB. expected COM port is named '/dev/ttyACM0'
+
+install the minimalmodbus library:
+~/oprint/bin/pip install minimalmodbus
 
 ### Neopixel
 
