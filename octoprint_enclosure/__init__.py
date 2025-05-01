@@ -829,7 +829,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
             else:
                 sudo_str = ""
 
-            cmd = sudo_str + "python " + script + str(led_pin) + " " + str(led_count) + " " + str(
+            cmd = sudo_str + "/home/pi/oprint/bin/python " + script + str(led_pin) + " " + str(led_count) + " " + str(
                 led_brightness) + " " + str(red) + " " + str(green) + " " + str(blue) + " "
 
             if neopixel_dirrect:
@@ -1095,7 +1095,7 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
     def handle_temperature_events(self):
         for temperature_alarm in [item for item in self.rpi_outputs if item['output_type'] == 'temperature_alarm']:
             set_temperature = self.to_float(temperature_alarm['alarm_set_temp'])
-            if int(set_temperature) is 0:
+            if int(set_temperature) == 0:
                 continue
             linked_data = [item for item in self.temperature_sensor_data if
                            item['index_id'] == temperature_alarm['linked_temp_sensor']].pop()
@@ -1176,10 +1176,11 @@ class EnclosurePlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.TemplateP
                 sudo_str = "sudo "
             else:
                 sudo_str = ""
-            cmd = sudo_str + "python3 " + script + str(sensor) + " " + str(pin)
+            cmd = sudo_str + "/home/pi/oprint/bin/python3 " + script + str(sensor) + " " + str(pin)
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Temperature dht cmd: %s", cmd)
             stdout = (Popen(cmd, shell=True, stdout=PIPE).stdout).read()
+            self._logger.info(stdout.decode("utf-8"))
             if  self._settings.get(["debug_temperature_log"]) is True:
                 self._logger.debug("Dht result: %s", stdout)
             temp, hum = stdout.decode("utf-8").split("|")
